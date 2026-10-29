@@ -103,7 +103,7 @@ def page(lang, preset):
         p = g(r, '기도') == '가능'
         nv = g(r, '네이버지도')
         if not nv.startswith('http'): nv = ''
-        tags = (f'<span class="badge">{"기도 가능" if ko else "Solat available"}</span>' if p else '') + f'<span class="reg">{e(reg if ko else reg_en)}</span>'
+        tags = (f'<span class="badge">{"기도 가능" if ko else "Prayer available"}</span>' if p else '') + f'<span class="reg">{e(reg if ko else reg_en)}</span>'
         nt = (g(r, '메모') or note(r)) if ko else (g(r, '영문 메모') or NOTE_EN.get(note(r), ''))
         note_html = f'<p class="note">※ {e(nt)}</p>' if nt else ''
         acts = (f'<a class="act nav" href="{e(nv)}" target="_blank" rel="noopener">{"네이버지도" if ko else "Naver Map"}</a>' if nv else '') + \
@@ -115,16 +115,16 @@ def page(lang, preset):
                      f'<div class="tags">{tags}</div></div>{note_html}<div class="acts"{"" if nv else " style=grid-template-columns:1fr"}>{acts}</div></li>')
     chips = f'<button type="button" class="chip" data-v="">{"전체" if ko else "All"}</button>' + ''.join(
         f'<button type="button" class="chip" data-v="{s}">{e(k if ko else en)}</button>' for k, s, en in REG) + \
-        f'<button type="button" class="chip pray" id="pray">{"🕌 기도 가능" if ko else "🕌 Solat available"}</button>'
+        f'<button type="button" class="chip pray" id="pray">{"🕌 기도 가능" if ko else "🕌 Prayer available"}</button>'
     pre = dict((s, (k, en)) for k, s, en in REG).get(preset)
     if ko:
         title = f'{pre[0]} 할랄 식당 리스트' if pre else '할랄 식당 리스트'
         desc = '서울·부산·제주 · 네이버지도·구글맵 바로 연결 · ARBA Travel Korea'
         legend = '버젯 1인 평균 15,000원, 리스트 밖 식당은 회사 보고 후 방문. 고기 반찬이 나오는 곳은 미리 빼달라고 요청. 전화번호·영업시간은 지도 앱에서 확인.'
     else:
-        title = f'Halal Restaurants · {pre[1]}' if pre else 'Halal Restaurants in Korea'
+        title = f'Halal & Muslim Friendly Restaurants · {pre[1]}' if pre else 'Halal & Muslim Friendly Restaurants in Korea'
         desc = 'Seoul · Busan · Jeju · open in Naver Map or Google Maps · ARBA Travel Korea'
-        legend = 'Halal restaurants selected by ARBA Travel Korea. Tap a map button for phone number, opening hours and directions (Naver Map works best in Korea and supports English).'
+        legend = 'Halal & Muslim friendly restaurants selected by ARBA. Tap a map button for phone number, opening hours and directions (Naver Map works best in Korea and supports English).'
     depth = '../' if preset else ''
     if ko:
         other = f'<a href="{"en/"}">English</a>'
@@ -139,7 +139,7 @@ def page(lang, preset):
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
 <style>{CSS}</style></head><body data-reg="{preset}">
-<header><div class="wrap"><div class="brand">ARBA TRAVEL KOREA</div><h1>{"할랄 식당 리스트" if ko else "Halal Restaurants in Korea"}</h1><div class="sub">{other} · {"업데이트" if ko else "Updated"} {today}</div></div></header>
+<header><div class="wrap"><div class="brand">ARBA TRAVEL KOREA</div><h1>{"할랄 식당 리스트" if ko else "Halal &amp; Muslim Friendly Restaurants in Korea"}</h1><div class="sub">{"업데이트" if ko else "Updated"} {today}</div></div></header>
 <div class="bar"><div class="wrap"><div class="chips" id="fr">{chips}</div></div></div>
 <main><div class="wrap"><p class="legend">{e(legend)}</p><p class="count" id="cnt" data-t="{"식당 #곳" if ko else "# restaurants"}"></p>
 <ol>{"".join(cards)}</ol><p class="empty" id="none" hidden>{"조건에 맞는 식당이 없습니다." if ko else "No restaurants match."}</p></div></main>
