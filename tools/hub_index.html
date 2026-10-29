@@ -1,0 +1,16 @@
+<title>ARBA 투어지침서</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#FAF7F5;--fg:#1C1716;--red:#BE1E2D}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171313;--fg:#F3EDEA}}
+:root[data-theme="dark"]{--bg:#171313;--fg:#F3EDEA}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;padding:16px;text-align:center}
+b{color:var(--red)}
+</style>
+<p id="m">투어지침서를 여는 중…</p>
+<script>
+// 공개 허브: 주소 뒤 #<TripID 슬러그> 로 해당 지침서(v/<슬러그>/)를 연다. 슬러그 없으면 첫 지침서(예전 링크 호환)
+const raw = decodeURIComponent((location.hash || '').slice(1));
+const slug = /^[A-Za-z0-9_-]{3,80}$/.test(raw) ? raw : 'SEL-JT-BSC-031126';
+location.replace('v/' + slug + '/index.html');
+</script>
