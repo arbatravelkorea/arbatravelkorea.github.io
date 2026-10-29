@@ -79,7 +79,7 @@ notes = ''.join(note_html(n, i) for i, n in enumerate(t['notes']))
 nls = web.get("namelists") or ([["", web["namelist_url"]]] if web.get("namelist_url") else [])  # [[라벨, 드라이브 링크], ...]
 namelist_btn = (''.join(f'<a class="btn sec" href="{e(u)}" target="_blank" rel="noopener">명단(룸리스트) 보기{(" · " + e(lb)) if lb else ""}</a>' for lb, u in nls)
                 if nls else '<p class="hint wa-hint">명단은 아직 없습니다. 받는 대로 따로 전달드리겠습니다.</p>')
-HAL = {'seoul': '서울·경기·강원', 'busan': '부산', 'jeju': '제주'}
+HAL = {'seoul': '서울', 'busan': '부산', 'jeju': '제주'}
 _regs = []
 for _x in T:
     for _d in str(_x.get('dest', 'Seoul')).split('+'):
