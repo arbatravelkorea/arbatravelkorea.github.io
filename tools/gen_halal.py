@@ -13,7 +13,7 @@ import csv, sys, html, re, pathlib, datetime, urllib.parse
 src, root = sys.argv[1], pathlib.Path(sys.argv[2])
 rows = list(csv.DictReader(open(src, encoding='utf-8-sig')))
 BASE = 'https://arbatravelkorea.github.io'
-REG = [('서울', 'seoul', 'Seoul'), ('제주', 'jeju', 'Jeju'), ('부산', 'busan', 'Busan'), ('외곽', 'outer', 'Outside Seoul')]  # 필터 순서
+REG = [('서울', 'seoul', 'Seoul'), ('제주', 'jeju', 'Jeju'), ('부산', 'busan', 'Busan'), ('외곽', 'outer', 'Outskirts')]  # 필터 순서
 NOTE_EN = {'1일전 예약한경우만 할랄로 준비 가능': 'Halal only if booked 1 day in advance'}
 KO2 = {k: (s, en) for k, s, en in REG}
 e = lambda s: html.escape(str(s or ''), quote=True)
@@ -21,6 +21,11 @@ g = lambda r, k: (r.get(k) or '').strip()
 today = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=9)).strftime('%Y-%m-%d')
 
 items = [r for r in rows if g(r, '식당명') and not any(re.search(r'폐업|중단|삭제', v or '') for v in r.values())]
+# 영문 지역 이름은 시트 Area 칸 값을 따른다
+for _r in items:
+    if g(_r, '지역') in KO2 and g(_r, 'Area'):
+        KO2[g(_r, '지역')] = (KO2[g(_r, '지역')][0], g(_r, 'Area'))
+REG = [(k, s_, KO2[k][1]) for k, s_, _ in REG]
 
 CSS = '''
 :root{--red:#BE1E2D;--gold:#ECAC1B;--bg:#FAF7F5;--card:#fff;--fg:#1C1716;--muted:#6E6461;--line:#ECE4E0;--soft:#F4EEEB;
@@ -62,12 +67,12 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(-
 '''
 
 JS = '''
-const q=document.getElementById('q'),cards=[...document.querySelectorAll('.card')],cnt=document.getElementById('cnt'),pb=document.getElementById('pray');
+const cards=[...document.querySelectorAll('.card')],cnt=document.getElementById('cnt'),pb=document.getElementById('pray');
 let reg=document.body.dataset.reg||'',pray=false;
 function sync(){document.querySelectorAll('#fr .chip').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.v===reg)));pb.setAttribute('aria-pressed',String(pray))}
-function run(){const s=q.value.trim().toLowerCase();let n=0;cards.forEach(c=>{const ok=(!reg||c.dataset.r===reg)&&(!pray||c.dataset.p==='1')&&(!s||c.dataset.s.includes(s));c.hidden=!ok;if(ok)n++});cnt.textContent=cnt.dataset.t.replace('#',n);document.getElementById('none').hidden=n>0;sync()}
+function run(){let n=0;cards.forEach(c=>{const ok=(!reg||c.dataset.r===reg)&&(!pray||c.dataset.p==='1');c.hidden=!ok;if(ok)n++});cnt.textContent=cnt.dataset.t.replace('#',n);document.getElementById('none').hidden=n>0;sync()}
 document.getElementById('fr').addEventListener('click',ev=>{const b=ev.target.closest('.chip');if(!b)return;if(b===pb){pray=!pray}else{reg=b.dataset.v}run()});
-q.addEventListener('input',run);run();
+run();
 '''
 
 def gmap(r):
@@ -98,9 +103,8 @@ def page(lang, preset):
         p = g(r, '기도') == '가능'
         nv = g(r, '네이버지도')
         if not nv.startswith('http'): nv = ''
-        tags = (f'<span class="badge">{"기도 가능" if ko else "Prayer space"}</span>' if p else '') + f'<span class="reg">{e(reg if ko else reg_en)}</span>'
-        nt = note(r)
-        nt = nt if ko else NOTE_EN.get(nt, '')
+        tags = (f'<span class="badge">{"기도 가능" if ko else "Solat available"}</span>' if p else '') + f'<span class="reg">{e(reg if ko else reg_en)}</span>'
+        nt = (g(r, '메모') or note(r)) if ko else (g(r, '영문 메모') or NOTE_EN.get(note(r), ''))
         note_html = f'<p class="note">※ {e(nt)}</p>' if nt else ''
         acts = (f'<a class="act nav" href="{e(nv)}" target="_blank" rel="noopener">{"네이버지도" if ko else "Naver Map"}</a>' if nv else '') + \
                f'<a class="act gmap" href="{e(gmap(r))}" target="_blank" rel="noopener">{"구글맵" if ko else "Google Maps"}</a>'
@@ -111,16 +115,16 @@ def page(lang, preset):
                      f'<div class="tags">{tags}</div></div>{note_html}<div class="acts"{"" if nv else " style=grid-template-columns:1fr"}>{acts}</div></li>')
     chips = f'<button type="button" class="chip" data-v="">{"전체" if ko else "All"}</button>' + ''.join(
         f'<button type="button" class="chip" data-v="{s}">{e(k if ko else en)}</button>' for k, s, en in REG) + \
-        f'<button type="button" class="chip pray" id="pray">{"🕌 기도 가능" if ko else "🕌 Prayer space"}</button>'
+        f'<button type="button" class="chip pray" id="pray">{"🕌 기도 가능" if ko else "🕌 Solat available"}</button>'
     pre = dict((s, (k, en)) for k, s, en in REG).get(preset)
     if ko:
-        title = f'{pre[0]} 할랄·무슬림 식당 리스트' if pre else '할랄·무슬림 식당 리스트'
+        title = f'{pre[0]} 할랄 식당 리스트' if pre else '할랄 식당 리스트'
         desc = '서울·부산·제주 · 네이버지도·구글맵 바로 연결 · ARBA Travel Korea'
         legend = '버젯 1인 평균 15,000원, 리스트 밖 식당은 회사 보고 후 방문. 고기 반찬이 나오는 곳은 미리 빼달라고 요청. 전화번호·영업시간은 지도 앱에서 확인.'
     else:
-        title = f'Halal & Muslim-friendly Restaurants · {pre[1]}' if pre else 'Halal & Muslim-friendly Restaurants in Korea'
+        title = f'Halal Restaurants · {pre[1]}' if pre else 'Halal Restaurants in Korea'
         desc = 'Seoul · Busan · Jeju · open in Naver Map or Google Maps · ARBA Travel Korea'
-        legend = 'Muslim-friendly restaurants selected by ARBA Travel Korea. Tap a map button for phone number, opening hours and directions (Naver Map works best in Korea and supports English). Please confirm halal status with the staff.'
+        legend = 'Halal restaurants selected by ARBA Travel Korea. Tap a map button for phone number, opening hours and directions (Naver Map works best in Korea and supports English).'
     depth = '../' if preset else ''
     if ko:
         other = f'<a href="{"en/"}">English</a>'
@@ -135,9 +139,8 @@ def page(lang, preset):
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
 <style>{CSS}</style></head><body data-reg="{preset}">
-<header><div class="wrap"><div class="brand">ARBA TRAVEL KOREA</div><h1>{"할랄·무슬림 식당 리스트" if ko else "Halal & Muslim-friendly Restaurants in Korea"}</h1><div class="sub">{other} · {"업데이트" if ko else "Updated"} {today}</div></div></header>
-<div class="bar"><div class="wrap"><input id="q" type="search" placeholder="{"식당 이름 검색" if ko else "Search restaurant name"}" aria-label="search">
-<div class="chips" id="fr">{chips}</div></div></div>
+<header><div class="wrap"><div class="brand">ARBA TRAVEL KOREA</div><h1>{"할랄 식당 리스트" if ko else "Halal Restaurants in Korea"}</h1><div class="sub">{other} · {"업데이트" if ko else "Updated"} {today}</div></div></header>
+<div class="bar"><div class="wrap"><div class="chips" id="fr">{chips}</div></div></div>
 <main><div class="wrap"><p class="legend">{e(legend)}</p><p class="count" id="cnt" data-t="{"식당 #곳" if ko else "# restaurants"}"></p>
 <ol>{"".join(cards)}</ol><p class="empty" id="none" hidden>{"조건에 맞는 식당이 없습니다." if ko else "No restaurants match."}</p></div></main>
 <footer>ARBA Travel Korea · korea@arbatravel.com</footer><script>{JS}</script></body></html>'''
