@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """할랄 식당 리스트 페이지 생성기 (v2, 2026-10-29 사용자 정리 시트 기준).
-Usage: gen_halal.py <sheet.csv> <repo_root>
+Usage: gen_halal.py <가이드용.csv> <repo_root> <손님용.csv>   (시트 탭 가이드용 gid 1637922198 / 손님용 gid 1140049188)
   sheet.csv = 'ARBA 할랄 식당 리스트' 구글시트 CSV (export?format=csv&gid=1637922198)
   시트 칸: ID, 지역(서울/부산/제주), Area, 식당명, Name, 네이버지도, 구글맵, 기도(가능/불가), 상태, 마지막 확인
   -> halal/index.html (한국어 전체)        halal/en/index.html (English 전체)
@@ -11,6 +11,7 @@ Usage: gen_halal.py <sheet.csv> <repo_root>
 import csv, sys, html, re, pathlib, datetime, urllib.parse
 
 src, root = sys.argv[1], pathlib.Path(sys.argv[2])
+src_en = sys.argv[3] if len(sys.argv) > 3 else src  # 손님용 탭 CSV (없으면 가이드용과 같은 목록)
 rows = list(csv.DictReader(open(src, encoding='utf-8-sig')))
 BASE = 'https://arbatravelkorea.github.io'
 REG = [('서울', 'seoul', 'Seoul'), ('제주', 'jeju', 'Jeju'), ('부산', 'busan', 'Busan'), ('외곽', 'outer', 'Outskirts')]  # 필터 순서
@@ -20,7 +21,9 @@ e = lambda s: html.escape(str(s or ''), quote=True)
 g = lambda r, k: (r.get(k) or '').strip()
 today = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=9)).strftime('%Y-%m-%d')
 
-items = [r for r in rows if g(r, '식당명') and not any(re.search(r'폐업|중단|삭제', v or '') for v in r.values())]
+alive = lambda rs: [r for r in rs if g(r, '식당명') and not any(re.search(r'폐업|중단|삭제', v or '') for v in r.values())]
+items = alive(rows)
+items_en = alive(list(csv.DictReader(open(src_en, encoding='utf-8-sig'))))
 # 영문 지역 이름은 시트 Area 칸 값을 따른다
 for _r in items:
     if g(_r, '지역') in KO2 and g(_r, 'Area'):
@@ -111,15 +114,10 @@ def contact(r):
         c.update({'담당자': g(r, '담당자'), '전화': g(r, '담당자 전화'), '문자': g(r, '문자') or 'O'})
     return c
 
-_ep = pathlib.Path(__file__).with_name('halal_en_exclude.txt')
-EN_EXCLUDE = {l.strip() for l in open(_ep, encoding='utf-8') if l.strip() and not l.startswith('#')} if _ep.exists() else set()
-
 def page(lang, preset):
     ko = lang == 'ko'
     cards = []
-    for r in items:
-        if not ko and (g(r, '식당명') in EN_EXCLUDE or g(r, '영문 제외').upper() in ('O', 'Y', '제외')):
-            continue
+    for r in (items if ko else items_en):
         reg = g(r, '지역'); slug, reg_en = KO2.get(reg, ('', reg))
         name = g(r, '식당명') if ko else (g(r, 'Name') or g(r, '식당명'))
         sub = g(r, 'Name') if ko else g(r, '식당명')
@@ -183,4 +181,4 @@ for preset in [''] + [s for _, s, _ in REG]:
     (d / 'index.html').write_text(page('ko', preset), encoding='utf-8')
     (d / 'en' / 'index.html').write_text(page('en', preset), encoding='utf-8')
 from collections import Counter
-print(len(items), Counter(g(r, '지역') for r in items), 'prayer', sum(g(r, '기도') == '가능' for r in items))
+print('ko', len(items), 'en', len(items_en), Counter(g(r, '지역') for r in items), 'prayer', sum(g(r, '기도') == '가능' for r in items))
