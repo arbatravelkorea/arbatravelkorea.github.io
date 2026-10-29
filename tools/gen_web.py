@@ -79,6 +79,17 @@ notes = ''.join(note_html(n, i) for i, n in enumerate(t['notes']))
 nls = web.get("namelists") or ([["", web["namelist_url"]]] if web.get("namelist_url") else [])  # [[라벨, 드라이브 링크], ...]
 namelist_btn = (''.join(f'<a class="btn sec" href="{e(u)}" target="_blank" rel="noopener">명단(룸리스트) 보기{(" · " + e(lb)) if lb else ""}</a>' for lb, u in nls)
                 if nls else '<p class="hint wa-hint">명단은 아직 없습니다. 받는 대로 따로 전달드리겠습니다.</p>')
+HAL = {'seoul': '서울·경기·강원', 'busan': '부산', 'jeju': '제주'}
+_regs = []
+for _x in T:
+    for _d in str(_x.get('dest', 'Seoul')).split('+'):
+        _k = _d.strip().lower()
+        if _k in HAL and _k not in _regs: _regs.append(_k)
+halal_btn = ''.join(f'<a class="btn sec" href="https://arbatravelkorea.github.io/halal/{k}/" target="_blank" rel="noopener">할랄 식당 리스트 · {HAL[k]}</a>' for k in _regs)
+if _regs:
+    halal_btn += ('<p class="hint">손님용 영어 리스트 (왓츠앱방에 공유해주세요. 자유일정 날 전화·네이버지도 바로 연결): '
+                  + ' · '.join(f'<span class="ph"><a href="https://arbatravelkorea.github.io/halal/{k}/en/" target="_blank" rel="noopener">{HAL[k]} EN</a>'
+                               f'<button type="button" class="cp" data-copy="https://arbatravelkorea.github.io/halal/{k}/en/">복사</button></span>' for k in _regs) + '</p>')
 page = f'''<title>{e(t["tripId"])} 투어지침서</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -202,6 +213,7 @@ a:focus-visible, button:focus-visible {{ outline:3px solid var(--gold); outline-
     <p class="hint wa-hint">투어 시작 최소 이틀 전 입장해 필요한 정보 전달과 인사 나눠주세요.{" 두 방 모두 입장하고 공지는 두 방에 다 올려주세요." if multi else ""}</p>
     {namelist_btn}
     {sched_btn}
+    {halal_btn}
   </section>
 
 {days_block}
