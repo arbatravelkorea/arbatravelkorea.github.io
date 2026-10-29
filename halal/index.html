@@ -1,0 +1,48 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ARBA 할랄 식당 리스트</title><meta property="og:title" content="ARBA 할랄 식당 리스트 · Halal Restaurants"><meta property="og:image" content="https://arbatravelkorea.github.io/img/og_halal_seoul.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap"><style>
+:root{--red:#BE1E2D;--red-ink:#fff;--gold:#ECAC1B;--bg:#FAF7F5;--card:#fff;--fg:#1C1716;--muted:#6E6461;--line:#ECE4E0;--soft:#F4EEEB;
+--green:#1C8C4E;--green-bg:#E2F4E9;--c:#0E7A43;--c-bg:#DDF3E6;--m:#1B5FA8;--m-bg:#E1ECFA;--p:#7A5A12;--p-bg:#F8EED6;--link:#1A5FD0;
+--f:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171313;--card:#221C1B;--fg:#F3EDEA;--muted:#AEA3A0;--line:#3A3130;--soft:#2B2423;
+--green:#5BD08D;--green-bg:#173A27;--c:#6FD9A0;--c-bg:#163A27;--m:#8DB8F0;--m-bg:#1A2B44;--p:#E9C97A;--p-bg:#3A2F17;--link:#8DB4FF;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171313;--card:#221C1B;--fg:#F3EDEA;--muted:#AEA3A0;--line:#3A3130;--soft:#2B2423;
+--green:#5BD08D;--green-bg:#173A27;--c:#6FD9A0;--c-bg:#163A27;--m:#8DB8F0;--m-bg:#1A2B44;--p:#E9C97A;--p-bg:#3A2F17;--link:#8DB4FF;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--f);-webkit-text-size-adjust:100%}
+.wrap{max-width:680px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--red);color:var(--red-ink);position:relative;overflow:hidden}
+header::after{content:"";position:absolute;right:-40px;top:-50px;width:150px;height:150px;border-radius:50%;background:var(--gold)}
+header .wrap{padding-block:20px 22px;position:relative;z-index:1}
+.brand{font-weight:800;letter-spacing:.3em;font-size:12px}
+h1{margin:12px 0 2px;font-size:clamp(23px,6.6vw,30px);line-height:1.2;font-weight:800;text-wrap:balance}
+.sub{opacity:.92;font-size:13.5px}.sub a{color:#fff}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding-block:10px}
+input[type=search]{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-top:8px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font:600 13px var(--f);padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer;white-space:nowrap}
+.chip[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
+main .wrap{padding-block:12px 36px}
+.legend{font-size:12.5px;color:var(--muted);margin:4px 0 12px}
+.count{font-size:13px;color:var(--muted);margin:2px 0 10px}
+ol{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.nm{margin:0;font-size:17px;font-weight:800;line-height:1.3}.nm small{display:block;font-size:12.5px;font-weight:500;color:var(--muted);margin-top:2px}
+.badge{flex:none;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.b-c{background:var(--c-bg);color:var(--c)}.b-m{background:var(--m-bg);color:var(--m)}.b-p{background:var(--p-bg);color:var(--p)}
+.meta{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:3px;font-size:14px}
+.meta b{display:inline-block;min-width:62px;font-size:12px;color:var(--muted);font-weight:700}
+.warn{margin:8px 0 0;font-size:13px;color:var(--red);font-weight:600}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.act{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none}
+.call{background:var(--green-bg);color:var(--green)}.map{background:#03C75A;color:#fff}.act.off{opacity:.45;pointer-events:none;background:var(--soft);color:var(--muted)}
+details{margin-top:10px;font-size:13.5px;border-top:1px dashed var(--line);padding-top:8px}summary{cursor:pointer;font-weight:700;color:var(--muted)}
+details p{margin:6px 0 0;overflow-wrap:anywhere}details a,.meta a{color:var(--link)}
+.empty{padding:30px 0;text-align:center;color:var(--muted)}
+footer{text-align:center;font-size:12px;color:var(--muted);padding-block:0 30px}
+.regions{display:grid;gap:10px;margin-top:16px}.regions a{display:block;padding:16px;border-radius:14px;background:var(--card);border:1px solid var(--line);color:var(--fg);text-decoration:none;font-weight:800;font-size:18px}
+.regions span{display:block;font-weight:500;font-size:13px;color:var(--muted)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+</style></head><body>
+<header><div class="wrap"><div class="brand">ARBA TRAVEL KOREA</div><h1>할랄 식당 리스트 · Halal Restaurants</h1><div class="sub">업데이트 2026-10-29</div></div></header>
+<main><div class="wrap"><div class="regions"><a href="seoul/">서울·경기·강원 (한국어)<span>가이드·기사용</span></a><a href="seoul/en/">Seoul · Gyeonggi · Gangwon (English)<span>For guests</span></a><a href="busan/">부산 (한국어)<span>가이드·기사용</span></a><a href="busan/en/">Busan (English)<span>For guests</span></a><a href="jeju/">제주 (한국어)<span>가이드·기사용</span></a><a href="jeju/en/">Jeju (English)<span>For guests</span></a></div></div></main></body></html>
