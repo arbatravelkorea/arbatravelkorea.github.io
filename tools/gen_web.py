@@ -91,7 +91,8 @@ HAL_ONCLICK = ("var u=this.dataset.copy,b=this;function ok(){b.textContent='복�
                "function fb(){var t=document.createElement('textarea');t.value=u;document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}t.remove();ok()}"
                "if(navigator.clipboard){navigator.clipboard.writeText(u).then(ok,fb)}else{fb()}")  # English ver. 버튼: 링크로 이동하지 않고 주소만 복사
 HALAL_BASE = 'https://arbatravelkorea.github.io/halal/'
-_hq = ('-'.join(k for k in ('seoul', 'jeju', 'busan', 'outer') if k in _regs) + '/') if _regs else ''  # 지역 조합 주소 /halal/seoul-jeju/ : 그 지역들이 미리 선택되고 카톡·왓츠앱 카드에도 지역 표시
+_hc = '-'.join(k for k in ('seoul', 'jeju', 'busan') if k in _regs)
+_hq = (_hc + '/') if _hc in ('seoul', 'jeju', 'busan', 'seoul-busan', 'seoul-jeju', 'seoul-jeju-busan') else ''  # 지역 조합 주소(6가지): 그 지역 미리 선택 + 카드에 지역 배지. 그 외 조합은 전체 목록
 halal_btn = ''
 if _regs:
     halal_btn = (f'<a class="btn halal" href="{HALAL_BASE}{_hq}" target="_blank" rel="noopener">🕌 할랄&amp;무슬림 프렌들리 식당 리스트</a>'

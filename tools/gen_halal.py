@@ -19,7 +19,7 @@ NOTE_EN = {'1일전 예약한경우만 할랄로 준비 가능': 'Halal only if 
 KO2 = {k: (s, en) for k, s, en in REG}
 e = lambda s: html.escape(str(s or ''), quote=True)
 g = lambda r, k: (r.get(k) or '').strip()
-OGV = '20261030b'  # 카드 이미지 바꾸면 올려서 카톡·왓츠앱 캐시 회피
+OGV = '20261030c'  # 카드 이미지 바꾸면 올려서 카톡·왓츠앱 캐시 회피
 today = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=9)).strftime('%Y-%m-%d')
 
 alive = lambda rs: [r for r in rs if g(r, '식당명') and not any(re.search(r'폐업|중단|삭제', v or '') for v in r.values())]
@@ -160,7 +160,7 @@ def page(lang, preset):
         other = f'<a href="{"en/"}">English</a>'
     else:
         other = f'<a href="../">한국어</a>'
-    og = f'{BASE}/img/halal/og_{"ko" if ko else "en"}{("_" + preset) if preset else ""}.png?v={OGV}'
+    og = f'{BASE}/img/halal/og_{"ko" if ko else "en"}{("_" + preset) if preset in COMBOS else ""}.png?v={OGV}'
     url = f'{BASE}/halal/' + (f'{preset}/' if preset else '') + ('' if ko else 'en/')
     return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}">
@@ -178,8 +178,9 @@ def page(lang, preset):
 h = root / 'halal'
 from itertools import combinations
 SLUGS = [s_ for _, s_, _ in REG]  # 순서: seoul, jeju, busan, outer
-COMBOS = ['-'.join(c) for n in range(1, len(SLUGS) + 1) for c in combinations(SLUGS, n)]  # 지역 조합별 주소 /halal/seoul-jeju/
-for preset in [''] + COMBOS:
+COMBOS = ['seoul', 'jeju', 'busan', 'seoul-busan', 'seoul-jeju', 'seoul-jeju-busan']  # 사용자 지정 6가지 (카드 이미지에 지역 배지)
+PAGES = COMBOS + ['outer']  # outer는 예전 주소 유지용 (배지 없는 카드)
+for preset in [''] + PAGES:
     d = h / preset if preset else h
     (d / 'en').mkdir(parents=True, exist_ok=True)
     (d / 'index.html').write_text(page('ko', preset), encoding='utf-8')
