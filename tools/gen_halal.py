@@ -13,7 +13,8 @@ import csv, sys, html, re, pathlib, datetime, urllib.parse
 src, root = sys.argv[1], pathlib.Path(sys.argv[2])
 rows = list(csv.DictReader(open(src, encoding='utf-8-sig')))
 BASE = 'https://arbatravelkorea.github.io'
-REG = [('서울', 'seoul', 'Seoul'), ('부산', 'busan', 'Busan'), ('제주', 'jeju', 'Jeju')]
+REG = [('서울', 'seoul', 'Seoul'), ('제주', 'jeju', 'Jeju'), ('부산', 'busan', 'Busan'), ('외곽', 'outer', 'Outside Seoul')]  # 필터 순서
+NOTE_EN = {'1일전 예약한경우만 할랄로 준비 가능': 'Halal only if booked 1 day in advance'}
 KO2 = {k: (s, en) for k, s, en in REG}
 e = lambda s: html.escape(str(s or ''), quote=True)
 g = lambda r, k: (r.get(k) or '').strip()
@@ -36,8 +37,8 @@ h1{margin:12px 0 2px;font-size:clamp(23px,6.6vw,30px);line-height:1.2;font-weigh
 .sub{opacity:.92;font-size:13.5px}.sub a{color:#fff}
 .bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding-block:10px}
 input[type=search]{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
-.chips{display:flex;gap:6px;flex-wrap:wrap;padding-top:8px}
-.chip{font:700 14px var(--f);padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer;min-height:36px}
+.chips{display:flex;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-top:8px}.chips::-webkit-scrollbar{display:none}
+.chip{flex:1 0 auto;white-space:nowrap;font:700 13.5px var(--f);padding:7px 9px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer;min-height:36px}
 .chip[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
 .chip.pray[aria-pressed=true]{background:var(--pray);border-color:var(--pray);color:#fff}
 main .wrap{padding-block:12px 36px}
@@ -72,7 +73,7 @@ def gmap(r):
     u = g(r, '구글맵')
     if u: return u
     name, reg = g(r, '식당명'), g(r, '지역')
-    query = name if reg in name else f'{name} {reg}'
+    query = name if (reg in name or reg == '외곽') else f'{name} {reg}'
     return 'https://www.google.com/maps/search/?api=1&query=' + urllib.parse.quote(query)
 
 def note(r):
@@ -89,9 +90,11 @@ def page(lang, preset):
         sub = g(r, 'Name') if ko else g(r, '식당명')
         p = g(r, '기도') == '가능'
         nv = g(r, '네이버지도')
+        if not nv.startswith('http'): nv = ''
         tags = (f'<span class="badge">{"기도 가능" if ko else "Prayer space"}</span>' if p else '') + f'<span class="reg">{e(reg if ko else reg_en)}</span>'
         nt = note(r)
-        note_html = f'<p class="note">※ {e(nt)}</p>' if (ko and nt) else ''
+        nt = nt if ko else NOTE_EN.get(nt, '')
+        note_html = f'<p class="note">※ {e(nt)}</p>' if nt else ''
         acts = (f'<a class="act nav" href="{e(nv)}" target="_blank" rel="noopener">{"네이버지도" if ko else "Naver Map"}</a>' if nv else '') + \
                f'<a class="act gmap" href="{e(gmap(r))}" target="_blank" rel="noopener">{"구글맵" if ko else "Google Maps"}</a>'
         s = ' '.join([g(r, '식당명'), g(r, 'Name'), reg, reg_en]).lower()
@@ -99,7 +102,7 @@ def page(lang, preset):
                      f'<div class="tags">{tags}</div></div>{note_html}<div class="acts"{"" if nv else " style=grid-template-columns:1fr"}>{acts}</div></li>')
     chips = f'<button type="button" class="chip" data-v="">{"전체" if ko else "All"}</button>' + ''.join(
         f'<button type="button" class="chip" data-v="{s}">{e(k if ko else en)}</button>' for k, s, en in REG) + \
-        f'<button type="button" class="chip pray" id="pray">{"🕌 기도 가능한 곳만" if ko else "🕌 Prayer space only"}</button>'
+        f'<button type="button" class="chip pray" id="pray">{"🕌 기도 가능" if ko else "🕌 Prayer space"}</button>'
     pre = dict((s, (k, en)) for k, s, en in REG).get(preset)
     if ko:
         title = f'{pre[0]} 할랄·무슬림 식당 리스트' if pre else '할랄·무슬림 식당 리스트'
@@ -114,7 +117,7 @@ def page(lang, preset):
         other = f'<a href="{"en/"}">English</a>'
     else:
         other = f'<a href="../">한국어</a>'
-    og = f'{BASE}/img/og_halal_{preset or "seoul"}.png'
+    og = f'{BASE}/img/og_halal_{preset if preset in ("seoul", "busan", "jeju") else "seoul"}.png'
     url = f'{BASE}/halal/' + (f'{preset}/' if preset else '') + ('' if ko else 'en/')
     return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}">
