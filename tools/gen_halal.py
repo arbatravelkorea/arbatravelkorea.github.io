@@ -71,10 +71,12 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(-
 
 JS = '''
 const cards=[...document.querySelectorAll('.card')],cnt=document.getElementById('cnt'),pb=document.getElementById('pray');
-let reg=document.body.dataset.reg||'',pray=false;
-function sync(){document.querySelectorAll('#fr .chip').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.v===reg)));pb.setAttribute('aria-pressed',String(pray))}
-function run(){let n=0;cards.forEach(c=>{const ok=(!reg||c.dataset.r===reg)&&(!pray||c.dataset.p==='1');c.hidden=!ok;if(ok)n++});cnt.textContent=cnt.dataset.t.replace('#',n);document.getElementById('none').hidden=n>0;sync()}
-document.getElementById('fr').addEventListener('click',ev=>{const b=ev.target.closest('.chip');if(!b)return;if(b===pb){pray=!pray}else{reg=b.dataset.v}run()});
+// 지역은 여러 개 선택 가능. 처음 선택: 주소 ?r=seoul,jeju  >  페이지 기본값(data-reg)  >  전체
+const qp=new URLSearchParams(location.search).get('r');
+let regs=new Set((qp!==null?qp:(document.body.dataset.reg||'')).split(',').map(x=>x.trim()).filter(Boolean)),pray=false;
+function sync(){document.querySelectorAll('#fr .chip[data-v]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.v===''?regs.size===0:regs.has(x.dataset.v))));pb.setAttribute('aria-pressed',String(pray))}
+function run(){let n=0;cards.forEach(c=>{const ok=(regs.size===0||regs.has(c.dataset.r))&&(!pray||c.dataset.p==='1');c.hidden=!ok;if(ok)n++});cnt.textContent=cnt.dataset.t.replace('#',n);document.getElementById('none').hidden=n>0;sync()}
+document.getElementById('fr').addEventListener('click',ev=>{const b=ev.target.closest('.chip');if(!b)return;if(b===pb){pray=!pray}else if(b.dataset.v===''){regs.clear()}else{regs.has(b.dataset.v)?regs.delete(b.dataset.v):regs.add(b.dataset.v)}run()});
 run();
 '''
 

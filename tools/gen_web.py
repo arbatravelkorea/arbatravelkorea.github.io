@@ -86,13 +86,13 @@ for _x in T:
         _k = _d.strip().lower()
         if _k in HAL and _k not in _regs: _regs.append(_k)
 HALAL_BASE = 'https://arbatravelkorea.github.io/halal/'
-_hp = (_regs[0] + '/') if len(_regs) == 1 else ''  # 지역 1곳이면 그 지역이 미리 선택된 주소, 여러 곳이면 전체
+_hq = ('?r=' + ','.join(_regs)) if _regs else ''  # 일정에 있는 지역들이 미리 선택된 채로 열림 (여러 개 가능)
 halal_btn = ''
 if _regs:
-    halal_btn = (f'<a class="btn sec" href="{HALAL_BASE}{_hp}" target="_blank" rel="noopener">할랄&amp;무슬림 프렌들리 식당 리스트</a>'
+    halal_btn = (f'<a class="btn halal" href="{HALAL_BASE}{_hq}" target="_blank" rel="noopener">🕌 할랄&amp;무슬림 프렌들리 식당 리스트</a>'
                  f'<p class="hint">손님용 영어 리스트 (왓츠앱방에 공유해주세요. 자유일정 날 네이버지도·구글맵 바로 연결): '
-                 f'<span class="ph"><a href="{HALAL_BASE}{_hp}en/" target="_blank" rel="noopener">English</a>'
-                 f'<button type="button" class="cp" data-copy="{HALAL_BASE}{_hp}en/">복사</button></span></p>')
+                 f'<span class="ph"><a href="{HALAL_BASE}en/{_hq}" target="_blank" rel="noopener">English</a>'
+                 f'<button type="button" class="cp" data-copy="{HALAL_BASE}en/{_hq}">복사</button></span></p>')
 page = f'''<title>{e(t["tripId"])} 투어지침서</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -152,6 +152,9 @@ h1.multi {{ font-size:clamp(20px,6vw,28px) }}
 .btn.wa {{ background:var(--green-bg); color:var(--green) }}
 .btn.pay {{ background:var(--red); color:var(--red-ink) }}
 .btn.sec {{ background:var(--card); color:var(--fg); border:1px solid var(--line) }}
+.btn.halal {{ background:#F7F5F0; color:#174C3C; border:1.5px solid #C5A46D }}
+@media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) .btn.halal {{ background:#1C2823; color:#E6D3A8; border-color:#C5A46D }} }}
+:root[data-theme="dark"] .btn.halal {{ background:#1C2823; color:#E6D3A8; border-color:#C5A46D }}
 
 .hint.wa-hint {{ text-align:center; font-weight:700; margin-top:-6px !important; color:var(--fg) }}
 .hint {{ font-size:12.5px; color:var(--muted); margin:6px 2px 0 }}
