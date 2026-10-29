@@ -142,7 +142,7 @@ def page(lang, preset):
         f'<button type="button" class="chip pray" id="pray">{"🕌 기도 가능" if ko else "🕌 Prayer available"}</button>'
     pre = dict((s, (k, en)) for k, s, en in REG).get(preset)
     if ko:
-        title = f'{pre[0]} 할랄 무슬림 프렌들리 식당 리스트' if pre else '할랄 무슬림 프렌들리 식당 리스트'
+        title = f'{pre[0]} 할랄&무슬림 프렌들리 식당 리스트' if pre else '할랄&무슬림 프렌들리 식당 리스트'
         desc = '서울·부산·제주 · 네이버지도·구글맵 바로 연결 · ARBA Travel Korea'
         legend = '식사가 패키지에 포함되어 있을 경우 버젯 1인 평균 15,000원. 프라이빗 투어는 손님과 협의하여 식당 방문. 리스트 밖 식당은 회사 보고 후 방문.'
     else:
@@ -163,7 +163,7 @@ def page(lang, preset):
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
 <style>{CSS}</style></head><body data-reg="{preset}">
-<header><div class="wrap"><div class="brand">ARBA TRAVEL KOREA</div><h1>{"할랄 무슬림 프렌들리 식당 리스트" if ko else "Halal &amp; Muslim Friendly Restaurants in Korea"}</h1><div class="sub">{"업데이트" if ko else "Updated"} {today}</div></div></header>
+<header><div class="wrap"><div class="brand">ARBA TRAVEL KOREA</div><h1>{"할랄&무슬림 프렌들리 식당 리스트" if ko else "Halal &amp; Muslim Friendly Restaurants in Korea"}</h1><div class="sub">{"업데이트" if ko else "Updated"} {today}</div></div></header>
 <div class="bar"><div class="wrap"><div class="chips" id="fr">{chips}</div></div></div>
 <main><div class="wrap"><p class="legend">{e(legend)}</p><p class="count" id="cnt" data-t="{"식당 #곳" if ko else "# restaurants"}"></p>
 <ol>{"".join(cards)}</ol><p class="empty" id="none" hidden>{"조건에 맞는 식당이 없습니다." if ko else "No restaurants match."}</p></div></main>

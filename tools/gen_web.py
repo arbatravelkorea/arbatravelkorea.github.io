@@ -85,11 +85,14 @@ for _x in T:
     for _d in str(_x.get('dest', 'Seoul')).split('+'):
         _k = _d.strip().lower()
         if _k in HAL and _k not in _regs: _regs.append(_k)
-halal_btn = ''.join(f'<a class="btn sec" href="https://arbatravelkorea.github.io/halal/{k}/" target="_blank" rel="noopener">할랄 식당 리스트 · {HAL[k]}</a>' for k in _regs)
+HALAL_BASE = 'https://arbatravelkorea.github.io/halal/'
+_hp = (_regs[0] + '/') if len(_regs) == 1 else ''  # 지역 1곳이면 그 지역이 미리 선택된 주소, 여러 곳이면 전체
+halal_btn = ''
 if _regs:
-    halal_btn += ('<p class="hint">손님용 영어 리스트 (왓츠앱방에 공유해주세요. 자유일정 날 전화·네이버지도 바로 연결): '
-                  + ' · '.join(f'<span class="ph"><a href="https://arbatravelkorea.github.io/halal/{k}/en/" target="_blank" rel="noopener">{HAL[k]} EN</a>'
-                               f'<button type="button" class="cp" data-copy="https://arbatravelkorea.github.io/halal/{k}/en/">복사</button></span>' for k in _regs) + '</p>')
+    halal_btn = (f'<a class="btn sec" href="{HALAL_BASE}{_hp}" target="_blank" rel="noopener">할랄&amp;무슬림 프렌들리 식당 리스트</a>'
+                 f'<p class="hint">손님용 영어 리스트 (왓츠앱방에 공유해주세요. 자유일정 날 네이버지도·구글맵 바로 연결): '
+                 f'<span class="ph"><a href="{HALAL_BASE}{_hp}en/" target="_blank" rel="noopener">English</a>'
+                 f'<button type="button" class="cp" data-copy="{HALAL_BASE}{_hp}en/">복사</button></span></p>')
 page = f'''<title>{e(t["tripId"])} 투어지침서</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
