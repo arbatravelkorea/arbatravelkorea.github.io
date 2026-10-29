@@ -55,6 +55,7 @@ ol{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .act{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;text-align:center}
 .nav{background:#03C75A;color:#fff}.gmap{background:var(--card);color:var(--gmap);border:1.5px solid var(--gmap)}
+.ph{display:block;width:calc(100% + 28px);margin:-14px -14px 12px;aspect-ratio:16/10;object-fit:cover;border-radius:14px 14px 0 0;background:var(--soft)}
 .empty{padding:30px 0;text-align:center;color:var(--muted)}
 footer{text-align:center;font-size:12px;color:var(--muted);padding-block:0 30px}
 a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
@@ -75,6 +76,12 @@ def gmap(r):
     name, reg = g(r, '식당명'), g(r, '지역')
     query = name if (reg in name or reg == '외곽') else f'{name} {reg}'
     return 'https://www.google.com/maps/search/?api=1&query=' + urllib.parse.quote(query)
+
+def photo(r):
+    u = g(r, '사진')
+    m = re.search(r'drive\.google\.com/(?:file/d/|open\?id=|uc\?id=)([\w-]+)', u)
+    if m: return f'https://lh3.googleusercontent.com/d/{m.group(1)}=w800'
+    return u if u.startswith('http') else ''
 
 def note(r):
     v = g(r, '마지막 확인')
@@ -98,7 +105,9 @@ def page(lang, preset):
         acts = (f'<a class="act nav" href="{e(nv)}" target="_blank" rel="noopener">{"네이버지도" if ko else "Naver Map"}</a>' if nv else '') + \
                f'<a class="act gmap" href="{e(gmap(r))}" target="_blank" rel="noopener">{"구글맵" if ko else "Google Maps"}</a>'
         s = ' '.join([g(r, '식당명'), g(r, 'Name'), reg, reg_en]).lower()
-        cards.append(f'<li class="card" data-r="{slug}" data-p="{1 if p else 0}" data-s="{e(s)}"><div class="top"><h2 class="nm">{e(name)}<small>{e(sub)}</small></h2>'
+        ph = photo(r)
+        img = f'<img class="ph" src="{e(ph)}" alt="{e(name)}" loading="lazy">' if ph else ''
+        cards.append(f'<li class="card" data-r="{slug}" data-p="{1 if p else 0}" data-s="{e(s)}">{img}<div class="top"><h2 class="nm">{e(name)}<small>{e(sub)}</small></h2>'
                      f'<div class="tags">{tags}</div></div>{note_html}<div class="acts"{"" if nv else " style=grid-template-columns:1fr"}>{acts}</div></li>')
     chips = f'<button type="button" class="chip" data-v="">{"전체" if ko else "All"}</button>' + ''.join(
         f'<button type="button" class="chip" data-v="{s}">{e(k if ko else en)}</button>' for k, s, en in REG) + \
