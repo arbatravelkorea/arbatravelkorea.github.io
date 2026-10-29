@@ -198,7 +198,7 @@ a:focus-visible, button:focus-visible {{ outline:3px solid var(--gold); outline-
 
 {flights_html()}
   <section class="btns">
-    {"".join(f'<a class="btn wa" href="{e(x["wa"])}" target="_blank" rel="noopener">WhatsApp 단톡방 입장하기' + (f' · {e(short(x["tripId"]))}' if multi else '') + '</a>' for x in T)}
+    {"".join((f'<a class="btn wa" href="{e(x["wa"])}" target="_blank" rel="noopener">WhatsApp 단톡방 입장하기' + (f' · {e(short(x["tripId"]))}' if multi else '') + '</a>') if x.get("wa") else '<p class="hint wa-hint">왓츠앱 단톡방은 아직 만들어지지 않았습니다. 만들어지는 대로 링크를 따로 보내드리겠습니다.</p>' for x in T)}
     <p class="hint wa-hint">투어 시작 최소 이틀 전 입장해 필요한 정보 전달과 인사 나눠주세요.{" 두 방 모두 입장하고 공지는 두 방에 다 올려주세요." if multi else ""}</p>
     {namelist_btn}
     {sched_btn}
