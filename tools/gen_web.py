@@ -85,14 +85,16 @@ for _x in T:
     for _d in str(_x.get('dest', 'Seoul')).split('+'):
         _k = _d.strip().lower()
         if _k in HAL and _k not in _regs: _regs.append(_k)
+HAL_ONCLICK = ("var u=this.dataset.copy,b=this;function ok(){b.textContent='복사됨 ✓';setTimeout(function(){b.textContent='English ver.'},1800)}"
+               "function fb(){var t=document.createElement('textarea');t.value=u;document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}t.remove();ok()}"
+               "if(navigator.clipboard){navigator.clipboard.writeText(u).then(ok,fb)}else{fb()}")  # English ver. 버튼: 링크로 이동하지 않고 주소만 복사
 HALAL_BASE = 'https://arbatravelkorea.github.io/halal/'
 _hq = ('?r=' + ','.join(_regs)) if _regs else ''  # 일정에 있는 지역들이 미리 선택된 채로 열림 (여러 개 가능)
 halal_btn = ''
 if _regs:
     halal_btn = (f'<a class="btn halal" href="{HALAL_BASE}{_hq}" target="_blank" rel="noopener">🕌 할랄&amp;무슬림 프렌들리 식당 리스트</a>'
-                 f'<p class="hint">손님용 영어 리스트 (왓츠앱방에 공유해주세요. 자유일정 날 네이버지도·구글맵 바로 연결): '
-                 f'<span class="ph"><a href="{HALAL_BASE}en/{_hq}" target="_blank" rel="noopener">English</a>'
-                 f'<button type="button" class="cp" data-copy="{HALAL_BASE}en/{_hq}">복사</button></span></p>')
+                 f'<p class="hint">자유일정 있을 경우 영문 식당 리스트 왓츠앱 방에 공유해주세요. '
+                 f'<button type="button" class="cpl" data-copy="{HALAL_BASE}en/{_hq}" onclick="{HAL_ONCLICK}">English ver.</button></p>')
 page = f'''<title>{e(t["tripId"])} 투어지침서</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -152,6 +154,7 @@ h1.multi {{ font-size:clamp(20px,6vw,28px) }}
 .btn.wa {{ background:var(--green-bg); color:var(--green) }}
 .btn.pay {{ background:var(--red); color:var(--red-ink) }}
 .btn.sec {{ background:var(--card); color:var(--fg); border:1px solid var(--line) }}
+.cpl {{ font:700 12px var(--f-body); color:var(--green); background:var(--green-bg); border:0; border-radius:6px; padding:3px 9px; cursor:pointer; text-decoration:underline; text-underline-offset:2px }}
 .btn.halal {{ background:#F7F5F0; color:#174C3C; border:1.5px solid #C5A46D }}
 @media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) .btn.halal {{ background:#1C2823; color:#E6D3A8; border-color:#C5A46D }} }}
 :root[data-theme="dark"] .btn.halal {{ background:#1C2823; color:#E6D3A8; border-color:#C5A46D }}

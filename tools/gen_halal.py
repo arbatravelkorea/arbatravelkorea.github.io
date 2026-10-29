@@ -111,10 +111,15 @@ def contact(r):
         c.update({'담당자': g(r, '담당자'), '전화': g(r, '담당자 전화'), '문자': g(r, '문자') or 'O'})
     return c
 
+_ep = pathlib.Path(__file__).with_name('halal_en_exclude.txt')
+EN_EXCLUDE = {l.strip() for l in open(_ep, encoding='utf-8') if l.strip() and not l.startswith('#')} if _ep.exists() else set()
+
 def page(lang, preset):
     ko = lang == 'ko'
     cards = []
     for r in items:
+        if not ko and (g(r, '식당명') in EN_EXCLUDE or g(r, '영문 제외').upper() in ('O', 'Y', '제외')):
+            continue
         reg = g(r, '지역'); slug, reg_en = KO2.get(reg, ('', reg))
         name = g(r, '식당명') if ko else (g(r, 'Name') or g(r, '식당명'))
         sub = g(r, 'Name') if ko else g(r, '식당명')
