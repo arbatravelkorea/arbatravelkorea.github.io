@@ -38,7 +38,7 @@ header{background:var(--red);color:#fff;position:relative;overflow:hidden}
 header::after{content:"";position:absolute;right:-40px;top:-50px;width:150px;height:150px;border-radius:50%;background:var(--gold)}
 header .wrap{padding-block:20px 22px;position:relative;z-index:1}
 .brand{font-weight:800;letter-spacing:.3em;font-size:12px}
-h1{margin:12px 0 2px;font-size:clamp(23px,6.6vw,30px);line-height:1.2;font-weight:800;text-wrap:balance}
+h1{word-break:keep-all;margin:12px 0 2px;font-size:clamp(23px,6.6vw,30px);line-height:1.2;font-weight:800;text-wrap:balance}
 .sub{opacity:.92;font-size:13.5px}.sub a{color:#fff}
 .bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding-block:10px}
 input[type=search]{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
@@ -59,7 +59,10 @@ ol{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .note{margin:8px 0 0;font-size:13px;color:var(--red);font-weight:600}
 .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .act{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;text-align:center}
-.nav{background:#03C75A;color:#fff}.gmap{background:var(--card);color:var(--gmap);border:1.5px solid var(--gmap)}
+.nav{background:#03C75A;color:#fff}
+.ct{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}.who{flex:1 1 auto;font-size:14px;color:var(--muted)}.who b{color:var(--fg)}
+.cbtn{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 14px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none}
+.cbtn.call{background:var(--pray-bg);color:var(--pray)}.cbtn.sms{background:var(--soft);color:var(--fg);border:1px solid var(--line)}.gmap{background:var(--card);color:var(--gmap);border:1.5px solid var(--gmap)}
 .ph{display:block;width:calc(100% + 28px);margin:-14px -14px 12px;aspect-ratio:16/10;object-fit:cover;border-radius:14px 14px 0 0;background:var(--soft)}
 .empty{padding:30px 0;text-align:center;color:var(--muted)}
 footer{text-align:center;font-size:12px;color:var(--muted);padding-block:0 30px}
@@ -93,6 +96,19 @@ def note(r):
     if not v or re.fullmatch(r'[\d\-./ ]+', v): return ''
     return v
 
+# 담당자 연락처 (한국어 가이드용 페이지에만). 시트에 '담당자','담당자 전화' 칸이 생기면 시트 값이 우선
+CONTACTS = {}
+_cp = pathlib.Path(__file__).with_name('halal_contacts.csv')
+if _cp.exists():
+    for _c in csv.DictReader(open(_cp, encoding='utf-8-sig')):
+        CONTACTS[_c['식당명'].strip()] = _c
+
+def contact(r):
+    c = dict(CONTACTS.get(g(r, '식당명'), {}))
+    if g(r, '담당자 전화'):
+        c.update({'담당자': g(r, '담당자'), '전화': g(r, '담당자 전화'), '문자': g(r, '문자') or 'O'})
+    return c
+
 def page(lang, preset):
     ko = lang == 'ko'
     cards = []
@@ -105,22 +121,30 @@ def page(lang, preset):
         if not nv.startswith('http'): nv = ''
         tags = (f'<span class="badge">{"기도 가능" if ko else "Prayer available"}</span>' if p else '') + f'<span class="reg">{e(reg if ko else reg_en)}</span>'
         nt = (g(r, '메모') or note(r)) if ko else (g(r, '영문 메모') or NOTE_EN.get(note(r), ''))
+        c = contact(r) if ko else {}
+        if ko and c.get('추가메모'): nt = (nt + ' / ' if nt else '') + c['추가메모']
         note_html = f'<p class="note">※ {e(nt)}</p>' if nt else ''
+        ct = ''
+        if c.get('전화'):
+            num = re.sub(r'[^\d+]', '', c['전화'])
+            sms = (c.get('문자') or 'O').strip().upper() not in ('X', 'N', '불가', '없음')
+            ct = (f'<div class="ct"><span class="who">담당 <b>{e(c.get("담당자") or "")}</b></span>'
+                  f'<a class="cbtn call" href="tel:{num}">전화하기</a>' + (f'<a class="cbtn sms" href="sms:{num}">문자하기</a>' if sms else '') + '</div>')
         acts = (f'<a class="act nav" href="{e(nv)}" target="_blank" rel="noopener">{"네이버지도" if ko else "Naver Map"}</a>' if nv else '') + \
                f'<a class="act gmap" href="{e(gmap(r))}" target="_blank" rel="noopener">{"구글맵" if ko else "Google Maps"}</a>'
         s = ' '.join([g(r, '식당명'), g(r, 'Name'), reg, reg_en]).lower()
         ph = photo(r)
         img = f'<img class="ph" src="{e(ph)}" alt="{e(name)}" loading="lazy">' if ph else ''
         cards.append(f'<li class="card" data-r="{slug}" data-p="{1 if p else 0}" data-s="{e(s)}">{img}<div class="top"><h2 class="nm">{e(name)}<small>{e(sub)}</small></h2>'
-                     f'<div class="tags">{tags}</div></div>{note_html}<div class="acts"{"" if nv else " style=grid-template-columns:1fr"}>{acts}</div></li>')
+                     f'<div class="tags">{tags}</div></div>{note_html}{ct}<div class="acts"{"" if nv else " style=grid-template-columns:1fr"}>{acts}</div></li>')
     chips = f'<button type="button" class="chip" data-v="">{"전체" if ko else "All"}</button>' + ''.join(
         f'<button type="button" class="chip" data-v="{s}">{e(k if ko else en)}</button>' for k, s, en in REG) + \
         f'<button type="button" class="chip pray" id="pray">{"🕌 기도 가능" if ko else "🕌 Prayer available"}</button>'
     pre = dict((s, (k, en)) for k, s, en in REG).get(preset)
     if ko:
-        title = f'{pre[0]} 할랄 식당 리스트' if pre else '할랄 식당 리스트'
+        title = f'{pre[0]} 할랄 무슬림 프렌들리 식당 리스트' if pre else '할랄 무슬림 프렌들리 식당 리스트'
         desc = '서울·부산·제주 · 네이버지도·구글맵 바로 연결 · ARBA Travel Korea'
-        legend = '버젯 1인 평균 15,000원, 리스트 밖 식당은 회사 보고 후 방문. 고기 반찬이 나오는 곳은 미리 빼달라고 요청. 전화번호·영업시간은 지도 앱에서 확인.'
+        legend = '식사가 패키지에 포함되어 있을 경우 버젯 1인 평균 15,000원. 프라이빗 투어는 손님과 협의하여 식당 방문. 리스트 밖 식당은 회사 보고 후 방문.'
     else:
         title = f'Halal & Muslim Friendly Restaurants · {pre[1]}' if pre else 'Halal & Muslim Friendly Restaurants in Korea'
         desc = 'Seoul · Busan · Jeju · open in Naver Map or Google Maps · ARBA Travel Korea'
@@ -139,7 +163,7 @@ def page(lang, preset):
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
 <style>{CSS}</style></head><body data-reg="{preset}">
-<header><div class="wrap"><div class="brand">ARBA TRAVEL KOREA</div><h1>{"할랄 식당 리스트" if ko else "Halal &amp; Muslim Friendly Restaurants in Korea"}</h1><div class="sub">{"업데이트" if ko else "Updated"} {today}</div></div></header>
+<header><div class="wrap"><div class="brand">ARBA TRAVEL KOREA</div><h1>{"할랄 무슬림 프렌들리 식당 리스트" if ko else "Halal &amp; Muslim Friendly Restaurants in Korea"}</h1><div class="sub">{"업데이트" if ko else "Updated"} {today}</div></div></header>
 <div class="bar"><div class="wrap"><div class="chips" id="fr">{chips}</div></div></div>
 <main><div class="wrap"><p class="legend">{e(legend)}</p><p class="count" id="cnt" data-t="{"식당 #곳" if ko else "# restaurants"}"></p>
 <ol>{"".join(cards)}</ol><p class="empty" id="none" hidden>{"조건에 맞는 식당이 없습니다." if ko else "No restaurants match."}</p></div></main>
