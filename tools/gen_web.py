@@ -85,16 +85,18 @@ for _x in T:
     for _d in str(_x.get('dest', 'Seoul')).split('+'):
         _k = _d.strip().lower()
         if _k in HAL and _k not in _regs: _regs.append(_k)
+for _k in job.get('halal_extra', []):  # 손님 개별 일정 지역 (예: Mirza 부산 개별 → ["busan"])
+    if _k in HAL and _k not in _regs: _regs.append(_k)
 HAL_ONCLICK = ("var u=this.dataset.copy,b=this;function ok(){b.textContent='복사됨 ✓';setTimeout(function(){b.textContent='English ver.'},1800)}"
                "function fb(){var t=document.createElement('textarea');t.value=u;document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}t.remove();ok()}"
                "if(navigator.clipboard){navigator.clipboard.writeText(u).then(ok,fb)}else{fb()}")  # English ver. 버튼: 링크로 이동하지 않고 주소만 복사
 HALAL_BASE = 'https://arbatravelkorea.github.io/halal/'
-_hq = ('?r=' + ','.join(_regs)) if _regs else ''  # 일정에 있는 지역들이 미리 선택된 채로 열림 (여러 개 가능)
+_hq = ('-'.join(k for k in ('seoul', 'jeju', 'busan', 'outer') if k in _regs) + '/') if _regs else ''  # 지역 조합 주소 /halal/seoul-jeju/ : 그 지역들이 미리 선택되고 카톡·왓츠앱 카드에도 지역 표시
 halal_btn = ''
 if _regs:
     halal_btn = (f'<a class="btn halal" href="{HALAL_BASE}{_hq}" target="_blank" rel="noopener">🕌 할랄&amp;무슬림 프렌들리 식당 리스트</a>'
                  f'<p class="hint">자유일정 있을 경우 영문 식당 리스트 왓츠앱 방에 공유해주세요. '
-                 f'<button type="button" class="cpl" data-copy="{HALAL_BASE}en/{_hq}" onclick="{HAL_ONCLICK}">English ver.</button></p>')
+                 f'<button type="button" class="cpl" data-copy="{HALAL_BASE}{_hq}en/" onclick="{HAL_ONCLICK}">English ver.</button></p>')
 page = f'''<title>{e(t["tripId"])} 투어지침서</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
