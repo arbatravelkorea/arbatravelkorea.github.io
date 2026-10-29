@@ -11,6 +11,9 @@ import csv, sys, html, re, pathlib, datetime, json
 
 src, root = sys.argv[1], pathlib.Path(sys.argv[2])
 rows = list(csv.DictReader(open(src, encoding='utf-8-sig')))
+COLS = set(rows[0].keys()) if rows else set()
+HAS_H = '할랄구분' in COLS
+HAS_TEL = '대표전화' in COLS
 BASE = 'https://arbatravelkorea.github.io'
 REG = {'서울': ('seoul', 'Seoul · Gyeonggi · Gangwon', '서울·경기·강원'),
        '부산': ('busan', 'Busan', '부산'),
@@ -77,7 +80,7 @@ ol{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .meta{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:3px;font-size:14px}
 .meta b{display:inline-block;min-width:62px;font-size:12px;color:var(--muted);font-weight:700}
 .warn{margin:8px 0 0;font-size:13px;color:var(--red);font-weight:600}
-.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.acts.one{grid-template-columns:1fr}
 .act{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none}
 .call{background:var(--green-bg);color:var(--green)}.map{background:#03C75A;color:#fff}.act.off{opacity:.45;pointer-events:none;background:var(--soft);color:var(--muted)}
 details{margin-top:10px;font-size:13.5px;border-top:1px dashed var(--line);padding-top:8px}summary{cursor:pointer;font-weight:700;color:var(--muted)}
@@ -105,7 +108,7 @@ def page(code, items, lang):
         if a and a not in areas: areas.append(a)
     cards = []
     for r in items:
-        hc, hen, hko = HALAL.get(g(r, '할랄구분'), ('p', g(r, '할랄구분'), g(r, '할랄구분')))
+        hc, hen, hko = HALAL.get(g(r, '할랄구분'), ('', g(r, '할랄구분'), g(r, '할랄구분')))
         area = g(r, '구역') if ko else g(r, 'Area')
         name = g(r, '식당명') if ko else g(r, 'Name')
         sub = g(r, 'Name') if ko else g(r, '식당명')
@@ -118,13 +121,15 @@ def page(code, items, lang):
         pray_en = {'가능': 'Prayer space available', '불가': '', '식당과 협의': 'Ask restaurant for prayer space'}.get(pray, '')
         meta = []
         if ko:
-            meta += [('음식', cuisine), ('메뉴', menu), ('1인', price), ('영업', g(r, '영업시간')), ('기도', g(r, '기도(원문)') or pray), ('수용', g(r, '수용인원')), ('주소', g(r, '주소'))]
+            meta += [('음식', cuisine), ('메뉴', menu), ('1인', price), ('영업', g(r, '영업시간')), ('기도', g(r, '기도(원문)') or ('가능' if pray == '가능' else '')), ('수용', g(r, '수용인원')), ('주소', g(r, '주소'))]
         else:
             meta += [('Food', cuisine), ('Menu', menu), ('Price', price), ('Hours', hours_en(g(r, '영업시간'))), ('Prayer', pray_en)]
         meta_html = ''.join(f'<li><b>{e(k)}</b>{e(v)}</li>' for k, v in meta if v)
         warn = g(r, '확인필요')
         warn_html = f'<p class="warn">※ {e(warn)}</p>' if ko and warn else ''
-        if phone:
+        if not HAS_TEL:
+            call = ''
+        elif phone:
             call = f'<a class="act call" href="tel:{tel(phone) if ko else intl(phone)}">{"전화" if ko else "Call"} {e(phone.split("/")[0].strip() if ko else pretty_intl(phone))}</a>'
         else:
             call = f'<span class="act call off">{"전화번호 없음" if ko else "No phone"}</span>'
@@ -134,9 +139,9 @@ def page(code, items, lang):
             inner = ''.join(f'<p><b>{e(k)}</b><br>{linkify(v)}</p>' for k, v in [('담당자', g(r, '담당자 연락처')), ('주차·예약', g(r, '가이드 메모(주차·예약)'))] if v)
             if inner: det = f'<details><summary>가이드 메모 (담당자·주차·예약)</summary>{inner}</details>'
         s = ' '.join([name, sub, cuisine, menu, area, g(r, 'Cuisine'), g(r, 'Menu'), g(r, '음식'), g(r, '대표메뉴')]).lower()
-        cards.append(f'<li class="card" data-area="{e(area)}" data-h="{hc}" data-s="{e(s)}"><div class="top"><h2 class="nm">{e(name)}<small>{e(area)}{(" · " + e(sub)) if sub else ""}</small></h2>'
-                     f'<span class="badge b-{hc}">{e(hko if ko else hen)}</span></div><ul class="meta">{meta_html}</ul>{warn_html}<div class="acts">{call}{mapb}</div>{det}</li>')
-    used = [h for h in ('c', 'm', 'p') if any(HALAL.get(g(r, '할랄구분'), ('p',))[0] == h for r in items)]
+        cards.append(f'<li class="card" data-area="{e(area)}" data-h="{hc}" data-s="{e(s)}"><div class="top"><h2 class="nm">{e(name)}<small>{e(area)}{(" · " + e(sub)) if sub else ""}</small></h2>' +
+                     (f'<span class="badge b-{hc}">{e(hko if ko else hen)}</span>' if hc else '') + '</div>' + f'<ul class="meta">{meta_html}</ul>{warn_html}<div class="acts{"" if call else " one"}">{call}{mapb}</div>{det}</li>')
+    used = [h for h in ('c', 'm', 'p') if any(HALAL.get(g(r, '할랄구분'), ('',))[0] == h for r in items)]
     hl = {v[0]: (v[2] if ko else v[1]) for v in HALAL.values()}
     chips_a = f'<button type="button" class="chip" data-v="" aria-pressed="true">{"전체" if ko else "All areas"}</button>' + ''.join(f'<button type="button" class="chip" data-v="{e(a)}" aria-pressed="false">{e(a)}</button>' for a in areas)
     chips_h = f'<button type="button" class="chip" data-v="" aria-pressed="true">{"전체 구분" if ko else "All types"}</button>' + ''.join(f'<button type="button" class="chip" data-v="{h}" aria-pressed="false">{e(hl[h])}</button>' for h in used)
@@ -145,6 +150,9 @@ def page(code, items, lang):
     other = (f'<a href="en/">English version for guests</a>' if ko else f'<a href="../">한국어</a>')
     legend = ('할랄 인증 = 인증서 확인 / 무슬림 음식점 = 무슬림 운영·할랄 고기 사용(식당에 확인) / 돼지고기 없는 메뉴 = 해산물·채식 위주, 고기 반찬 빼달라고 요청. 버젯 1인 평균 15,000원, 리스트 밖 식당은 회사 보고 후 방문.'
               if ko else 'Halal certified = certificate checked · Halal / Muslim-friendly = Muslim-run or halal meat (please confirm with staff) · No pork = seafood or vegetarian dishes; ask to remove any meat side dishes. Information may change — call before you go. Naver Map works in English.')
+    if not used:
+        legend = ('버젯 1인 평균 15,000원, 리스트 밖 식당은 회사 보고 후 방문. 고기 반찬이 나오는 곳은 미리 빼달라고 요청. 전화번호·영업시간·길찾기는 네이버지도 버튼에서 확인.'
+                  if ko else 'Muslim-friendly restaurants selected by ARBA Travel Korea. Tap "Naver Map" for phone number, opening hours and directions (Naver Map works in English). Please confirm halal status with the staff.')
     og = f'{BASE}/img/og_halal_{slug}.png'
     url = f'{BASE}/halal/{slug}/' + ('' if ko else 'en/')
     return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -156,12 +164,12 @@ def page(code, items, lang):
 <style>{CSS}</style></head><body>
 <header><div class="wrap"><div class="brand">ARBA TRAVEL KOREA</div><h1>{e(title)}</h1><div class="sub">{other} · {"업데이트" if ko else "Updated"} {today}</div></div></header>
 <div class="bar"><div class="wrap"><input id="q" type="search" placeholder="{"식당·메뉴·지역 검색" if ko else "Search restaurant, food, area"}" aria-label="search">
-<div class="chips" id="fa">{chips_a}</div><div class="chips" id="fh">{chips_h}</div></div></div>
+<div class="chips" id="fa">{chips_a}</div>{('<div class="chips" id="fh">' + chips_h + '</div>') if used else ''}</div></div>
 <main><div class="wrap"><p class="legend">{e(legend)}</p><p class="count" id="cnt" data-t="{"식당 #곳" if ko else "# restaurants"}"></p>
 <ol>{"".join(cards)}</ol><p class="empty" id="none" hidden>{"조건에 맞는 식당이 없습니다." if ko else "No restaurants match."}</p></div></main>
 <footer>ARBA Travel Korea · korea@arbatravel.com</footer><script>{JS}</script></body></html>'''
 
-alive = [r for r in rows if g(r, '식당명') and not re.search(r'폐업|중단|삭제', g(r, '상태'))]
+alive = [r for r in rows if g(r, '식당명') and not any(re.search(r'폐업|중단|삭제', v or '') for v in r.values())]  # 어느 칸이든 '폐업'이면 제외
 for kr, code in REG.items():
     items = [r for r in alive if g(r, '지역') == kr]
     d = root / 'halal' / code[0]; (d / 'en').mkdir(parents=True, exist_ok=True)
