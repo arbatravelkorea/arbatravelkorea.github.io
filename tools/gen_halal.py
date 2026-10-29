@@ -19,6 +19,7 @@ NOTE_EN = {'1일전 예약한경우만 할랄로 준비 가능': 'Halal only if 
 KO2 = {k: (s, en) for k, s, en in REG}
 e = lambda s: html.escape(str(s or ''), quote=True)
 g = lambda r, k: (r.get(k) or '').strip()
+OGV = '20261030'  # 카드 이미지 바꾸면 올려서 카톡·왓츠앱 캐시 회피
 today = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=9)).strftime('%Y-%m-%d')
 
 alive = lambda rs: [r for r in rs if g(r, '식당명') and not any(re.search(r'폐업|중단|삭제', v or '') for v in r.values())]
@@ -147,11 +148,11 @@ def page(lang, preset):
         f'<button type="button" class="chip pray" id="pray">{"🕌 기도 가능" if ko else "🕌 Prayer available"}</button>'
     pre = dict((s, (k, en)) for k, s, en in REG).get(preset)
     if ko:
-        title = f'{pre[0]} 할랄&무슬림 프렌들리 식당 리스트' if pre else '할랄&무슬림 프렌들리 식당 리스트'
+        title = '할랄&무슬림 프렌들리 식당 리스트'
         desc = '서울·부산·제주 · 네이버지도·구글맵 바로 연결 · ARBA Travel Korea'
         legend = '식사가 패키지에 포함되어 있을 경우 버젯 1인 평균 15,000원. 프라이빗 투어는 손님과 협의하여 식당 방문. 리스트 밖 식당은 회사 보고 후 방문.'
     else:
-        title = f'Halal & Muslim Friendly Restaurants · {pre[1]}' if pre else 'Halal & Muslim Friendly Restaurants in Korea'
+        title = 'Halal & Muslim Friendly Restaurants in Korea'
         desc = 'Seoul · Busan · Jeju · open in Naver Map or Google Maps · ARBA Travel Korea'
         legend = 'Halal & Muslim friendly restaurants selected by ARBA. Tap a map button for phone number, opening hours and directions (Naver Map works best in Korea and supports English).'
     depth = '../' if preset else ''
@@ -159,7 +160,7 @@ def page(lang, preset):
         other = f'<a href="{"en/"}">English</a>'
     else:
         other = f'<a href="../">한국어</a>'
-    og = f'{BASE}/img/og_halal_{preset if preset in ("seoul", "busan", "jeju") else "seoul"}.png'
+    og = f'{BASE}/img/og_halal_{"ko" if ko else "en"}.png?v={OGV}'
     url = f'{BASE}/halal/' + (f'{preset}/' if preset else '') + ('' if ko else 'en/')
     return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{e(title)}</title><meta name="description" content="{e(desc)}">
