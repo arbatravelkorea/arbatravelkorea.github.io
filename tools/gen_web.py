@@ -166,16 +166,18 @@ h1.multi {{ font-size:clamp(20px,6vw,28px) }}
 .hint {{ font-size:12.5px; color:var(--muted); margin:6px 2px 0 }}
 ol {{ list-style:none; margin:0; padding:0 }}
 .notes {{ display:grid; gap:10px }}
-.note {{ display:flex; gap:12px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 14px 14px 12px }}
+.note {{ display:grid; grid-template-columns:24px minmax(0,1fr); column-gap:10px; row-gap:6px; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px }}
 .note.warn {{ background:var(--warn-bg) }}
-.num {{ flex:none; width:24px; height:24px; border-radius:50%; background:var(--red); color:var(--red-ink); font-weight:700; font-size:13px; display:grid; place-items:center; margin-top:1px }}
-.nb {{ min-width:0 }}
+.num {{ width:24px; height:24px; border-radius:50%; background:var(--red); color:var(--red-ink); font-weight:700; font-size:13px; display:grid; place-items:center; margin-top:1px }}
+.nb {{ display:contents }}
+.nb > .nh {{ grid-column:2; margin:0 !important }}
+.nb > :not(.nh) {{ grid-column:1 / -1 }}
 .nb p {{ margin:0; overflow-wrap:anywhere }}
 .nh {{ font-weight:700; margin-bottom:4px !important }}
 .ph {{ display:inline-flex; align-items:center; gap:4px; white-space:nowrap }}
 .ph a {{ color:var(--link); font-weight:700; text-decoration:underline; text-underline-offset:2px }}
 .ph a.sms, .cp {{ font:700 11px var(--f-body); color:var(--green); background:var(--green-bg); border:0; border-radius:6px; padding:2px 7px; text-decoration:none; cursor:pointer }}
-ul.bl {{ margin:2px 0 0; padding-left:18px; display:grid; gap:5px }}
+ul.bl {{ margin:0; padding-left:16px; display:grid; gap:5px }}
 ul.bl > li::marker {{ color:var(--red) }}
 ul.sub {{ margin:4px 0 2px; padding-left:16px; display:grid; gap:4px; list-style:'– '; color:var(--fg) }}
 .nh.cat {{ font-size:16px }}
