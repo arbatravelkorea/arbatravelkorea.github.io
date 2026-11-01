@@ -21,7 +21,7 @@ try:
 except ImportError:
     pass
 def short(tid): return '/'.join(tid.split('/')[2:]) if tid.count('/') >= 3 else tid
-PH = re.compile(r'(01[016789])[- ]?(\d{3,4})[- ]?(\d{4})')
+PH = re.compile(r'(?<![\d-])(01[016789]|02|0[3-6][1-5]|070)[- ]?(\d{3,4})[- ]?(\d{4})(?![\d-])')  # 휴대폰 + 지역번호(02·064 등) 유선 — 유선은 문자 버튼 없음 (2026-11-01)
 URL = re.compile(r'(https?://[^\s<]+)')
 
 def e(s): return html.escape(str(s), quote=True)
@@ -31,8 +31,9 @@ def rich(s):
     s = URL.sub(lambda m: f'<a class="ext" href="{m.group(1)}" target="_blank" rel="noopener">{m.group(1)}</a>', s)
     def ph(m):
         n = ''.join(m.groups())
+        sms = f'<a class="sms" href="sms:{n}">문자</a>' if m.group(1).startswith('01') else ''
         return (f'<span class="ph"><a href="tel:{n}">{m.group(0)}</a>'
-                f'<a class="sms" href="sms:{n}">문자</a>'
+                f'{sms}'
                 f'<button type="button" class="cp" data-copy="{m.group(0)}">복사</button></span>')
     s = PH.sub(ph, s)
     return s.replace('\n', '<br>')
