@@ -98,6 +98,18 @@ if _regs:
     halal_btn = (f'<a class="btn halal" href="{HALAL_BASE}{_hq}" target="_blank" rel="noopener">🕌 할랄&amp;무슬림 프렌들리 식당 리스트</a>'
                  f'<p class="hint">자유일정 있을 경우 영문 식당 리스트 왓츠앱 방에 공유해주세요. '
                  f'<button type="button" class="cpl" data-copy="{HALAL_BASE}{_hq}en/" onclick="{HAL_ONCLICK}">English ver.</button></p>')
+# 공항 피켓 버튼 (2026-11-01): PT(Trip ID가 숫자_이름) 지침서에 GitHub 피켓 페이지 링크. 페이지는 tools/make_sign.py가 만듦 (share.sh 6번째 인자)
+import os as _os, base64 as _b64
+_slug = _os.path.basename(_os.path.dirname(_os.path.abspath(out)))
+_want_sign = job.get('sign', bool(re.match(r'^\d{10,}_', t['tripId'])))
+sign_btn = ''
+if _want_sign:
+    try:
+        _lg = _b64.b64encode(open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), 'logo_red.png'), 'rb').read()).decode()
+        _ic = f'<span class="sgi"><img src="data:image/png;base64,{_lg}" alt=""></span>'
+    except OSError:
+        _ic = ''
+    sign_btn = (f'<a class="btn sign" href="https://arbatravelkorea.github.io/v/{_slug}/sign/" target="_blank" rel="noopener">{_ic}공항 피켓 보기/인쇄</a>')
 page = f'''<title>{e(t["tripId"])} 투어지침서</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -158,6 +170,9 @@ h1.multi {{ font-size:clamp(20px,6vw,28px) }}
 .btn.pay {{ background:var(--red); color:var(--red-ink) }}
 .btn.sec {{ background:var(--card); color:var(--fg); border:1px solid var(--line) }}
 .cpl {{ font:700 12px var(--f-body); color:var(--green); background:var(--green-bg); border:0; border-radius:6px; padding:3px 9px; cursor:pointer; text-decoration:underline; text-underline-offset:2px }}
+.btn.sign {{ background:#fff; color:#1C1716; border:1.5px solid #BE1E2D }}
+.btn .sgi {{ display:inline-flex; align-items:center; justify-content:center; width:34px; height:24px; background:#fff; border:1.5px solid #BE1E2D; border-radius:3px }}
+.btn .sgi img {{ height:9px; width:auto }}
 .btn.halal {{ background:#F7F5F0; color:#174C3C; border:1.5px solid #C5A46D }}
 @media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) .btn.halal {{ background:#1C2823; color:#E6D3A8; border-color:#C5A46D }} }}
 :root[data-theme="dark"] .btn.halal {{ background:#1C2823; color:#E6D3A8; border-color:#C5A46D }}
@@ -227,6 +242,7 @@ a:focus-visible, button:focus-visible {{ outline:3px solid var(--gold); outline-
     <p class="hint wa-hint">투어 시작 최소 이틀 전 입장해 필요한 정보 전달과 인사 나눠주세요.{" 두 방 모두 입장하고 공지는 두 방에 다 올려주세요." if multi else ""}</p>
     {namelist_btn}
     {sched_btn}
+    {sign_btn}
     {halal_btn}
   </section>
 
