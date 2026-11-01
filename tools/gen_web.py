@@ -7,6 +7,19 @@ import json, sys, re, html
 
 job = json.load(open(sys.argv[1])); web = json.load(open(sys.argv[2])); out = sys.argv[3]
 T = job['trips']; t = T[0]; multi = len(T) > 1
+# 손님 Title(존칭·칭호) 메모 (2026-11-01): 이름 앞에 Puan·Datin·Dato'·Dr. 등이 있으면 '투어 및 일정' 맨 앞(항공 연착 확인 다음)에 설명 + 'Title + 이름'으로 부르라는 항목 자동 추가
+try:
+    import os as _o0; sys.path.insert(0, _o0.path.dirname(_o0.path.abspath(__file__)))
+    from guest_title import title_note as _tn
+    _gn = job.get('guestName') or (t['tripId'] if re.match(r'^\d{10,}_', t['tripId']) else t.get('title', ''))
+    _note = _tn(_gn) if job.get('titleNote', True) else None
+    if _note:
+        for _sec in t.get('notes', []):
+            if _sec.get('title') == '투어 및 일정' and not any('손님 호칭' in json.dumps(x, ensure_ascii=False) for x in _sec['items']):
+                _it = _sec['items']; _k = 1 if _it and isinstance(_it[0], list) and '연착' in _it[0][0] else 0
+                _it.insert(_k, _note)
+except ImportError:
+    pass
 def short(tid): return '/'.join(tid.split('/')[2:]) if tid.count('/') >= 3 else tid
 PH = re.compile(r'(01[016789])[- ]?(\d{3,4})[- ]?(\d{4})')
 URL = re.compile(r'(https?://[^\s<]+)')

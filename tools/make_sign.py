@@ -2,7 +2,7 @@
 """공항 피켓(사인보드) 페이지 — A4 가로, 흰 바탕, ARBA 로고만 빨강, 손님 이름 검정.
 사용: python3 make_sign.py "<Trip ID 또는 손님 이름>" <슬러그> <repo 경로>
  → <repo>/v/<슬러그>/sign/index.html  (주소: https://arbatravelkorea.github.io/v/<슬러그>/sign/)
-이름 규칙: 'Trip ID 숫자_' 와 괄호 부분을 빼고, Bin/Binti/Bte/Bt 뒤는 생략, 대문자.
+이름 규칙(guest_title.py): 'Trip ID 숫자_'·괄호 부분 빼고, 이름 앞 Title(Puan·Datin·Dato'·Dr. 등)은 유지, Bin/Binti 뒤 생략, 대문자.
 GitHub에는 손님 이름·로고만 올라감 (명단·여권 정보 없음).
 """
 import base64, html, os, re, sys
@@ -10,11 +10,8 @@ import base64, html, os, re, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def sign_name(raw: str) -> str:
-    s = re.sub(r'^\d+_', '', raw.strip())
-    s = re.sub(r'\(.*?\)', '', s)
-    s = re.split(r'\s+(?:bin|binti|bte|bt)\s+', s, flags=re.I)[0]
-    return re.sub(r'\s+', ' ', s).strip().upper()
+sys.path.insert(0, HERE)
+from guest_title import sign_name  # Title(Puan·Datin·Dato' 등)은 앞에 유지, Bin/Binti 뒤 생략
 
 
 def build(name: str) -> str:
