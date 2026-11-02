@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>SEOUL STANDARD + BASIC — ARBA 미팅보드</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css">
+<style>
+@page { size: A4 landscape; margin: 0 }
+* { box-sizing: border-box }
+html, body { margin: 0; background: #E9E6E4; font-family: Pretendard, "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif }
+.bar { position: sticky; top: 0; z-index: 2; display: flex; gap: 10px; align-items: center; justify-content: space-between;
+  padding: 12px 16px; background: #fff; border-bottom: 1px solid #ddd }
+.bar p { margin: 0; font-size: 13px; color: #555; line-height: 1.4 }
+.bar button { flex: none; min-height: 44px; padding: 0 18px; border-radius: 10px; border: 1.5px solid #BE1E2D; background: #fff;
+  color: #111; font: 700 16px Pretendard, system-ui, sans-serif; cursor: pointer }
+.wrap { padding: 16px; overflow: hidden }
+.frame { margin: 0 auto; position: relative }
+.sheet { position: absolute; left: 0; top: 0; width: 1123px; height: 794px; background: #fff; transform-origin: 0 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,.15) }
+.logo { position: absolute; left: 50%; top: 60px; width: 605px; transform: translateX(-50%) }
+.body { position: absolute; left: 68px; right: 68px; top: 275px; bottom: 45px; display: flex; flex-direction: column;
+  align-items: center; justify-content: space-evenly; color: #000; font-weight: 800; white-space: nowrap; line-height: 1 }
+.bus { border: 2.6px solid #000; border-radius: 15px; padding: 14px 42px; font-size: 59px }
+@media print {
+  html, body { background: #fff }
+  .bar { display: none }
+  .wrap { padding: 0 }
+  .frame { width: 297mm !important; height: 210mm !important }
+  .sheet { transform: none !important; box-shadow: none; width: 297mm; height: 210mm }
+}
+</style></head>
+<body>
+<div class="bar"><p>A4 <b>가로</b>로 인쇄하세요.<br>컬러 인쇄면 로고만 빨강으로 나옵니다.</p>
+<button type="button" onclick="window.print()">인쇄하기</button></div>
+<div class="wrap"><div class="frame" id="frame"><div class="sheet" id="sheet">
+<img class="logo" src="data:image/png;base64,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" alt="ARBA TRAVEL">
+<div class="body"><div class="fit" data-cap="80">SEOUL STANDARD + BASIC</div><div class="fit" data-cap="112">GUIDE  STELLA</div></div>
+</div></div></div>
+<script>
+(function () {
+  var cv = document.createElement('canvas').getContext('2d'), W = 987;
+  function fit() {
+    document.querySelectorAll('.fit').forEach(function (el) {
+      cv.font = '800 100px Pretendard, "Noto Sans KR", sans-serif';
+      var w = cv.measureText(el.textContent).width;
+      el.style.fontSize = Math.floor(Math.min(W / w * 100, +el.dataset.cap)) + 'px';
+    });
+  }
+  function scale() {
+    var avail = Math.min(document.documentElement.clientWidth - 32, 1123), k = avail / 1123, f = document.getElementById('frame');
+    f.style.width = avail + 'px'; f.style.height = (794 * k) + 'px';
+    document.getElementById('sheet').style.transform = 'scale(' + k + ')';
+  }
+  fit(); scale();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  window.addEventListener('resize', scale);
+})();
+</script>
+</body></html>

@@ -115,7 +115,7 @@ if _regs:
 # 공항 피켓 버튼 (2026-11-01): PT(Trip ID가 숫자_이름) 지침서에 GitHub 피켓 페이지 링크. 페이지는 tools/make_sign.py가 만듦 (share.sh 6번째 인자)
 import os as _os, base64 as _b64
 _slug = _os.path.basename(_os.path.dirname(_os.path.abspath(out)))
-_want_sign = job.get('sign', bool(re.match(r'^\d{10,}_', t['tripId'])))
+_want_sign = job.get('sign', True)  # 2026-11-02: PT·JT 모두 (JT는 단체 미팅보드)
 sign_btn = ''
 if _want_sign:
     try:
