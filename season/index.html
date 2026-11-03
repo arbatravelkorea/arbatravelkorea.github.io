@@ -112,8 +112,7 @@ td.on.cur{background:var(--red)}
     return '<div class="spot"><div class="top"><h3><span class="kind">'+esc(EN?s.kind_en:s.kind)+'</span>'+esc(EN?s.name_en:s.name)+'</h3>'+
       '<span class="st '+st[0]+'">'+st[1]+'</span></div>'+(here?'<div class="inplan">'+T.inplan+'</div>':'')+
       '<div class="meta">'+esc(zn)+' · '+esc(EN?s.detour_en:s.detour)+' · '+(s.dates?'':T.usual+' ')+win+'</div>'+
-      (EN?'':'<p class="tip">'+esc(s.tip)+'</p>')+
-      '<div class="en"><span>'+esc(s.en)+'</span><button type="button" data-t="'+esc(s.en)+'">'+T.copy+'</button></div>'+
+      '<p class="tip">'+esc(EN?s.en:s.tip)+'</p>'+
       '<div class="links"><a class="live" target="_blank" rel="noopener" href="'+blog+'">'+T.blog+'</a>'+
       '<a target="_blank" rel="noopener" href="https://www.instagram.com/explore/tags/'+encodeURIComponent(s.ig)+'/">Instagram #'+esc(s.ig)+'</a>'+
       '<a target="_blank" rel="noopener" href="https://map.naver.com/p/search/'+q+'">'+T.map+'</a></div></div>';

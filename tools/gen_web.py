@@ -23,11 +23,10 @@ except ImportError:
 # 시즌 추천 방문 지시 (2026-11-03 사용자 지시): season 버튼이 있으면 '투어 및 일정'에 "일정 중 한 곳 방문" 메모 자동 추가
 _IS_JT = any('/JT/' in x.get('tripId', '') for x in T)
 if job.get('season') and job.get('seasonNote', True):
-    _sn = ("Seasonal picks: check the '🌸 Seasonal picks' button above and visit at least one of the suggested places during the tour. "
-           "It is not in the guests' itinerary, but our tours have no shopping stops, so there is time. Check current photos with 'Latest blog posts' first, "
-           "and share the place's English line in the WhatsApp group.") if job.get('lang') == 'en' else (
-           "시즌 추천: 위 '🌸 시즌 추천 · 지금 가볼 만한 곳' 버튼에서 투어 날짜·동선에 맞는 곳을 확인하고, 일정 중 한 곳은 꼭 방문해주세요. "
-           "손님 일정표에는 없는 추가 방문이지만 쇼핑 없는 일정이라 충분히 넣을 수 있습니다. 가기 전 '최근 1주 블로그'로 지금 상태를 확인하고, 장소의 영어 한 줄을 왓츠앱방에 공유해주세요."
+    _sn = ("Seasonal picks: check the '🌸 Seasonal picks' button above and, if time allows, visit one of the suggested places during the tour. "
+           "It is not in the guests' itinerary, but our tours have no shopping stops, so there is usually time. Check current photos with 'Latest blog posts' first.") if job.get('lang') == 'en' else (
+           "시즌 추천: 위 '🌸 시즌 추천 · 지금 가볼 만한 곳' 버튼에서 투어 날짜·동선에 맞는 곳을 확인하고, 시간이 되면 일정 중 한 곳 방문해주세요. "
+           "손님 일정표에는 없는 추가 방문이지만 쇼핑 없는 일정이라 대부분 넣을 수 있습니다. 가기 전 '최근 1주 블로그'로 지금 상태를 확인해주세요."
            + ("" if _IS_JT else " (PT는 하루 10시간 기준 안에서)"))
     for _sec in t.get('notes', []):
         if _sec.get('title') in ('투어 및 일정', 'Tour & itinerary') and not any('시즌 추천' in json.dumps(x, ensure_ascii=False) or 'Seasonal picks:' in json.dumps(x) for x in _sec['items']):
