@@ -20,6 +20,25 @@ try:
                 _it.insert(_k, _note)
 except ImportError:
     pass
+# 시즌 추천 방문 지시 (2026-11-03 사용자 지시): season 버튼이 있으면 '투어 및 일정'에 "일정 중 한 곳 방문" 메모 자동 추가
+_IS_JT = any('/JT/' in x.get('tripId', '') for x in T)
+if job.get('season') and job.get('seasonNote', True):
+    _sn = ("Seasonal picks: check the '🌸 Seasonal picks' button above and visit at least one of the suggested places during the tour. "
+           "It is not in the guests' itinerary, but our tours have no shopping stops, so there is time. Check current photos with 'Latest blog posts' first, "
+           "and share the place's English line in the WhatsApp group.") if job.get('lang') == 'en' else (
+           "시즌 추천: 위 '🌸 시즌 추천 · 지금 가볼 만한 곳' 버튼에서 투어 날짜·동선에 맞는 곳을 확인하고, 일정 중 한 곳은 꼭 방문해주세요. "
+           "손님 일정표에는 없는 추가 방문이지만 쇼핑 없는 일정이라 충분히 넣을 수 있습니다. 가기 전 '최근 1주 블로그'로 지금 상태를 확인하고, 장소의 영어 한 줄을 왓츠앱방에 공유해주세요."
+           + ("" if _IS_JT else " (PT는 하루 10시간 기준 안에서)"))
+    for _sec in t.get('notes', []):
+        if _sec.get('title') in ('투어 및 일정', 'Tour & itinerary') and not any('시즌 추천' in json.dumps(x, ensure_ascii=False) or 'Seasonal picks:' in json.dumps(x) for x in _sec['items']):
+            _it = _sec['items']; _k = 0
+            while _k < len(_it) and (('연착' in json.dumps(_it[_k], ensure_ascii=False)) or ('delay' in json.dumps(_it[_k])) or ('손님 호칭' in json.dumps(_it[_k], ensure_ascii=False))): _k += 1
+            _it.insert(_k, _sn)
+# ⛔ JT(단체)는 10시간 기준·초과요금 없음 (2026-11-03 사용자 지시) → 메모에 들어가 있으면 경고
+if _IS_JT:
+    _all = json.dumps(t.get('notes', []), ensure_ascii=False)
+    for _w in ('10시간', '초과요금', '초과 요금', '1시간당', '10 hours', 'extra hour', 'overtime'):
+        if _w in _all: print(f'⚠️ JT 지침서에 "{_w}" 문구가 있습니다 — 단체는 10시간 기준·초과요금 없음. 빼주세요.', file=sys.stderr)
 def short(tid): return '/'.join(tid.split('/')[2:]) if tid.count('/') >= 3 else tid
 PH = re.compile(r'(?<![\d-])(01[016789]|02|0[3-6][1-5]|070)[- ]?(\d{3,4})[- ]?(\d{4})(?![\d-])')  # 휴대폰 + 지역번호(02·064 등) 유선 — 유선은 문자 버튼 없음 (2026-11-01)
 URL = re.compile(r'(https?://[^\s<]+)')
