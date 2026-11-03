@@ -114,7 +114,7 @@ if _regs:
                  f'<button type="button" class="cpl" data-copy="{HALAL_BASE}{_hq}en/" onclick="{HAL_ONCLICK}">English ver.</button></p>')
 # 공항 피켓 버튼 (2026-11-01): PT(Trip ID가 숫자_이름) 지침서에 GitHub 피켓 페이지 링크. 페이지는 tools/make_sign.py가 만듦 (share.sh 6번째 인자)
 import os as _os, base64 as _b64
-_slug = _os.path.basename(_os.path.dirname(_os.path.abspath(out)))
+_slug = job.get('signSlug') or _os.path.basename(_os.path.dirname(_os.path.abspath(out)))
 _want_sign = job.get('sign', True)  # 2026-11-02: PT·JT 모두 (JT는 단체 미팅보드)
 sign_btn = ''
 if _want_sign:
@@ -124,6 +124,18 @@ if _want_sign:
     except OSError:
         _ic = ''
     sign_btn = (f'<a class="btn sign" href="https://arbatravelkorea.github.io/v/{_slug}/sign/" target="_blank" rel="noopener">{_ic}공항 피켓 보기/인쇄</a>')
+# 시즌 추천 버튼 (2026-11-03): job.season = {"r":"SEL|JJU","d":"YYYY-MM-DD(투어 첫날)","p":"1일차 장소,장소|2일차|...|공항 샌딩 HH:MM"} → GitHub season 페이지
+import urllib.parse as _up
+LANG = job.get('lang', 'ko')
+season_btn = ''
+_sea = job.get('season')
+if _sea and _sea.get('d') and _sea.get('p'):
+    _sq = {'r': _sea.get('r', 'SEL'), 'd': _sea['d'], 'p': _sea['p'], 't': ' + '.join(x['tripId'] for x in T)}
+    if LANG == 'en': _sq['lang'] = 'en'
+    season_btn = (f'<a class="btn season" href="https://arbatravelkorea.github.io/season/?{e(_up.urlencode(_sq))}" target="_blank" rel="noopener">'
+                  '🌸 시즌 추천 · 지금 가볼 만한 곳</a>')
+# 한/영 전환 링크 (job.langAlt = 다른 언어 지침서 주소)
+lang_alt = (f'<a class="langsw" href="{e(job["langAlt"])}">{"한국어" if LANG == "en" else "English"}</a>') if job.get('langAlt') else ''
 page = f'''<title>{e(t["tripId"])} 투어지침서</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -187,6 +199,10 @@ h1.multi {{ font-size:clamp(20px,6vw,28px) }}
 .btn.sign {{ background:#fff; color:#1C1716; border:1.5px solid #BE1E2D }}
 .btn .sgi {{ display:inline-flex; align-items:center; justify-content:center; width:34px; height:24px; background:#fff; border:1.5px solid #BE1E2D; border-radius:3px }}
 .btn .sgi img {{ height:9px; width:auto }}
+.btn.season {{ background:#FFF6F7; color:#8A1D2A; border:1.5px solid #E8A0A8 }}
+:root[data-theme="dark"] .btn.season {{ background:#2E1B1E; color:#FFC2C8; border-color:#9B4A54 }}
+@media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) .btn.season {{ background:#2E1B1E; color:#FFC2C8; border-color:#9B4A54 }} }}
+.langsw {{ float:right; font-size:12px; letter-spacing:.04em; font-weight:800; color:#fff; border:1.5px solid rgba(255,255,255,.75); border-radius:8px; padding:3px 10px; text-decoration:none; position:relative; z-index:2 }}
 .btn.halal {{ background:#F7F5F0; color:#174C3C; border:1.5px solid #C5A46D }}
 @media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) .btn.halal {{ background:#1C2823; color:#E6D3A8; border-color:#C5A46D }} }}
 :root[data-theme="dark"] .btn.halal {{ background:#1C2823; color:#E6D3A8; border-color:#C5A46D }}
@@ -231,7 +247,7 @@ a:focus-visible, button:focus-visible {{ outline:3px solid var(--gold); outline-
 </style>
 
 <header><div class="wrap">
-  <div class="brand">ARBA TRAVEL KOREA</div>
+  <div class="brand">ARBA TRAVEL KOREA{lang_alt}</div>
   <div class="kicker">TOUR VOUCHER · 가이드용</div>
   <h1{' class="multi"' if multi else ''}>{"<br>".join(e(x["tripId"]) for x in T)}</h1>
   <div class="sub">{e(" + ".join(x.get("title","") for x in T) if multi else t.get("title",""))} · {e(t["arrival"])} – {e(t["departure"])}{" · 합류 투어" if multi else ""}</div>
@@ -256,6 +272,7 @@ a:focus-visible, button:focus-visible {{ outline:3px solid var(--gold); outline-
     <p class="hint wa-hint">투어 시작 최소 이틀 전 입장해 필요한 정보 전달과 인사 나눠주세요.{" 두 방 모두 입장하고 공지는 두 방에 다 올려주세요." if multi else ""}</p>
     {namelist_btn}
     {sched_btn}
+    {season_btn}
     {sign_btn}
     {halal_btn}
   </section>
@@ -286,7 +303,43 @@ document.addEventListener('click', async ev => {{
 }});
 </script>
 '''
+EN_LABELS = [
+    ('🌸 시즌 추천 · 지금 가볼 만한 곳', '🌸 Seasonal picks on our route'),
+    ('명단(룸리스트) 보기', 'View name list (rooming list)'),
+    ('명단은 아직 없습니다. 받는 대로 따로 전달드리겠습니다.', 'Name list not received yet — we will send it separately.'),
+    ('🕌 할랄&amp;무슬림 프렌들리 식당 리스트', '🕌 Halal &amp; Muslim-friendly restaurant list'),
+    ('자유일정 있을 경우 영문 식당 리스트 왓츠앱 방에 공유해주세요. ', 'On free days, share the English restaurant list in the WhatsApp group. '),
+    ('공항 피켓 보기/인쇄', 'Airport sign — view / print'),
+    ('WhatsApp 단톡방 입장하기', 'Join the WhatsApp group'),
+    ('왓츠앱 단톡방은 아직 만들어지지 않았습니다. 만들어지는 대로 링크를 따로 보내드리겠습니다.', 'WhatsApp group not created yet — the link will follow.'),
+    ('투어 시작 최소 이틀 전 입장해 필요한 정보 전달과 인사 나눠주세요.', 'Join at least 2 days before the tour to greet guests and share information.'),
+    (' 두 방 모두 입장하고 공지는 두 방에 다 올려주세요.', ' Join both groups and post notices in both.'),
+    ('TOUR VOUCHER · 가이드용', 'TOUR VOUCHER · FOR GUIDE'),
+    (' · 합류 투어', ' · Combined tour'),
+    ('합류 인원 합계', 'Combined total'),
+    ('<span>입국</span>', '<span>ARRIVAL</span>'), ('<span>출국</span>', '<span>DEPARTURE</span>'),
+    ('<span>도시</span>', '<span>CITY</span>'), ('<span>예약명</span>', '<span>BOOKING</span>'),
+    ('<h2>항공</h2>', '<h2>FLIGHTS</h2>'), ('PNR 없음', 'No PNR'),
+    ('<h2>일정</h2>', '<h2>ITINERARY</h2>'),
+    ('<h2>가이드님 확인사항</h2>', '<h2>NOTES FOR THE GUIDE</h2>'),
+    ('<h2>투어 종료 후 정산</h2>', '<h2>SETTLEMENT AFTER THE TOUR</h2>'),
+    (' 정산링크</a>', ' settlement link</a>'),
+    ('전화번호를 눌러도 전화가 안 열리면 [복사]를 눌러 붙여넣어 주세요.', 'If tapping a phone number does not dial, tap [Copy] and paste it.'),
+    (' 가이드님</b>', '</b>'),
+    ("'일정표 보기' : '일정표 닫기'", "'View itinerary' : 'Hide itinerary'"),
+    ('>일정표 보기<', '>View itinerary<'),
+    ('alt="일정표 ', 'alt="Itinerary page '),
+    ("b.textContent = '복사됨'", "b.textContent = 'Copied'"), ("b.textContent = '선택됨'", "b.textContent = 'Selected'"), ("b.textContent = '복사'", "b.textContent = 'Copy'"),
+    ('>복사</button>', '>Copy</button>'), ('>문자</a>', '>SMS</a>'),
+    ('명</b></p>', ' pax</b></p>'),
+    (' 투어지침서</title>', ' Tour Voucher</title>'),
+    ('· 발행 ', '· Issued '),
+    ('쪽" loading', '" loading'), ('복사됨 ✓', 'Copied ✓'),
+]
+if LANG == 'en':
+    for _k, _v in EN_LABELS:
+        page = page.replace(_k, _v)
 # 허브 아티팩트 안의 하위 페이지로 게시되므로 문서 골격을 직접 붙인다
-page = '<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' + page
+page = f'<!doctype html><html lang="{LANG}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' + page
 open(out, 'w').write(page)
 print(out, len(page))

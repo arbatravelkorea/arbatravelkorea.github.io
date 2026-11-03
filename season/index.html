@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>시즌 추천 — ARBA 투어지침서</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--red:#BE1E2D;--fg:#1C1716;--mut:#6B6360;--line:#E7E1DE;--bg:#FAF7F5;--card:#fff;--green:#1F7A4D;--amber:#A65F00}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:Pretendard,"Noto Sans KR",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:680px;margin:0 auto;padding:16px 16px 48px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+header .dot{width:10px;height:10px;border-radius:50%;background:var(--red);flex:none}
+header h1{font-size:20px;margin:0;font-weight:800;letter-spacing:-.01em;flex:1}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+.lang a{font-size:12.5px;font-weight:800;padding:6px 10px;text-decoration:none;color:var(--mut);background:#fff}
+.lang a.on{background:var(--red);color:#fff}
+.sub{color:var(--mut);font-size:14px;margin:0 0 14px;line-height:1.5}
+.rule{background:#fff;border:1px solid var(--line);border-left:4px solid var(--red);border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.55;color:#3b3533;margin-bottom:18px}
+.day{margin:22px 0 10px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.day h2{font-size:16px;margin:0;font-weight:800}
+.day .route{font-size:13px;color:var(--mut)}
+.today{font-size:11.5px;font-weight:800;color:#fff;background:var(--red);border-radius:6px;padding:2px 7px}
+.none{font-size:13.5px;color:var(--mut);background:#fff;border:1px dashed var(--line);border-radius:10px;padding:10px 12px}
+.spot{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin:8px 0}
+.top{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.spot h3{margin:0;font-size:15.5px;font-weight:800;line-height:1.35}
+.kind{display:inline-block;font-size:11.5px;font-weight:700;color:var(--red);border:1px solid #f0c9cd;background:#fff6f7;border-radius:6px;padding:1px 6px;margin-right:4px;vertical-align:1px}
+.st{flex:none;font-size:12px;font-weight:800;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.st.peak{background:#E7F5EE;color:var(--green)}
+.st.early{background:#FFF4E0;color:var(--amber)}
+.st.late{background:#F1EEEC;color:#5d5653}
+.inplan{font-size:12.5px;font-weight:800;color:var(--green);margin-top:4px}
+.meta{font-size:12.5px;color:var(--mut);margin:5px 0 7px}
+.tip{font-size:14px;line-height:1.55;margin:0 0 8px}
+.en{font-size:13px;line-height:1.5;background:#F6F3F1;border-radius:8px;padding:8px 10px;color:#3b3533;display:flex;gap:8px;align-items:flex-start}
+.en span{flex:1}
+.en button{flex:none;border:1px solid var(--line);background:#fff;border-radius:7px;font:700 12px Pretendard,sans-serif;padding:5px 8px;cursor:pointer;color:var(--fg)}
+.links{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.links a{font-size:12.5px;font-weight:700;text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:#fff}
+.links a.live{border-color:var(--red);color:var(--red)}
+details{margin-top:28px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+summary{font-weight:800;font-size:14.5px;cursor:pointer}
+.calwrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+th,td{border-bottom:1px solid #f0ebe8;padding:5px 2px;text-align:center}
+td:first-child,th:first-child{text-align:left;padding-right:6px;min-width:120px}
+td.on{background:#fbe3e5}
+td.on.cur{background:var(--red)}
+.foot{font-size:12px;color:var(--mut);margin-top:18px;line-height:1.6}
+</style></head>
+<body><div class="wrap">
+<header><span class="dot"></span><h1 id="h1"></h1><span class="lang"><a id="lk" href="#">한국어</a><a id="le" href="#">EN</a></span></header>
+<p class="sub" id="sub"></p>
+<div class="rule" id="rule"></div>
+<div id="days"></div>
+<details id="cal"><summary id="calsum"></summary><div class="calwrap" id="caltbl"></div></details>
+<p class="foot" id="foot"></p>
+</div>
+<script src="spots.js"></script>
+<script>
+(function(){
+  var P=new URLSearchParams(location.search);
+  var EN=(P.get('lang')||'').toLowerCase()==='en';
+  var R=(P.get('r')||'SEL').toUpperCase()==='JJU'?'JJU':'SEL';
+  var Z=window.ZONES[R], S=window.SPOTS.filter(function(s){return s.r===R});
+  var T=EN?{
+    h1:{SEL:'Seoul — Seasonal Picks',JJU:'Jeju — Seasonal Picks'},
+    rule:'Only places <b>on our route</b> and <b>actually in season on the tour dates</b>. Bloom dates shift 1–2 weeks every year, so guides check <b>"Latest blog posts"</b> for current photos before going. No shopping stops on our tours, so these fill spare time.',
+    st:['Just starting','In season','Ending'], inplan:'Already in today\'s itinerary — in season now, allow extra time here',
+    free:'Free day — suggest these to guests (no guide).', freeNone:'Free day — everything in season is already covered on guided days.',
+    early:'Departure day — straight to the airport (night flights show spots on the airport road).', none:'Nothing in season near today\'s route. Follow the itinerary.',
+    usual:'usually', blog:'Latest blog posts (1 week)', map:'Map', copy:'Copy', copied:'Copied', today:'Today',
+    nowSub:'In season today', nowNone:'Nothing in season right now.', cal:'Full seasonal calendar', foot:'ARBA Travel Korea · Tell the Korea office to add or change places.', unknown:'location TBC',
+    wd:['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+  }:{
+    h1:{SEL:'서울 시즌 추천',JJU:'제주 시즌 추천'},
+    rule:'<b>우리 동선 안에서만</b> 추천합니다. 그날 일정 근처에서 <b>투어 날짜에 실제로 볼 수 있는 곳</b>만 보여줘요. 개화는 해마다 1~2주 차이가 나니, 가기 전 <b>"최근 1주 블로그"</b> 버튼으로 지금 사진을 꼭 확인하고 손님께 안내해주세요. 쇼핑 없는 일정이라 시간이 남을 때 넣으면 됩니다.',
+    st:['막 시작','제철','끝물'], inplan:'오늘 일정에 있는 곳 — 제철이니 꼭 시간 넉넉히 보여주세요',
+    free:'자유일정 날이라 손님이 가볼 만한 곳을 안내해주세요 (가이드 동행 없음).', freeNone:'자유일정 날 — 지금 제철인 곳은 가이드 일정에서 이미 보여드려요.',
+    early:'출국일이라 추가 방문 없이 공항으로 이동합니다 (밤 비행기면 공항 가는 길 추천이 나옵니다).', none:'이날 동선 근처에 제철인 곳이 없어요. 일정대로 진행하시면 됩니다.',
+    usual:'보통', blog:'최근 1주 블로그', map:'지도', copy:'복사', copied:'복사됨', today:'오늘',
+    nowSub:'오늘 기준 제철인 곳', nowNone:'지금 제철인 곳이 없어요.', cal:'계절 달력 전체 보기', foot:'ARBA Travel Korea · 장소 추가·수정은 회사로 알려주세요.', unknown:'위치 확인 필요',
+    wd:['일','월','화','수','목','금','토']
+  };
+  document.documentElement.lang=EN?'en':'ko';
+  function link(l){var q=new URLSearchParams(location.search); if(l) q.set('lang','en'); else q.delete('lang'); return '?'+q.toString();}
+  var lk=document.getElementById('lk'), le=document.getElementById('le');
+  lk.href=link(false); le.href=link(true); (EN?le:lk).className='on';
+  function md(s){var a=s.split('-');return (+a[0])*100+(+a[1]);}
+  function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+  function doy(m){var a=new Date(2001,Math.floor(m/100)-1,m%100);return Math.round((a-new Date(2001,0,1))/864e5);}
+  function zl(s){return [].concat(s.zone||[]);}
+  // 날짜가 시즌 안이면 0~1 위치, 아니면 -1 (연말→연초 넘어가는 기간도 처리)
+  function pos(spot,date){
+    var x=doy((date.getMonth()+1)*100+date.getDate());
+    for(var i=0;i<spot.win.length;i++){
+      var a=doy(md(spot.win[i][0])),b=doy(md(spot.win[i][1])),len=(b-a+365)%365||365,off=(x-a+365)%365;
+      if(off<=len) return off/len;
+    }
+    return -1;
+  }
+  function status(f){return f<0.2?['early',T.st[0]]:f>0.8?['late',T.st[2]]:['peak',T.st[1]];}
+  function zonesOf(t){var z=[];Object.keys(Z).forEach(function(k){if(Z[k].kw.some(function(w){return t.indexOf(w)>=0}))z.push(k)});return z;}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]});}
+  function card(s,f,here){
+    var st=status(f), q=encodeURIComponent(s.q), z=zl(s)[0];
+    var blog='https://search.naver.com/search.naver?ssc=tab.blog.all&sm=tab_opt&nso=so%3Add%2Cp%3A1w&query='+encodeURIComponent(s.ig);
+    var zn=Z[z]?(EN?Z[z].en:Z[z].name):T.unknown;
+    var win=s.win.map(function(w){return w[0].replace('-','/')+'~'+w[1].replace('-','/')}).join(', ');
+    return '<div class="spot"><div class="top"><h3><span class="kind">'+esc(EN?s.kind_en:s.kind)+'</span>'+esc(EN?s.name_en:s.name)+'</h3>'+
+      '<span class="st '+st[0]+'">'+st[1]+'</span></div>'+(here?'<div class="inplan">'+T.inplan+'</div>':'')+
+      '<div class="meta">'+esc(zn)+' · '+esc(EN?s.detour_en:s.detour)+' · '+T.usual+' '+win+'</div>'+
+      (EN?'':'<p class="tip">'+esc(s.tip)+'</p>')+
+      '<div class="en"><span>'+esc(s.en)+'</span><button type="button" data-t="'+esc(s.en)+'">'+T.copy+'</button></div>'+
+      '<div class="links"><a class="live" target="_blank" rel="noopener" href="'+blog+'">'+T.blog+'</a>'+
+      '<a target="_blank" rel="noopener" href="https://www.instagram.com/explore/tags/'+encodeURIComponent(s.ig)+'/">Instagram #'+esc(s.ig)+'</a>'+
+      '<a target="_blank" rel="noopener" href="https://map.naver.com/p/search/'+q+'">'+T.map+'</a></div></div>';
+  }
+  function dlab(d){return (d.getMonth()+1)+'/'+d.getDate()+'('+T.wd[d.getDay()]+')';}
+  var start=P.get('d'), plan=(P.get('p')||'').split('|').filter(function(x){return x!==''});
+  var trip=P.get('t')||'', today=ymd(new Date());
+  document.title=T.h1[R]+' — ARBA';
+  document.getElementById('h1').textContent=T.h1[R];
+  document.getElementById('rule').innerHTML=T.rule;
+  document.getElementById('calsum').textContent=T.cal;
+  document.getElementById('foot').textContent=T.foot;
+  var out='';
+  if(start&&plan.length){
+    var d0=new Date(start+'T00:00:00'), last=new Date(d0); last.setDate(d0.getDate()+plan.length-1);
+    document.getElementById('sub').textContent=(trip?trip+' · ':'')+dlab(d0)+' ~ '+dlab(last);
+    var days=plan.map(function(txt,i){
+      var d=new Date(d0); d.setDate(d0.getDate()+i);
+      var free=/자유|free/i.test(txt), zs=zonesOf(txt), hits=[];
+      // 출국일: 출발 시각이 6~18시면 추가 방문 없음 (예: "공항 샌딩 11:05"), 0~6시는 전날 밤 비행기
+      var dep=/샌딩|출국|출발|departure/i.test(txt), tm=txt.match(/(\d{1,2}):(\d{2})/), early=dep&&(!tm||(+tm[1]>=6&&+tm[1]<18));
+      var FAR={nami:1,everland:1,airport:1}; // 자유일정: 손님끼리 가기 먼 곳은 빼기 (서울)
+      if(!early) S.forEach(function(s){var f=pos(s,d); if(f<0) return; var zz=zl(s);
+        var ok=free? zz.some(function(z){return !(R==='SEL'&&FAR[z])}) : zz.some(function(z){return zs.indexOf(z)>=0});
+        if(ok) hits.push([s,f]);});
+      return {d:d,txt:txt,free:free,early:early,hits:hits,show:[]};
+    });
+    // 한 장소는 한 번만: 이미 일정에 있는 날 > 첫 번째 가이드 동행일 > 자유일정
+    S.forEach(function(s){
+      var key=s.q.split(' ')[0], best=null;
+      days.forEach(function(dy){var h=dy.hits.filter(function(x){return x[0]===s})[0]; if(!h) return;
+        var here=dy.txt.indexOf(key)>=0||dy.txt.indexOf(s.name_en.split(' ')[0])>=0, score=here?0:dy.free?2:1;
+        if(!best||score<best.score) best={dy:dy,f:h[1],score:score,here:here};});
+      if(best) best.dy.show.push([s,best.f,best.here]);
+    });
+    days.forEach(function(dy){
+      var hits=dy.show; hits.sort(function(a,b){return (b[2]-a[2])||(Math.abs(a[1]-.5)-Math.abs(b[1]-.5))});
+      out+='<div class="day"><h2>'+dlab(dy.d)+'</h2>'+(ymd(dy.d)===today?'<span class="today">'+T.today+'</span>':'')+
+        '<span class="route">'+esc(dy.txt.split(',').join(' · '))+'</span></div>';
+      if(dy.free&&hits.length) out+='<div class="none" style="border-style:solid;margin-bottom:6px">'+T.free+'</div>';
+      out+=hits.length?hits.map(function(h){return card(h[0],h[1],h[2])}).join(''):'<div class="none">'+(dy.free?T.freeNone:dy.early?T.early:T.none)+'</div>';
+    });
+  } else {
+    document.getElementById('sub').textContent=T.nowSub+' ('+today.slice(5).replace('-','/')+')';
+    var now=new Date(), hits=[];
+    S.forEach(function(s){var f=pos(s,now); if(f>=0) hits.push([s,f]);});
+    out=hits.length?hits.map(function(h){return card(h[0],h[1])}).join(''):'<div class="none">'+T.nowNone+'</div>';
+    document.getElementById('cal').open=true;
+  }
+  document.getElementById('days').innerHTML=out;
+  // 계절 달력
+  var cm=new Date().getMonth(), th='<tr><th></th>'; for(var m=1;m<=12;m++) th+='<th>'+m+'</th>'; th+='</tr>';
+  var rows=S.map(function(s){var r='<tr><td>'+esc(EN?s.name_en:s.name)+'</td>';for(var m=1;m<=12;m++){var on=false;for(var k=1;k<=28;k+=9){if(pos(s,new Date(2026,m-1,k))>=0)on=true;}r+='<td class="'+(on?'on'+(m-1===cm?' cur':''):'')+'"></td>';}return r+'</tr>';}).join('');
+  document.getElementById('caltbl').innerHTML='<table>'+th+rows+'</table>';
+  document.addEventListener('click',function(e){var b=e.target.closest('button[data-t]');if(!b)return;
+    var t=b.getAttribute('data-t');
+    function ok(){b.textContent=T.copied;setTimeout(function(){b.textContent=T.copy},1500)}
+    function fb(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(x){}a.remove();ok()}
+    if(navigator.clipboard) navigator.clipboard.writeText(t).then(ok,fb); else fb();});
+})();
+</script>
+</body></html>
