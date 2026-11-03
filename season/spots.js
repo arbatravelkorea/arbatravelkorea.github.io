@@ -15,6 +15,12 @@ window.ZONES = {
     coex:      {name:'코엑스·잠실', en:'COEX / Jamsil', kw:['코엑스','별마당','봉은사','롯데월드','잠실','석촌','COEX','Starfield']},
     everland:  {name:'에버랜드·용인', en:'Everland / Yongin', kw:['에버랜드','용인','민속촌','Everland']}
   },
+  BUS: {
+    haeundae:{name:'해운대·광안리', en:'Haeundae / Gwangalli', kw:['해운대','광안리','광안','동백섬','누리마루','더베이','이기대','블루라인','Haeundae','Gwangalli']},
+    nampo:   {name:'남포·자갈치·감천', en:'Nampo / Jagalchi / Gamcheon', kw:['남포','자갈치','국제시장','감천','용두산','BIFF','Nampo','Gamcheon']},
+    gijang:  {name:'기장 (해동용궁사)', en:'Gijang (Haedong Yonggungsa)', kw:['기장','용궁사','롯데월드','오시리아','Gijang']},
+    airport: {name:'김해공항·부산역', en:'Gimhae Airport / Busan Station', kw:['김해','공항','부산역','KTX','Airport']}
+  },
   JJU: {
     jejusi: {name:'제주시·공항 주변', en:'Jeju City / Airport', kw:['공항','용두암','용연','도깨비','이호테우','동문','제주시','함덕','Airport','Yongduam']},
     west:   {name:'서부 (오설록·산방산·애월)', en:'West (O\'sulloc / Sanbangsan / Aewol)', kw:['오설록','이니스프리','용머리','산방','협재','한림','애월','새별','카멜리아','곽지','Osulloc','O\'sulloc']},
@@ -91,10 +97,10 @@ window.SPOTS = [
  detour:'+30분 (남이섬 가는 길)', detour_en:'+30 min on the way to Nami',
  tip:'봄 유채꽃밭 자리에 가을 코스모스. 남이섬 오가는 길에 들르기 좋습니다.',
  en:'Cosmos flower fields by the Han River in Guri, on the way to Nami Island.', ig:'구리코스모스', q:'구리한강시민공원'},
-{id:'s-haneul-grass', r:'SEL', kind:'억새·핑크뮬리', kind_en:'Silver grass', name:'하늘공원 억새 (서울억새축제)', name_en:'Haneul Park silver grass', zone:'airport', win:[['09-20','11-10']],
+{id:'s-haneul-grass', r:'SEL', kind:'억새', kind_en:'Silver grass', name:'하늘공원 억새', name_en:'Haneul Park silver grass', zone:'airport', win:[['09-25','10-31']],
  detour:'+40분 (공항 가는 길 상암)', detour_en:'+40 min on the airport road (Sangam)',
- tip:'서울↔인천공항 길(상암)에 있습니다. 매년 10월 중순 서울억새축제. 계단이 많으니 맹꽁이전기차 이용. 출국일은 밤 비행기일 때만.',
- en:'Haneul Park silver-grass hills in Mapo — on the way to/from Incheon Airport (late Sep–early Nov).', ig:'하늘공원억새', q:'하늘공원'},
+ tip:'서울↔인천공항 길(상암)에 있습니다. 서울억새축제는 매년 10월 중순 1주일(2026년 10/17~23, 저녁 라이팅쇼)만이고, 축제가 끝나도 10월 말까지 억새를 볼 수 있습니다. 계단이 많으니 맹꽁이전기차 이용. 출국일은 밤 비행기일 때만.',
+ en:'Haneul Park silver-grass hills in Mapo — on the way to/from Incheon Airport (late Sep–Oct; festival week in mid-Oct).', ig:'하늘공원억새', q:'하늘공원'},
 {id:'s-nami-autumn', r:'SEL', kind:'단풍·은행', kind_en:'Autumn leaves', name:'남이섬 단풍·은행나무길', name_en:'Nami Island autumn leaves', zone:'nami', win:[['10-22','11-12']],
  detour:'동선 그대로', detour_en:'on the route',
  tip:'송파은행나무길·메타세쿼이아길이 절정. 사람이 많으니 오전 일찍 입도 추천.',
@@ -128,6 +134,16 @@ window.SPOTS = [
  detour:'동선 그대로', detour_en:'on the route',
  tip:'눈 온 다음날이면 꼭 메타세쿼이아길 사진. 말레이시아 손님들이 가장 좋아하는 장면.',
  en:'Snowy Nami Island — the Winter Sonata tree lanes after a snowfall.', ig:'남이섬설경', q:'남이섬'},
+
+// ───────── 불꽃축제 (해마다 날짜가 바뀜 → dates에 그해 날짜만, 다음 해 발표되면 추가) ─────────
+{id:'s-fireworks', r:'SEL', kind:'불꽃축제', kind_en:'Fireworks', name:'서울세계불꽃축제 (여의도)', name_en:'Seoul International Fireworks Festival (Yeouido)', zone:['yeouido','itaewon'], dates:[['2026-09-05','2026-09-05']], win:[],
+ detour:'저녁 (교통 통제·인파 매우 많음)', detour_en:'evening (road closures, huge crowds)',
+ tip:'매년 가을 토요일 저녁 여의도 한강공원. 2026년은 9/5(토). 버스는 여의도 근처 진입이 어려우니 이촌·노들섬 쪽 등 미리 하차 장소를 정하고, 끝나고 귀가 인파를 피해 일찍 이동하세요.',
+ en:'Seoul International Fireworks Festival over the Han River at Yeouido — a huge evening show (crowded, plan the meeting point).', ig:'서울세계불꽃축제', q:'여의도한강공원'},
+{id:'b-fireworks', r:'BUS', kind:'불꽃축제', kind_en:'Fireworks', name:'부산불꽃축제 (광안리)', name_en:'Busan Fireworks Festival (Gwangalli)', zone:['haeundae'], dates:[['2026-11-07','2026-11-07']], win:[],
+ detour:'저녁 19:00~20:00 (교통 매우 혼잡)', detour_en:'evening 7–8 pm (very heavy traffic)',
+ tip:'2026년 11/7(토) 19:00~20:00 광안리해수욕장·이기대·동백섬 일원 (16:00 블랙이글스 에어쇼). 백사장 무료 관람, 유료석은 별도 예매. 광안리 일대 교통 통제가 심하니 일찍 자리 잡기.',
+ en:'Busan Fireworks Festival over Gwangan Bridge — free viewing on Gwangalli Beach, 7–8 pm (arrive early).', ig:'부산불꽃축제', q:'광안리해수욕장'},
 
 // ───────── 제주 ─────────
 {id:'j-jeonnong-cherry', r:'JJU', kind:'벚꽃', kind_en:'Cherry blossom', name:'전농로·제주대 입구 벚꽃길', name_en:'Jeju City cherry-blossom streets', zone:'jejusi', win:[['03-25','04-08']],
