@@ -4,16 +4,16 @@
 window.ZONES = {
   SEL: {
     airport:   {name:'인천공항·영종도', en:'Incheon Airport / Yeongjong', kw:['공항','인천','영종','미팅','샌딩','ICN','Airport','airport']},
-    nami:      {name:'남이섬·가평 가는 길', en:'Nami Island / Gapyeong road', kw:['남이섬','가평','쁘띠','아침고요','레일바이크','Nami']},
-    palace:    {name:'경복궁·광화문·청계천', en:'Gyeongbokgung / Gwanghwamun', kw:['경복궁','광화문','세종','북촌','창덕궁','인사동','청와대','Gyeongbok']},
-    namsan:    {name:'남산', en:'Namsan', kw:['남산','타워','Namsan']},
-    itaewon:   {name:'이태원·한강', en:'Itaewon / Han River', kw:['이태원','중앙성원','한강','반포','Itaewon']},
-    yeouido:   {name:'여의도', en:'Yeouido', kw:['여의도','더현대','63','Yeouido']},
-    dongdaemun:{name:'동대문·청계천', en:'Dongdaemun / Cheonggyecheon', kw:['동대문','DDP','두타','청계천','Dongdaemun']},
-    myeongdong:{name:'명동·남대문·시청', en:'Myeongdong / Namdaemun / City Hall', kw:['명동','남대문','서울역','덕수궁','시청','Myeongdong','Namdaemun']},
-    seongsu:   {name:'성수·서울숲', en:'Seongsu / Seoul Forest', kw:['성수','서울숲','Seongsu']},
-    coex:      {name:'코엑스·잠실', en:'COEX / Jamsil', kw:['코엑스','별마당','봉은사','롯데월드','잠실','석촌','COEX','Starfield']},
-    everland:  {name:'에버랜드·용인', en:'Everland / Yongin', kw:['에버랜드','용인','민속촌','Everland']}
+    nami:      {name:'남이섬·가평 가는 길', en:'Nami Island / Gapyeong road', kw:['남이섬','가평','쁘띠','아침고요','레일바이크','Nami','Gapyeong','Petite France','Morning Calm']},
+    palace:    {name:'경복궁·광화문·청계천', en:'Gyeongbokgung / Gwanghwamun', kw:['경복궁','광화문','세종','북촌','창덕궁','인사동','청와대','Gyeongbok','Gwanghwamun','Insadong','Changdeok','Bukchon','Ikseon','HiKR','Sejong']},
+    namsan:    {name:'남산', en:'Namsan', kw:['남산','타워','Namsan','N Seoul Tower']},
+    itaewon:   {name:'이태원·한강', en:'Itaewon / Han River', kw:['이태원','중앙성원','한강','반포','Itaewon','Banpo','Mosque']},
+    yeouido:   {name:'여의도', en:'Yeouido', kw:['여의도','더현대','63','Yeouido','Hyundai']},
+    dongdaemun:{name:'동대문·청계천', en:'Dongdaemun / Cheonggyecheon', kw:['동대문','DDP','두타','청계천','Dongdaemun','DDP','Cheonggye']},
+    myeongdong:{name:'명동·남대문·시청', en:'Myeongdong / Namdaemun / City Hall', kw:['명동','남대문','서울역','덕수궁','시청','Myeongdong','Namdaemun','Seoul Station','Deoksu','City Hall']},
+    seongsu:   {name:'성수·서울숲', en:'Seongsu / Seoul Forest', kw:['성수','서울숲','Seongsu','Seoul Forest']},
+    coex:      {name:'코엑스·잠실', en:'COEX / Jamsil', kw:['코엑스','별마당','봉은사','롯데월드','잠실','석촌','올림픽공원','KSPO','COEX','Starfield','Jamsil','Olympic Park']},
+    everland:  {name:'에버랜드·용인', en:'Everland / Yongin', kw:['에버랜드','용인','민속촌','Everland','Folk Village','Yongin']}
   },
   BUS: {
     haeundae:{name:'해운대·광안리', en:'Haeundae / Gwangalli', kw:['해운대','광안리','광안','동백섬','누리마루','더베이','이기대','블루라인','Haeundae','Gwangalli']},
@@ -22,10 +22,10 @@ window.ZONES = {
     airport: {name:'김해공항·부산역', en:'Gimhae Airport / Busan Station', kw:['김해','공항','부산역','KTX','Airport']}
   },
   JJU: {
-    jejusi: {name:'제주시·공항 주변', en:'Jeju City / Airport', kw:['공항','용두암','용연','도깨비','이호테우','동문','제주시','함덕','Airport','Yongduam']},
-    west:   {name:'서부 (오설록·산방산·애월)', en:'West (O\'sulloc / Sanbangsan / Aewol)', kw:['오설록','이니스프리','용머리','산방','협재','한림','애월','새별','카멜리아','곽지','Osulloc','O\'sulloc']},
-    south:  {name:'남부 (중문·서귀포)', en:'South (Jungmun / Seogwipo)', kw:['천제연','천지연','중문','서귀포','정방','쇠소깍','누웨마루','올레시장','위미','남원','휴애리','Cheonjeyeon']},
-    east:   {name:'동부 (성읍·성산·우도)', en:'East (Seongeup / Seongsan / Udo)', kw:['성읍','섭지','성산','우도','김녕','산굼부리','표선','월정','종달','비자림','만장굴','세화','Seongsan','Udo']}
+    jejusi: {name:'제주시·공항 주변', en:'Jeju City / Airport', kw:['공항','용두암','용연','도깨비','이호테우','동문','제주시','함덕','Airport','Yongduam','Yongyeon','Dokkaebi','Iho','Dongmun','Jeju City']},
+    west:   {name:'서부 (오설록·산방산·애월)', en:'West (O\'sulloc / Sanbangsan / Aewol)', kw:['오설록','이니스프리','용머리','산방','협재','한림','애월','새별','카멜리아','곽지','Osulloc','O\'sulloc','Innisfree','Yongmeori','Sanbang','Aewol','Saebyeol','Camellia']},
+    south:  {name:'남부 (중문·서귀포)', en:'South (Jungmun / Seogwipo)', kw:['천제연','천지연','중문','서귀포','정방','쇠소깍','누웨마루','올레시장','위미','남원','휴애리','Cheonjeyeon','Cheonjiyeon','Jungmun','Seogwipo','Nuwemaru','Hueree','Wimi']},
+    east:   {name:'동부 (성읍·성산·우도)', en:'East (Seongeup / Seongsan / Udo)', kw:['성읍','섭지','성산','우도','김녕','산굼부리','표선','월정','종달','비자림','만장굴','세화','Seongsan','Udo','Seongeup','Seopjikoji','Gimnyeong','Sangumburi','Pyoseon','Jongdal','Bijarim']}
   }
 };
 

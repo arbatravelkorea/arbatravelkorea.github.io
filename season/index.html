@@ -50,7 +50,7 @@ td.on.cur{background:var(--red)}
 .foot{font-size:12px;color:var(--mut);margin-top:18px;line-height:1.6}
 </style></head>
 <body><div class="wrap">
-<header><span class="dot"></span><h1 id="h1"></h1><span class="lang"><a id="lk" href="#">한국어</a><a id="le" href="#">EN</a></span></header>
+<header><span class="dot"></span><h1 id="h1"></h1></header>
 <p class="sub" id="sub"></p>
 <div class="rule" id="rule"></div>
 <div id="days"></div>
@@ -85,8 +85,6 @@ td.on.cur{background:var(--red)}
   };
   document.documentElement.lang=EN?'en':'ko';
   function link(l){var q=new URLSearchParams(location.search); if(l) q.set('lang','en'); else q.delete('lang'); return '?'+q.toString();}
-  var lk=document.getElementById('lk'), le=document.getElementById('le');
-  lk.href=link(false); le.href=link(true); (EN?le:lk).className='on';
   function md(s){var a=s.split('-');return (+a[0])*100+(+a[1]);}
   function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
   function doy(m){var a=new Date(2001,Math.floor(m/100)-1,m%100);return Math.round((a-new Date(2001,0,1))/864e5);}
