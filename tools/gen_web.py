@@ -99,7 +99,27 @@ def flights_html():
         who = f'<p class="fw">{e(f["who"])}</p>' if f.get('who') else ''
         pnr = f'<p class="pnr">PNR <b>{e(f["pnr"])}</b> <button type="button" class="cp" data-copy="{e(f["pnr"])}">복사</button>' + (f' <span class="fs">{e(f.get("airline",""))}</span>' if f.get('airline') else '') + '</p>' if f.get('pnr') else '<p class="pnr">PNR 없음</p>'
         out += f'<div class="flt">{who}{pnr}<ul class="legs">{legs}</ul></div>'
-    return f'<section><h2>항공</h2><div class="card fl">{out}</div></section>'
+    # 공항 미팅 버튼 (2026-11-04 대표 확정): 항공 카드 바로 밑 → GitHub airport 페이지 (실시간 도착편 조회·출구·연착 추적, PT는 단기주차장 안내)
+    import urllib.parse as _u2
+    _yr = '20' + (t.get('arrival', '') or '00 Nov 26').split()[-1][-2:]
+    _fs = []
+    for f in fl:
+        for l in f['legs']:
+            _w = l.get('when', ''); _m = re.search(r'(\d{1,2})/(\d{1,2}).*?(\d{1,2}:\d{2})', _w)
+            _me = re.search(r'(\d{1,2}) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w* .*?(\d{1,2}:\d{2})', _w)
+            if _m: _mo, _dy, _tm = int(_m.group(1)), int(_m.group(2)), _m.group(3)
+            elif _me: _mo, _dy, _tm = 'JanFebMarAprMayJunJulAugSepOctNovDec'.index(_me.group(2)) // 3 + 1, int(_me.group(1)), _me.group(3)
+            else: continue
+            _d = f"{_yr}-{_mo:02d}-{_dy:02d}"
+            _ap = 'CJU' if ('제주' in _w or 'Jeju' in _w) else ('PUS' if any(x in _w for x in ('김해', '부산', 'Gimhae', 'Busan')) else 'ICN')
+            _fs.append('|'.join([l['no'], _d, _tm, 'in' if l['dir'] in ('입국', 'IN') else 'out', _ap]))
+    _ab = ''
+    if _fs:
+        _q = {'k': 'JT' if _IS_JT else 'PT', 't': ' + '.join(x['tripId'] for x in T), 'f': '~'.join(_fs)}
+        if job.get('lang') == 'en': _q['lang'] = 'en'
+        _ab = (f'<a class="btn sec airport" href="https://arbatravelkorea.github.io/airport/?{e(_u2.urlencode(_q))}" target="_blank" rel="noopener">'
+               '✈️ 공항 미팅 · 실시간 도착 정보</a>')
+    return f'<section><h2>항공</h2><div class="card fl">{out}</div>{_ab}</section>'
 
 days = ''.join(
     f'<li class="day{" free" if d.get("free") else ""}"><div class="dd"><b>{e(d["date"])}</b><span>{e(d["dow"])}</span></div>'
@@ -222,6 +242,7 @@ h1.multi {{ font-size:clamp(20px,6vw,28px) }}
 .btn.sign {{ background:#fff; color:#1C1716; border:1.5px solid #BE1E2D }}
 .btn .sgi {{ display:inline-flex; align-items:center; justify-content:center; width:34px; height:24px; background:#fff; border:1.5px solid #BE1E2D; border-radius:3px }}
 .btn .sgi img {{ height:9px; width:auto }}
+.btn.airport {{ margin-top:10px }}
 .btn.season {{ background:#FFF6F7; color:#8A1D2A; border:1.5px solid #E8A0A8 }}
 :root[data-theme="dark"] .btn.season {{ background:#2E1B1E; color:#FFC2C8; border-color:#9B4A54 }}
 @media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) .btn.season {{ background:#2E1B1E; color:#FFC2C8; border-color:#9B4A54 }} }}
@@ -328,6 +349,7 @@ document.addEventListener('click', async ev => {{
 '''
 EN_LABELS = [
     ('🌸 시즌 추천 · 지금 가볼 만한 곳', '🌸 Seasonal picks on our route'),
+    ('✈️ 공항 미팅 · 실시간 도착 정보', '✈️ Airport meeting · live arrivals'),
     ('명단(룸리스트) 보기', 'View name list (rooming list)'),
     ('명단은 아직 없습니다. 받는 대로 따로 전달드리겠습니다.', 'Name list not received yet — we will send it separately.'),
     ('🕌 할랄&amp;무슬림 프렌들리 식당 리스트', '🕌 Halal &amp; Muslim-friendly restaurant list'),
