@@ -131,7 +131,9 @@ sched_btn = (('<button type="button" class="btn sec" id="sched-toggle" aria-expa
               '<div id="sched" class="sched" hidden>' + ''.join(f'<img src="{e(x)}" alt="일정표 {k+1}쪽" loading="lazy">' for k, x in enumerate(imgs)) + '</div>') if imgs else '')
 days_block = '' if imgs else f'<section><h2>일정</h2><ol class="days">{days}</ol></section>'
 guide_phone = rich(job.get('guidePhone', '')) if job.get('guidePhone') else ''
-notes = ''.join(note_html(n, i) for i, n in enumerate(t['notes']))
+# 2026-11-04 대표: 정산 방법은 위 '정산하기' 버튼(정산 안내 페이지)으로 옮김 → '정산' 메모는 지침서에 넣지 않음
+_notes = [n for n in t['notes'] if not (isinstance(n, dict) and n.get('title', '').strip() in ('정산', 'Settlement'))]
+notes = ''.join(note_html(n, i) for i, n in enumerate(_notes))
 
 nls = web.get("namelists") or ([["", web["namelist_url"]]] if web.get("namelist_url") else [])  # [[라벨, 드라이브 링크], ...]
 namelist_btn = (''.join(f'<a class="btn sec" href="{e(u)}" target="_blank" rel="noopener">명단(룸리스트) 보기{(" · " + e(lb)) if lb else ""}</a>' for lb, u in nls)
@@ -340,11 +342,7 @@ a:focus-visible, button:focus-visible {{ outline:3px solid var(--gold); outline-
     <ol class="notes">{notes}</ol>
   </section>
 
-  <section class="btns">
-    <h2>투어 종료 후 정산</h2>
-    {"".join(f'<a class="btn pay" href="{e(x["settlement"])}" target="_blank" rel="noopener">{e(x["tripId"])} 정산링크</a>' for x in T)}
-    <p class="hint">전화번호를 눌러도 전화가 안 열리면 [복사]를 눌러 붙여넣어 주세요.</p>
-  </section>
+  <p class="hint">전화번호를 눌러도 전화가 안 열리면 [복사]를 눌러 붙여넣어 주세요.</p>
 </div></main>
 <footer>ARBA Travel Korea Co., Ltd. · License 239-88-01134 · korea@arbatravel.com · 발행 {e(job["issued"])}</footer>
 <script>

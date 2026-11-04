@@ -61,7 +61,7 @@ td:first-child{font-weight:700;white-space:nowrap;padding-right:10px}
          ['Submit → next item','After Submit, open the settlement link again and do the next item the same way.']],
       pur:[['Accommodation','Hotel'],['Transportation','Vehicle, taxi, EV bus, etc.'],['Entrance fee','Entrance tickets (all card payments in one go)'],['Meals','Guest & guide meals, water'],['Tour Guide','Your agreed guide fee — no receipt needed']],
       tips:'Good to know',help:'If anything is unclear, message the company on KakaoTalk.',tl:['Entrance fees: upload all corporate-card entrance payments together, even if other groups\' tickets were bought at the same time.','Public transport that doesn\'t take the corporate card (e.g. Namsan EV bus): pay with your transport card, upload the app history or screenshot as Cash.','Anything paid with your own cash or personal card is Cash — Card is only for the corporate card.','Tour Guide: choose Tour Guide, enter the agreed total fee, choose Cash and Submit without a receipt.'],
-      noCard:'No corporate card: pay in cash where possible and get a cash receipt with ARBA Travel\'s business no. 239-88-01134.'}
+      noCard:['No corporate card: pay in cash where possible and each time get a cash receipt (expense proof) with ARBA Travel\'s business no. 239-88-01134. We transfer the amount you spent back to you in full.','If you pay with your personal card you cannot get a cash receipt. We still reimburse a card receipt, but the company must report it as your income (3.3% withholding), which can raise your income tax — so cash + cash receipt is recommended.','If some places could not give a cash receipt, tell the company which items have a cash receipt and which do not when you settle.']}
     :{h1:'정산하는 법',go:'정산링크 열기',goHint:'이름·Trip Type·Trip ID는 자동으로 들어가 있어요. 확인만 하시면 됩니다.',
       s:[['정산링크 열기','위 빨간 버튼을 누르세요. 가이드님 이름, Trip Type, Trip ID가 자동으로 들어가 있습니다.'],
          ['Purpose(항목) 고르기','한 번에 한 항목씩 올립니다.'],
@@ -71,7 +71,7 @@ td:first-child{font-weight:700;white-space:nowrap;padding-right:10px}
          ['Submit → 다음 항목','Submit 후 정산링크를 다시 열어 다음 항목도 같은 방법으로 올려주세요.']],
       pur:[['Accommodation','호텔'],['Transportation','차량·택시·EV버스 등 교통'],['Entrance fee','입장료 (카드로 쓴 금액 한 번에)'],['Meals','손님·가이드 식사, 생수'],['Tour Guide','협의된 가이드 일비 — 영수증 없음']],
       tips:'알아두세요',help:'어려우시면 회사 비즈카톡으로 물어보세요.',tl:['입장료는 다른 팀 것까지 한 번에 발권했어도 나누지 말고 법인카드로 쓴 금액 그대로 한 번에 올리세요.','남산 EV버스처럼 법인카드가 안 되는 대중교통은 가이드님 교통카드로 내고, 앱 내역·스크린샷을 Cash로 올리세요.','본인 현금·개인카드로 낸 비용은 Card가 아니라 Cash입니다. Card는 법인카드만.','일비: Purpose에서 Tour Guide → 협의된 일비 총액 → Cash → 영수증 없이 Submit 하시면 돼요.'],
-      noCard:'법인카드 없이 진행: 가능하면 현금으로 결제하고 아르바트래블 사업자번호 239-88-01134로 현금영수증을 받아주세요.'};
+      noCard:['법인카드 없이 진행: 가능하면 현금으로 결제하고, 결제할 때마다 아르바트래블 사업자번호(239-88-01134)로 현금영수증(지출증빙)을 받아주세요. 정산하면 쓴 금액 그대로 현금으로 입금해드립니다.','개인카드로 결제하면 현금영수증을 따로 받을 수 없습니다. 카드 영수증을 올려 정산하면 입금은 해드리지만, 회사가 가이드님 소득으로 원천징수 신고(3.3%)를 해야 해서 종합소득세가 올라갈 수 있습니다. 그래서 현금 + 현금영수증을 권해드립니다.','현금영수증을 못 받은 곳이 있으면 정산할 때 \'현금영수증 받은 항목 / 못 받은 항목\'을 구분해서 회사에 알려주세요.']};
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]});}
   function f(label,inner,on,req){return '<div class="f"><label>'+label+(req===false?'':' <i>*</i>')+'</label><div class="box'+(on?' on':'')+'">'+inner+'</div></div>';}
   var name='KIM ··· / ···', trip=trips[0]||'SEL/JT/···';
@@ -88,7 +88,7 @@ td:first-child{font-weight:700;white-space:nowrap;padding-right:10px}
   document.getElementById('h1').textContent=K.h1; document.getElementById('sub').textContent=trips.filter(Boolean).join(' + ');
   var h=links.map(function(u,i){return '<a class="go" target="_blank" rel="noopener" href="'+esc(u)+'">🧾 '+K.go+(links.length>1?' · '+esc(trips[i]||''):'')+'</a>'}).join('')+'<p class="hint">'+K.goHint+'</p>';
   if(!EN) h+='<div class="vid"><b>▶ 영상으로 보기 (80초)</b><video controls playsinline preload="none" poster="howto.jpg" src="howto.mp4"></video><p class="hint" style="margin:8px 2px 0">영상을 보면서 그대로 따라 하시면 됩니다. 아래에 글로도 정리해 두었어요.</p></div>';
-  if(!CARD) h+='<div class="tip" style="margin-bottom:12px;background:#FFF6F7;border-color:#F0C9CD"><b style="color:var(--red)">!</b> '+esc(K.noCard)+'</div>';
+  if(!CARD) h+='<div class="tip" style="margin-bottom:12px;background:#FFF6F7;border-color:#F0C9CD"><b style="color:var(--red)">'+(EN?'No corporate card — how to pay (important)':'법인카드 없이 진행 — 결제 방법 (중요)')+'</b><ul>'+K.noCard.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul></div>';
   K.s.forEach(function(s,i){h+='<div class="step"><div class="sh"><span class="n">'+(i+1)+'</span><b>'+esc(s[0])+'</b></div><p>'+esc(s[1])+'</p>'+mocks[i]+'</div>';});
   h+='<div class="tip"><b>'+K.tips+'</b><ul>'+K.tl.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul></div><p class="hint" style="margin-top:12px">'+esc(K.help)+'</p>';
   document.getElementById('app').innerHTML=h;
