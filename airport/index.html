@@ -74,7 +74,7 @@ li::marker{color:var(--red)}
       '<a class="btn sec" target="_blank" rel="noopener" href="'+fs+'">'+L.track+'</a>'+
       (icn&&f.dir!=='out'?'<p class="hint">'+L.liveHint+'</p><div class="exits">'+(tm==='T2'?'<span>A</span><span>B</span>':'<span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span>')+'</div>':'')+'</div>';
   });
-  if(PT) h+='<h2>'+L.pk+'</h2><div class="card"><ul>'+L.pkl.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul></div>';
+  if(PT&&F.some(function(f){return f.ap==='ICN'&&f.dir!=='out'})) h+='<h2>'+L.pk+'</h2><div class="card"><ul>'+L.pkl.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul></div>';
   document.getElementById('app').innerHTML=h; document.getElementById('foot').textContent=L.foot;
 })();
 </script>
