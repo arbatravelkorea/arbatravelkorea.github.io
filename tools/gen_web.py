@@ -253,9 +253,7 @@ h1.multi {{ font-size:clamp(20px,6vw,28px) }}
 .btn .sgi img {{ height:9px; width:auto }}
 .btn.airport {{ margin-top:10px }}
 .card.fl ~ .btn {{ margin-top:10px }}
-.btn.settle {{ background:#FFF8E6; color:#7A4A00; border:1.5px solid #E2B04A }}
-@media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) .btn.settle {{ background:#2A2112; color:#F3D08A; border-color:#B8862E }} }}
-:root[data-theme="dark"] .btn.settle {{ background:#2A2112; color:#F3D08A; border-color:#B8862E }}
+.btn.settle {{ background:var(--red); color:var(--red-ink) }}
 .btn.season {{ background:#FFF6F7; color:#8A1D2A; border:1.5px solid #E8A0A8 }}
 :root[data-theme="dark"] .btn.season {{ background:#2E1B1E; color:#FFC2C8; border-color:#9B4A54 }}
 @media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) .btn.season {{ background:#2E1B1E; color:#FFC2C8; border-color:#9B4A54 }} }}
