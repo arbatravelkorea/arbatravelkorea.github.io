@@ -119,7 +119,7 @@ def flights_html():
         if job.get('lang') == 'en': _q['lang'] = 'en'
         _ab = (f'<a class="btn sec airport" href="https://arbatravelkorea.github.io/airport/?{e(_u2.urlencode(_q))}" target="_blank" rel="noopener">'
                '✈️ 공항 미팅 · 실시간 도착 정보</a>')
-    return f'<section><h2>항공</h2><div class="card fl">{out}</div>{_ab}</section>'
+    return f'<section><h2>항공</h2><div class="card fl">{out}</div>{_ab}{sign_btn}</section>'  # 2026-11-04: 공항 피켓 버튼도 공항 미팅 버튼 바로 밑
 
 days = ''.join(
     f'<li class="day{" free" if d.get("free") else ""}"><div class="dd"><b>{e(d["date"])}</b><span>{e(d["dow"])}</span></div>'
@@ -167,6 +167,13 @@ if _want_sign:
     except OSError:
         _ic = ''
     sign_btn = (f'<a class="btn sign" href="https://arbatravelkorea.github.io/v/{_slug}/sign/" target="_blank" rel="noopener">{_ic}공항 피켓 보기/인쇄</a>')
+# 정산하기 버튼 (2026-11-04 대표 확정): 할랄 버튼 밑 → GitHub settle 페이지 (정산링크 + 정산하는 법 단계 안내·영상)
+#   job.corp_card = False 이면 법인카드 없이 진행 (Cash만 안내 + 현금영수증 사업자번호)
+import urllib.parse as _us
+_sq = {'u': '~'.join(x.get('settlement', '') for x in T if x.get('settlement')), 't': '~'.join(x['tripId'] for x in T if x.get('settlement'))}
+if job.get('corp_card') is False: _sq['card'] = '0'
+if job.get('lang') == 'en': _sq['lang'] = 'en'
+settle_btn = (f'<a class="btn settle" href="https://arbatravelkorea.github.io/settle/?{e(_us.urlencode(_sq))}" target="_blank" rel="noopener">🧾 정산하기 · 정산하는 법</a>') if _sq['u'] else ''
 # 시즌 추천 버튼 (2026-11-03): job.season = {"r":"SEL|JJU","d":"YYYY-MM-DD(투어 첫날)","p":"1일차 장소,장소|2일차|...|공항 샌딩 HH:MM"} → GitHub season 페이지
 import urllib.parse as _up
 LANG = job.get('lang', 'ko')
@@ -243,6 +250,10 @@ h1.multi {{ font-size:clamp(20px,6vw,28px) }}
 .btn .sgi {{ display:inline-flex; align-items:center; justify-content:center; width:34px; height:24px; background:#fff; border:1.5px solid #BE1E2D; border-radius:3px }}
 .btn .sgi img {{ height:9px; width:auto }}
 .btn.airport {{ margin-top:10px }}
+.card.fl ~ .btn {{ margin-top:10px }}
+.btn.settle {{ background:#FFF8E6; color:#7A4A00; border:1.5px solid #E2B04A }}
+@media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) .btn.settle {{ background:#2A2112; color:#F3D08A; border-color:#B8862E }} }}
+:root[data-theme="dark"] .btn.settle {{ background:#2A2112; color:#F3D08A; border-color:#B8862E }}
 .btn.season {{ background:#FFF6F7; color:#8A1D2A; border:1.5px solid #E8A0A8 }}
 :root[data-theme="dark"] .btn.season {{ background:#2E1B1E; color:#FFC2C8; border-color:#9B4A54 }}
 @media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) .btn.season {{ background:#2E1B1E; color:#FFC2C8; border-color:#9B4A54 }} }}
@@ -317,8 +328,9 @@ a:focus-visible, button:focus-visible {{ outline:3px solid var(--gold); outline-
     {namelist_btn}
     {sched_btn}
     {season_btn}
-    {sign_btn}
+    {'' if (job.get('flights') or []) else sign_btn}
     {halal_btn}
+    {settle_btn}
   </section>
 
 {days_block}
@@ -355,6 +367,7 @@ EN_LABELS = [
     ('🕌 할랄&amp;무슬림 프렌들리 식당 리스트', '🕌 Halal &amp; Muslim-friendly restaurant list'),
     ('자유일정 있을 경우 영문 식당 리스트 왓츠앱 방에 공유해주세요. ', 'On free days, share the English restaurant list in the WhatsApp group. '),
     ('공항 피켓 보기/인쇄', 'Airport sign — view / print'),
+    ('🧾 정산하기 · 정산하는 법', '🧾 Settle expenses · how to'),
     ('WhatsApp 단톡방 입장하기', 'Join the WhatsApp group'),
     ('왓츠앱 단톡방은 아직 만들어지지 않았습니다. 만들어지는 대로 링크를 따로 보내드리겠습니다.', 'WhatsApp group not created yet — the link will follow.'),
     ('투어 시작 최소 이틀 전 입장해 필요한 정보 전달과 인사 나눠주세요.', 'Join at least 2 days before the tour to greet guests and share information.'),

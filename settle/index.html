@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>정산하는 법 — ARBA 투어지침서</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--red:#BE1E2D;--fg:#1C1716;--mut:#6B6360;--line:#E7E1DE;--bg:#FAF7F5;--card:#fff;--green:#1F7A4D;--hl:#FFF4C2}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:Pretendard,"Noto Sans KR",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding:16px 16px 48px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+header .dot{width:10px;height:10px;border-radius:50%;background:var(--red);flex:none}
+header h1{font-size:20px;margin:0;font-weight:800}
+.sub{color:var(--mut);font-size:14px;margin:0 0 14px}
+.go{display:flex;align-items:center;justify-content:center;min-height:54px;border-radius:12px;background:var(--red);color:#fff;font-weight:800;font-size:17px;text-decoration:none;margin:4px 0 6px}
+.hint{font-size:12.5px;color:var(--mut);margin:0 2px 16px;line-height:1.5}
+.step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.sh{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+.n{width:26px;height:26px;border-radius:50%;background:var(--red);color:#fff;font-weight:800;font-size:14px;display:grid;place-items:center;flex:none}
+.sh b{font-size:16px}
+.step p{margin:4px 0 0;font-size:14.5px;line-height:1.55}
+.mock{margin-top:10px;border:1px solid #E3E1DE;border-radius:10px;padding:12px;background:#fcfcfc}
+.f{margin-bottom:9px}
+.f:last-child{margin-bottom:0}
+.f label{display:block;font-size:12.5px;color:#3d3836;margin-bottom:4px}
+.f label i{color:var(--red);font-style:normal}
+.box{border:1px solid #D8D5D2;border-radius:7px;padding:8px 10px;font-size:13.5px;background:#fff;min-height:34px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.box.on{border:2px solid var(--red);background:var(--hl)}
+.chip{font-size:12.5px;background:#DDE9FF;border-radius:20px;padding:2px 9px}
+.chip.g{background:#D7F2E6}
+.drop{border-style:dashed;color:#6b6766;justify-content:center}
+.muted{color:#9a9592}
+.btnm{display:inline-block;background:#2D7FF9;color:#fff;border-radius:7px;padding:7px 14px;font-weight:700;font-size:13px}
+.btnm.on{outline:3px solid var(--red);outline-offset:2px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+td{border-top:1px solid var(--line);padding:7px 4px;vertical-align:top}
+td:first-child{font-weight:700;white-space:nowrap;padding-right:10px}
+.vid{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:14px}
+.vid b{display:block;font-size:16px;margin:0 0 8px}
+.vid video{display:block;width:100%;max-width:360px;margin:0 auto;border-radius:10px;background:#000}
+.tip{background:#F3F8F5;border:1px solid #CFE7DA;border-radius:12px;padding:12px 16px}
+.tip b{color:var(--green)}
+.tip ul{margin:6px 0 0;padding-left:18px;font-size:14px;line-height:1.55;display:grid;gap:5px}
+</style></head>
+<body><div class="wrap">
+<header><span class="dot"></span><h1 id="h1"></h1></header>
+<p class="sub" id="sub"></p>
+<div id="app"></div>
+</div>
+<script>
+(function(){
+  var P=new URLSearchParams(location.search), EN=P.get('lang')==='en', CARD=P.get('card')!=='0';
+  var links=(P.get('u')||'').split('~').filter(Boolean), trips=(P.get('t')||'').split('~');
+  var K=EN?{h1:'How to submit your expenses',go:'Open settlement link',goHint:'Your name, Trip Type and Trip ID are already filled in — just check them.',
+      s:[['Open the settlement link','Tap the red button above. Your name, Trip Type and Trip ID are filled in automatically.'],
+         ['Choose the Purpose','Choose one item at a time.'],
+         ['Enter the Amount','The total of the receipts you upload (numbers only).'],
+         ['Choose the Payment Method',CARD?'Corporate card → Credit Card, then enter the last 4 digits of the card. Your own money (cash / personal card) → Cash.':'You have no corporate card, so always choose Cash.'],
+         ['Upload the receipts','Put the receipts for this item together in 1 photo (2 if needed). Add e-receipt screenshots too.'],
+         ['Submit → next item','After Submit, open the settlement link again and do the next item the same way.']],
+      pur:[['Accommodation','Hotel'],['Transportation','Vehicle, taxi, EV bus, etc.'],['Entrance fee','Entrance tickets (all card payments in one go)'],['Meals','Guest & guide meals, water'],['Tour Guide','Your agreed guide fee — no receipt needed']],
+      tips:'Good to know',help:'If anything is unclear, message the company on KakaoTalk.',tl:['Entrance fees: upload all corporate-card entrance payments together, even if other groups\' tickets were bought at the same time.','Public transport that doesn\'t take the corporate card (e.g. Namsan EV bus): pay with your transport card, upload the app history or screenshot as Cash.','Anything paid with your own cash or personal card is Cash — Card is only for the corporate card.','Tour Guide: choose Tour Guide, enter the agreed total fee, choose Cash and Submit without a receipt.'],
+      noCard:'No corporate card: pay in cash where possible and get a cash receipt with ARBA Travel\'s business no. 239-88-01134.'}
+    :{h1:'정산하는 법',go:'정산링크 열기',goHint:'이름·Trip Type·Trip ID는 자동으로 들어가 있어요. 확인만 하시면 됩니다.',
+      s:[['정산링크 열기','위 빨간 버튼을 누르세요. 가이드님 이름, Trip Type, Trip ID가 자동으로 들어가 있습니다.'],
+         ['Purpose(항목) 고르기','한 번에 한 항목씩 올립니다.'],
+         ['Amount(금액) 입력','올리는 영수증의 합계 금액 (숫자만).'],
+         ['Payment Method(결제 방법) 고르기',CARD?'법인카드로 결제 → Credit Card 선택 후 카드 끝 4자리 입력. 본인 돈(현금·개인카드) → Cash.':'법인카드가 없으시니 항상 Cash를 고르세요.'],
+         ['영수증 사진 올리기','그 항목 영수증을 모아 사진 1장으로 (안 되면 2장). 전자영수증 캡처도 같이 올리면 됩니다.'],
+         ['Submit → 다음 항목','Submit 후 정산링크를 다시 열어 다음 항목도 같은 방법으로 올려주세요.']],
+      pur:[['Accommodation','호텔'],['Transportation','차량·택시·EV버스 등 교통'],['Entrance fee','입장료 (카드로 쓴 금액 한 번에)'],['Meals','손님·가이드 식사, 생수'],['Tour Guide','협의된 가이드 일비 — 영수증 없음']],
+      tips:'알아두세요',help:'어려우시면 회사 비즈카톡으로 물어보세요.',tl:['입장료는 다른 팀 것까지 한 번에 발권했어도 나누지 말고 법인카드로 쓴 금액 그대로 한 번에 올리세요.','남산 EV버스처럼 법인카드가 안 되는 대중교통은 가이드님 교통카드로 내고, 앱 내역·스크린샷을 Cash로 올리세요.','본인 현금·개인카드로 낸 비용은 Card가 아니라 Cash입니다. Card는 법인카드만.','일비: Purpose에서 Tour Guide → 협의된 일비 총액 → Cash → 영수증 없이 Submit 하시면 돼요.'],
+      noCard:'법인카드 없이 진행: 가능하면 현금으로 결제하고 아르바트래블 사업자번호 239-88-01134로 현금영수증을 받아주세요.'};
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]});}
+  function f(label,inner,on,req){return '<div class="f"><label>'+label+(req===false?'':' <i>*</i>')+'</label><div class="box'+(on?' on':'')+'">'+inner+'</div></div>';}
+  var name='KIM ··· / ···', trip=trips[0]||'SEL/JT/···';
+  var head=f('TG Name',esc(name))+f('Trip Type','<span class="chip">'+(trip.indexOf('/JT/')>=0?'JT':'PT')+'</span>')+f(trip.indexOf('/JT/')>=0?'JT TripID':'PT TripID',esc(trip));
+  var mocks=[
+    '<div class="mock">'+head.replace(/class="box"/g,'class="box on"')+'</div>',
+    '<div class="mock">'+f('Purpose','<span class="chip g">Meals</span> <span class="muted">▾</span>',true)+'<table>'+K.pur.map(function(p){return '<tr><td>'+p[0]+'</td><td>'+esc(p[1])+'</td></tr>'}).join('')+'</table></div>',
+    '<div class="mock">'+f('Amount (KRW)','₩ 245,000',true)+'</div>',
+    '<div class="mock">'+(CARD?f('Payment Method','<span class="chip">Credit Card</span>',true)+f('Last 4 Digit','1234',true):f('Payment Method','<span class="chip">Cash</span>',true))+'</div>',
+    '<div class="mock">'+f(CARD?'Upload Receipt Credit Card Method':'Upload Receipt Cash Method','📷 Drop files here or click to browse',true,CARD?undefined:false).replace('class="box on"','class="box on drop"')+'</div>',
+    '<div class="mock" style="text-align:right"><span class="muted" style="font-size:12.5px;margin-right:10px">Clear form</span><span class="btnm on">Submit</span></div>'
+  ];
+  document.documentElement.lang=EN?'en':'ko'; document.title=K.h1+' — ARBA';
+  document.getElementById('h1').textContent=K.h1; document.getElementById('sub').textContent=trips.filter(Boolean).join(' + ');
+  var h=links.map(function(u,i){return '<a class="go" target="_blank" rel="noopener" href="'+esc(u)+'">🧾 '+K.go+(links.length>1?' · '+esc(trips[i]||''):'')+'</a>'}).join('')+'<p class="hint">'+K.goHint+'</p>';
+  if(!EN) h+='<div class="vid"><b>▶ 영상으로 보기 (80초)</b><video controls playsinline preload="none" poster="howto.jpg" src="howto.mp4"></video><p class="hint" style="margin:8px 2px 0">영상을 보면서 그대로 따라 하시면 됩니다. 아래에 글로도 정리해 두었어요.</p></div>';
+  if(!CARD) h+='<div class="tip" style="margin-bottom:12px;background:#FFF6F7;border-color:#F0C9CD"><b style="color:var(--red)">!</b> '+esc(K.noCard)+'</div>';
+  K.s.forEach(function(s,i){h+='<div class="step"><div class="sh"><span class="n">'+(i+1)+'</span><b>'+esc(s[0])+'</b></div><p>'+esc(s[1])+'</p>'+mocks[i]+'</div>';});
+  h+='<div class="tip"><b>'+K.tips+'</b><ul>'+K.tl.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul></div><p class="hint" style="margin-top:12px">'+esc(K.help)+'</p>';
+  document.getElementById('app').innerHTML=h;
+})();
+</script>
+</body></html>
