@@ -29,7 +29,7 @@
   function who(c) {
     if (!c) return '';
     var pl = c.nomap ? '' : placeOf(c), mp = c.map || halalLink(pl);
-    if (!c.phone) { if (!(c.map || (pl && /^(점심|저녁|아침)\s*[—–-]/.test(c.text || '')))) return ''; return '<span class="who"><a class="mini nm" target="_blank" rel="noopener" href="' + esc(mp || ('https://map.naver.com/p/search/' + encodeURIComponent(pl))) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' + (c.note ? ' <span class="x">' + esc(c.note).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span>'; }
+    if (!c.phone) { if (c.nomap || !(c.map || (pl && /^(점심|저녁|아침)\s*[—–-]/.test(c.text || '')))) return ''; return '<span class="who"><a class="mini nm" target="_blank" rel="noopener" href="' + esc(mp || ('https://map.naver.com/p/search/' + encodeURIComponent(pl))) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' + (c.note ? ' <span class="x">' + esc(c.note).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span>'; }
     return '<span class="who">' + (c.contact ? esc(c.contact) + ' ' : '') + '<a class="mini" href="tel:' + num(c.phone) + '">' + ((c.callLabel || (/^(점심|저녁|아침)\s*[—–-]/.test(c.text || '') ? L.reserve : '')) ? '📞 ' + esc(c.callLabel || L.reserve) : L.call) + '</a>' + (c.sms ? '<a class="mini" href="sms:' + num(c.phone) + '">' + L.sms + '</a>' : '') +
       ((pl || mp) ? '<a class="mini nm" target="_blank" rel="noopener" href="' + esc(mp || ('https://map.naver.com/p/search/' + encodeURIComponent(pl))) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' : (c.nomap ? '' : cpBtn(c.phone))) + (c.note ? ' <span class="x">' + esc(c.note).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span>';
   }
@@ -150,7 +150,7 @@
         '</div></details>';
     });
     // 전체 메모
-    if (D.memo && D.memo.length) h += '<h2>' + L.memo + '</h2><div class="card"><ul class="memo">' + D.memo.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul></div>';
+    if (D.memo && D.memo.length) h += '<h2>' + L.memo + '</h2><div class="card"><ul class="memo">' + D.memo.map(function (m) { return '<li>' + esc(m).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</li>'; }).join('') + '</ul></div>';
     // 비상 연락처: 회사 전화 + 비즈카톡
     var C = D.company || {};
     h += '<h2>' + L.contacts + '</h2><div class="card tel"><b>' + esc(C.name || 'ARBA Travel Korea') + '</b>' + (C.phone ? '<br>' + tel(C.phone) : '') +
