@@ -22,9 +22,13 @@
   function cpBtn(v) { return '<button type="button" class="cp" data-copy="' + esc(v) + '">' + L.copy + '</button>'; }
   function tel(p) { return p ? '<a href="tel:' + num(p) + '">' + esc(p) + '</a> ' + cpBtn(p) : ''; }
   // 담당자·전화·문자 묶음: {contact:'박현성', phone:'010-…', sms:true, note:'문자 예약'}
+  // 식당 등: 전화·문자 옆에 네이버 지도 아이콘(place 또는 "점심/저녁 — 식당명"에서 자동) — 지도가 없으면 [복사]
+  function placeOf(c) { if (c.place) return c.place; var m = String(c.text || '').match(/^(?:점심|저녁|아침)\s*[—–-]?\s*([^(—–\-·]+)/); return m ? m[1].trim() : ''; }
   function who(c) {
     if (!c || !c.phone) return '';
-    return '<span class="who">' + (c.contact ? esc(c.contact) + ' ' : '') + '<a class="mini" href="tel:' + num(c.phone) + '">' + L.call + '</a>' + (c.sms ? '<a class="mini" href="sms:' + num(c.phone) + '">' + L.sms + '</a>' : '') + cpBtn(c.phone) + (c.note ? ' <span class="x">' + esc(c.note) + '</span>' : '') + '</span>';
+    var pl = placeOf(c);
+    return '<span class="who">' + (c.contact ? esc(c.contact) + ' ' : '') + '<a class="mini" href="tel:' + num(c.phone) + '">' + L.call + '</a>' + (c.sms ? '<a class="mini" href="sms:' + num(c.phone) + '">' + L.sms + '</a>' : '') +
+      (pl ? '<a class="mini nm" target="_blank" rel="noopener" href="https://map.naver.com/p/search/' + encodeURIComponent(pl) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' : cpBtn(c.phone)) + (c.note ? ' <span class="x">' + esc(c.note) + '</span>' : '') + '</span>';
   }
 
   // 손님 첫 인사 (영어) — WhatsApp wa.me/?text= 로 자동 입력. 월별 날씨 안내는 서울·제주·부산 평년 기준
