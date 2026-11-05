@@ -103,8 +103,8 @@
       '<button type="button" class="btn greet cp" data-label="💬 ② ' + esc(L.greet) + '" data-copy="' + esc(greet(D)) + '">💬 ② ' + L.greet + '</button></div>' +
       '<p class="hint">' + (K.hint ? esc(K.hint) + '<br>' : '') + L.greetHint + '</p>' +
       '<div class="btnrow">' +
-      (K.season ? '<a class="btn season" target="_blank" rel="noopener" href="' + esc(K.season) + '">🌸 ' + L.season + '</a>' : '<span class="btn dis"></span>') +
-      (K.halal ? '<a class="btn halal" target="_blank" rel="noopener" href="' + esc(K.halal) + '">🕌 ' + L.halal + '</a>' : '<span class="btn dis"></span>') +
+      (K.season ? '<a class="btn season" target="_blank" rel="noopener" href="' + esc(K.season) + '">🌸 ' + L.season + '</a>' : '') +
+      (K.halal ? '<a class="btn halal' + (K.season ? '' : ' wide2') + '" target="_blank" rel="noopener" href="' + esc(K.halal) + '">🕌 ' + L.halal + '</a>' : '') +
       (K.settle ? '<a class="btn red wide2" target="_blank" rel="noopener" href="' + esc(K.settle) + '">🧾 ' + L.settle + '</a>' : '') + '</div>';
     // 항공
     h += '<h2>' + L.flights + '</h2>';
@@ -194,7 +194,7 @@
           var el = LV[i]; if (!el) return; var st = el.parentNode.querySelector('.st');
           if (!d.ok || !d.found) { st.className = 'st na'; st.textContent = L.notYet; return; }
           el.querySelector('.est').textContent = d.estimated && d.estimated !== d.scheduled ? d.estimated : (d.estimated ? '=' : '—');
-          if (d.terminal) el.querySelector('.term').textContent = d.terminal;
+          if (d.terminal) el.querySelector('.term').textContent = d.terminal === '탑승동' ? (EN ? 'T1 (Concourse)' : 'T1 (탑승동)') : d.terminal;
           el.querySelector('.exit').textContent = (d.dir === 'A' ? d.exit : d.counter) || L.tba;
           var txt = L.status[d.status] || d.status;
           if (d.status === 'delay' && d.delayMin > 0) txt += ' ' + (d.delayMin >= 60 ? Math.floor(d.delayMin / 60) + L.h : '') + (d.delayMin % 60) + L.m;
