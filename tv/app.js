@@ -27,8 +27,9 @@
   // 할랄 리스트에 있는 식당이면 리스트의 정확한 네이버지도 링크 (이름 앞부분 일치: "고삼이 신촌점", "EID (이태원)…" → "EID 할랄 코리안푸드")
   function halalLink(pl) { var H = window.HALAL_LINKS || {}; if (!pl) return ''; var k = pl.replace(/\s*\(.*$/, '').replace(/\s+/g, ' ').trim().toLowerCase(); var best = ''; Object.keys(H).forEach(function (n) { var nn = n.toLowerCase(); if (nn === k || nn.indexOf(k) === 0 || k.indexOf(nn) === 0) { if (!best || n.length > best.length) best = n; } }); if (!best) Object.keys(H).forEach(function (n) { var w = n.toLowerCase().split(' ')[0]; if (w.length >= 2 && k.indexOf(w) === 0 && !best) best = n; }); return best ? H[best] : ''; }
   function who(c) {
-    if (!c || !c.phone) return '';
+    if (!c) return '';
     var pl = c.nomap ? '' : placeOf(c), mp = c.map || halalLink(pl);
+    if (!c.phone) { if (!(c.map || (pl && /^(점심|저녁|아침)\s*[—–-]/.test(c.text || '')))) return ''; return '<span class="who"><a class="mini nm" target="_blank" rel="noopener" href="' + esc(mp || ('https://map.naver.com/p/search/' + encodeURIComponent(pl))) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' + (c.note ? ' <span class="x">' + esc(c.note).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span>'; }
     return '<span class="who">' + (c.contact ? esc(c.contact) + ' ' : '') + '<a class="mini" href="tel:' + num(c.phone) + '">' + ((c.callLabel || (/^(점심|저녁|아침)\s*[—–-]/.test(c.text || '') ? L.reserve : '')) ? '📞 ' + esc(c.callLabel || L.reserve) : L.call) + '</a>' + (c.sms ? '<a class="mini" href="sms:' + num(c.phone) + '">' + L.sms + '</a>' : '') +
       ((pl || mp) ? '<a class="mini nm" target="_blank" rel="noopener" href="' + esc(mp || ('https://map.naver.com/p/search/' + encodeURIComponent(pl))) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' : (c.nomap ? '' : cpBtn(c.phone))) + (c.note ? ' <span class="x">' + esc(c.note).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span>';
   }
@@ -137,7 +138,7 @@
       var meals = d.meals || {};
       function mealSpan(i, key) { var mm = meals[key]; if (!mm) return '<span class="no">' + L.meal[i] + '</span>'; if (mm.ok === false) return '<span class="no">' + L.meal[i] + (mm.txt ? ' — ' + esc(mm.txt) : ' — ' + L.free) + '</span>'; return '<span class="' + (mm.alt ? 'alt' : '') + '">' + L.meal[i] + (mm.txt ? ' ' + esc(mm.txt) : '') + '</span>'; }
       h += '<details class="day" data-d="' + esc(d.d) + '" data-loc="' + esc(d.loc || D.loc || 'SEL') + '"><summary><span class="d" data-today="' + L.today + '">' + esc(d.label) + '</span><span class="s">' + esc(d.summary) + '</span><span class="ar">▶</span></summary><div class="body">' +
-        '<ul class="tl">' + (d.items || []).map(function (it) { return '<li><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + who(it) + (it.x ? '<span class="x">' + nl(it.x) + '</span>' : '') + '</span></li>'; }).join('') + '</ul>' +
+        '<ul class="tl">' + (d.items || []).map(function (it) { return '<li><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + who(it) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span></li>'; }).join('') + '</ul>' +
         '<div class="row"><span class="i">🍽</span><div class="meal">' + mealSpan(0, 'b') + mealSpan(1, 'l') + mealSpan(2, 'd') + '</div></div>' +
         (d.move ? '<div class="row"><span class="i">🚐</span><div>' + esc(d.move) + who(d.moveWho) + (d.moveSub ? '<br><span class="x">' + esc(d.moveSub) + '</span>' : '') + '</div></div>' : '') +
         (d.stay ? '<div class="row"><span class="i">🏨</span><div>' + esc(d.stay) + '</div></div>' : '') +
