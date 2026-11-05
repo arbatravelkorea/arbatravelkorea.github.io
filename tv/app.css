@@ -27,7 +27,12 @@ h2{font-size:12.5px;letter-spacing:.12em;color:var(--red);font-weight:800;margin
 .btn.season{background:#FFF0F2;color:#B0264B;border-color:#F3C9CE}
 .btn.kakao{background:#FEE500;color:#191919;border-color:#FEE500;margin-top:10px;flex:none;width:100%}
 .btn .nmap{height:18px}
-.btn.greet{flex:1 1 45%;margin-left:0;font:inherit;font-size:14px;font-weight:700;cursor:pointer;background:#E6F4EC;color:var(--green);border-color:#CFE7DA}
+.btn.greet{margin-left:0;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+/* 링크 격자 (2026-11-06): 버튼 5개 같은 폭·간격, 정산만 한 줄 가득. 설명은 격자 아래 */
+.linkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.linkgrid .btn{flex:none;width:100%;margin:0;min-height:48px}
+.linkgrid .btn.wide2{grid-column:1 / -1}
+.hint.linkhint{margin:4px 2px 10px}
 .wx{font-size:12px;font-weight:700;color:var(--mut);display:block;margin-top:2px;white-space:nowrap}
 .btn.wide2{flex:1 1 100%}
 .btn.wide{flex:1 1 100%;margin-top:10px;background:var(--soft)}

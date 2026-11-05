@@ -98,14 +98,14 @@
       (D.chips && D.chips.length ? '<div style="margin-top:12px">' + D.chips.map(function (c) { return '<span class="hon' + (c.amber ? ' amber' : '') + '">' + esc(c.text || c) + '</span>'; }).join('') + '</div>' : '') + '</div>';
     // 링크: 왓츠앱(왼쪽 위) 할랄(오른쪽 위) 시즌(왼쪽 아래) 정산(오른쪽 아래)
     var K = D.links || {};
-    h += '<h2>' + L.links + '</h2><div class="btnrow">' +
+    // 2026-11-06 대표: 버튼 5개를 한 격자(투어 전 → 투어 중 → 투어 후 순)로, 설명은 격자 아래 한 번만
+    h += '<h2>' + L.links + '</h2><div class="linkgrid">' +
       (K.wa ? '<a class="btn wa" target="_blank" rel="noopener" href="' + esc(K.wa) + '">' + WA_SVG + '① ' + L.waBtn + '</a>' : '<span class="btn wa dis">' + WA_SVG + L.waBtn + ' (' + L.tba + ')</span>') +
-      '<button type="button" class="btn greet cp" data-label="💬 ② ' + esc(L.greet) + '" data-copy="' + esc(greet(D)) + '">💬 ② ' + L.greet + '</button></div>' +
-      '<p class="hint">' + (K.hint ? esc(K.hint) + '<br>' : '') + L.greetHint + '</p>' +
-      '<div class="btnrow">' +
+      '<button type="button" class="btn wa greet cp" data-label="💬 ② ' + esc(L.greet) + '" data-copy="' + esc(greet(D)) + '">💬 ② ' + L.greet + '</button>' +
       (K.season ? '<a class="btn season" target="_blank" rel="noopener" href="' + esc(K.season) + '">🌸 ' + L.season + '</a>' : '') +
       (K.halal ? '<a class="btn halal' + (K.season ? '' : ' wide2') + '" target="_blank" rel="noopener" href="' + esc(K.halal) + '">🕌 ' + L.halal + '</a>' : '') +
-      (K.settle ? '<a class="btn red wide2" target="_blank" rel="noopener" href="' + esc(K.settle) + '">🧾 ' + L.settle + '</a>' : '') + '</div>';
+      (K.settle ? '<a class="btn red wide2" target="_blank" rel="noopener" href="' + esc(K.settle) + '">🧾 ' + L.settle + '</a>' : '') + '</div>' +
+      '<p class="hint linkhint">' + (K.hint ? esc(K.hint) + '<br>' : '') + L.greetHint + '</p>';
     // 항공
     h += '<h2>' + L.flights + '</h2>';
     (D.flights || []).forEach(function (f) {
