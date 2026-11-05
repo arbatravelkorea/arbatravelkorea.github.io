@@ -8,13 +8,13 @@
     sched: '예정', est: '변경', term: '터미널', exit: '출구', counter: '카운터', checking: '조회 중…', fsOnly: ' 공항은 FlightStats로 확인', track: '실시간 추적 (FlightStats)', notYet: '아직 공항 조회 전 (3일 전부터 조회됨)', liveFail: '실시간 조회 실패 — FlightStats로 확인', belt: '벨트 ', sign: '공항 피켓 보기/인쇄',
     status: { ontime: '정시', delay: '지연', landed: '도착함', departed: '출발함', cancel: '결항', divert: '회항' }, tba: '미정',
     booking: '예약번호', checkin: '체크인', checkout: '체크아웃', bf: '조식', rooms: '객실', pay: '결제', addr: '주소', tel: '전화', map: '📍 지도', call: '📞 전화', sms: '💬 문자', copy: '복사', copied: '복사됨', namelist: '📋 명단(룸리스트) 보기', nonamelist: '📋 명단 — 아직 없음 (받는 대로 여기에)',
-    today: '오늘', meal: ['아침', '점심', '저녁'], free: '손님 자유', pray: '오늘 기도', after: ' 이후', before: ' 전에', left: '해 지기까지 ', h: '시간 ', m: '분', sunset: '해 졌음 → Maghrib+Isha', draft: '초안 · 확정 전', waBtn: 'WhatsApp', halal: '할랄&무슬림 프렌들리 식당 리스트', season: '시즌 추천 · 지금 가볼 만한 곳', settle: '정산하기 · 정산하는 법', kakao: '아르바트래블 비즈카톡',
+    today: '오늘', meal: ['아침', '점심', '저녁'], free: '손님 자유', pray: '오늘 기도', after: ' 이후', before: ' 전에', left: '해 지기까지 ', h: '시간 ', m: '분', sunset: '해 졌음 → Maghrib+Isha', draft: '초안 · 확정 전', waBtn: 'WhatsApp', halal: '할랄&무슬림 프렌들리 식당 리스트', season: '시즌 추천 · 지금 가볼 만한 곳', settle: '정산하기 · 정산하는 법', kakao: '아르바트래블 비즈카톡', greet: '손님께 첫 인사 보내기 (왓츠앱 · 자동 입력)', greetHint: '누르면 인사말이 영어로 채워집니다 → 이 팀 단톡방을 고르고 보내기만 누르세요. 내용은 고쳐서 보내셔도 됩니다.',
     foot: 'ARBA Travel Korea · 지침서 내용은 바뀔 수 있으니 투어 전날 다시 열어 확인해주세요.' };
   var L_EN = { voucher: 'TOUR VOUCHER · FOR GUIDE', guide: '', in: 'Arrival', out: 'Departure', city: 'City', tl: 'Tour leader', none: 'None', links: '🔗 LINKS', flights: '✈️ FLIGHTS · LIVE', hotel: '🏨 HOTEL', days: '📅 ITINERARY', memo: '📌 NOTES FOR THE WHOLE TOUR', contacts: '☎️ EMERGENCY CONTACT',
     sched: 'Sched.', est: 'Est.', term: 'Terminal', exit: 'Exit', counter: 'Counter', checking: 'Checking…', fsOnly: ' airport: check on FlightStats', track: 'Live tracking (FlightStats)', notYet: 'Not in the airport system yet (opens 3 days before)', liveFail: 'Live lookup unavailable — use FlightStats', belt: 'belt ', sign: 'Airport sign — view / print',
     status: { ontime: 'On time', delay: 'Delayed', landed: 'Landed', departed: 'Departed', cancel: 'Cancelled', divert: 'Diverted' }, tba: 'TBA',
     booking: 'Booking no.', checkin: 'Check-in', checkout: 'Check-out', bf: 'Breakfast', rooms: 'Rooms', pay: 'Payment', addr: 'Address', tel: 'Phone', map: '📍 Map', call: '📞 Call', sms: '💬 SMS', copy: 'Copy', copied: 'Copied', namelist: '📋 Name list (rooming list)', nonamelist: '📋 Name list — not yet',
-    today: 'TODAY', meal: ['Breakfast', 'Lunch', 'Dinner'], free: 'own arrangement', pray: 'Prayer today', after: ' onwards', before: ' before', left: 'Sunset in ', h: 'h ', m: 'min', sunset: 'Sun has set → Maghrib+Isha', draft: 'DRAFT · not final', waBtn: 'WhatsApp', halal: 'Halal & Muslim-friendly restaurants', season: 'Seasonal picks on our route', settle: 'Settle expenses · how to', kakao: 'ARBA Travel on KakaoTalk',
+    today: 'TODAY', meal: ['Breakfast', 'Lunch', 'Dinner'], free: 'own arrangement', pray: 'Prayer today', after: ' onwards', before: ' before', left: 'Sunset in ', h: 'h ', m: 'min', sunset: 'Sun has set → Maghrib+Isha', draft: 'DRAFT · not final', waBtn: 'WhatsApp', halal: 'Halal & Muslim-friendly restaurants', season: 'Seasonal picks on our route', settle: 'Settle expenses · how to', kakao: 'ARBA Travel on KakaoTalk', greet: 'Send first greeting to guests (WhatsApp · prefilled)', greetHint: 'Opens WhatsApp with the greeting filled in — pick this group and tap send. Feel free to edit it.',
     foot: 'ARBA Travel Korea · Details can change — please reopen this page the day before the tour.' };
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function nl(s) { return esc(s).replace(/\n/g, '<br>'); }
@@ -25,6 +25,34 @@
   function who(c) {
     if (!c || !c.phone) return '';
     return '<span class="who">' + (c.contact ? esc(c.contact) + ' ' : '') + '<a class="mini" href="tel:' + num(c.phone) + '">' + L.call + '</a>' + (c.sms ? '<a class="mini" href="sms:' + num(c.phone) + '">' + L.sms + '</a>' : '') + cpBtn(c.phone) + (c.note ? ' <span class="x">' + esc(c.note) + '</span>' : '') + '</span>';
+  }
+
+  // 손님 첫 인사 (영어) — WhatsApp wa.me/?text= 로 자동 입력. 월별 날씨 안내는 서울·제주·부산 평년 기준
+  var WX_M = { SEL: ['-6~2°C, very cold with occasional snow', '-4~5°C, cold and dry', '1~11°C, chilly mornings, mild afternoons', '7~18°C, mild and pleasant', '12~23°C, warm and sunny', '18~27°C, warm with some rain', '23~30°C, hot and humid (rainy season)', '24~31°C, hot and humid', '18~27°C, warm and clear', '10~20°C, cool and crisp', '3~12°C, cold mornings and evenings', '-3~5°C, cold with possible snow'],
+    JJU: ['2~9°C, windy and cold', '2~10°C, windy', '6~13°C, cool and windy', '10~18°C, mild', '15~22°C, pleasant', '19~25°C, warm, some rain', '24~29°C, hot and humid', '25~31°C, hot', '21~27°C, warm', '15~22°C, mild', '9~16°C, cool and windy', '4~11°C, cold and windy'],
+    BUS: ['-1~8°C, cold', '1~10°C, cold', '5~13°C, cool', '10~18°C, mild', '15~22°C, pleasant', '19~24°C, warm', '23~28°C, hot and humid', '25~30°C, hot', '20~26°C, warm', '14~22°C, mild', '8~15°C, cool', '2~10°C, cold'] };
+  var WX_C = { cold: 'Please bring a warm padded jacket or coat, a scarf, gloves and layers (thermal inner wear helps). Indoors and buses are heated, so layers you can take off are best.', cool: 'A jacket or light coat with layers is ideal — mornings and evenings are chilly.', mild: 'Light layers and a thin jacket are enough; comfortable walking shoes please.', hot: 'Light, breathable clothes, a cap and sunscreen — and a small umbrella for sudden showers.' };
+  function greet(D) {
+    if (D.greeting) return D.greeting;
+    var g = D.guide || {}, name = g.eng || g.name || '', m = +((D.days && D.days[0] && D.days[0].d) || '').slice(5, 7) || 11, loc = D.loc || 'SEL';
+    var wx = (WX_M[loc] || WX_M.SEL)[m - 1], cl = (m <= 2 || m === 12) ? WX_C.cold : (m <= 4 || m >= 10) ? WX_C.cool : (m >= 7 && m <= 8) ? WX_C.hot : WX_C.mild;
+    var ap = loc === 'JJU' ? 'Jeju Airport' : loc === 'BUS' ? 'Gimhae Airport' : 'Incheon Airport';
+    return 'Hi everyone! 👋 I\'m ' + name + ', your ARBA tour guide in Korea for ' + (D.period || '') + '. Thank you so much for choosing Korea — we are really looking forward to welcoming you!\n\n' +
+      '🌡 Weather: ' + wx + '. ' + cl + '\n\n' +
+      '🧳 Good to bring: comfortable walking shoes, a small day bag, a reusable water bottle, a Korean plug adapter (type C/F, 220V), and any personal medicine. Prayer mats and small bottles of water for wudu are handy too.\n\n' +
+      '✈️ Before you fly: please keep power banks and spare batteries in your carry-on (not in checked luggage). If you already have K-ETA, you do NOT need to fill in the Arrival Card. Please keep your passport and K-ETA/visa handy for immigration.\n\n' +
+      '🛬 On arrival at ' + ap + ', I will be waiting at the arrival exit holding an ARBA Travel sign. Please follow me after you collect your luggage.\n\n' +
+      'If you have any questions before the trip, feel free to ask here anytime. See you very soon in Korea! 🇰🇷\n— ' + name;
+  }
+  // 날씨 (Open-Meteo, 키 없음, 16일 예보) — WMO 코드 → 이모지
+  function wxIcon(c) { c = +c; if (c === 0) return '☀️'; if (c <= 2) return '🌤'; if (c === 3) return '☁️'; if (c <= 49) return '🌫'; if (c <= 57) return '🌦'; if (c <= 67) return '🌧'; if (c <= 77) return '🌨'; if (c <= 82) return '🌧'; if (c <= 86) return '🌨'; return '⛈'; }
+  function weather(loc) {
+    var ll = (window.PRAYER_LOC || {})[loc] || (window.PRAYER_LOC || {}).SEL || [37.57, 126.98];
+    var u = 'https://api.open-meteo.com/v1/forecast?latitude=' + ll[0] + '&longitude=' + ll[1] + '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=16';
+    return fetch(u).then(function (r) { return r.json(); }).then(function (j) {
+      var d = j.daily || {}, out = {}; (d.time || []).forEach(function (t, i) { out[t] = { c: d.weather_code[i], hi: Math.round(d.temperature_2m_max[i]), lo: Math.round(d.temperature_2m_min[i]), mm: Math.round((d.precipitation_sum[i] || 0) * 10) / 10, pp: d.precipitation_probability_max[i] }; });
+      return out;
+    }).catch(function () { return {}; });
   }
   var L = L_KO, EN = false, SLUG = '';
 
@@ -55,7 +83,7 @@
       (K.wa ? '<a class="btn wa" target="_blank" rel="noopener" href="' + esc(K.wa) + '">' + WA_SVG + L.waBtn + '</a>' : '<span class="btn wa dis">' + WA_SVG + L.waBtn + ' (' + L.tba + ')</span>') +
       (K.halal ? '<a class="btn halal" target="_blank" rel="noopener" href="' + esc(K.halal) + '">🕌 ' + L.halal + '</a>' : '<span class="btn dis"></span>') +
       (K.season ? '<a class="btn season" target="_blank" rel="noopener" href="' + esc(K.season) + '">🌸 ' + L.season + '</a>' : '<span class="btn dis"></span>') +
-      (K.settle ? '<a class="btn red" target="_blank" rel="noopener" href="' + esc(K.settle) + '">🧾 ' + L.settle + '</a>' : '') + '</div>' + (K.hint ? '<p class="hint">' + esc(K.hint) + '</p>' : '');
+      (K.settle ? '<a class="btn red" target="_blank" rel="noopener" href="' + esc(K.settle) + '">🧾 ' + L.settle + '</a>' : '') + '</div>' + (K.hint ? '<p class="hint">' + esc(K.hint) + '</p>' : '') + '<div class="btnrow"><a class="btn greet" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(greet(D)) + '">💬 ' + L.greet + '</a></div><p class="hint">' + L.greetHint + ' <button type="button" class="cp" data-copy="' + esc(greet(D)) + '">' + L.copy + '</button></p>';
     // 항공
     h += '<h2>' + L.flights + '</h2>';
     (D.flights || []).forEach(function (f) {
@@ -87,7 +115,7 @@
     (D.days || []).forEach(function (d, di) {
       var meals = d.meals || {};
       function mealSpan(i, key) { var mm = meals[key]; if (!mm) return '<span class="no">' + L.meal[i] + '</span>'; if (mm.ok === false) return '<span class="no">' + L.meal[i] + (mm.txt ? ' — ' + esc(mm.txt) : ' — ' + L.free) + '</span>'; return '<span class="' + (mm.alt ? 'alt' : '') + '">' + L.meal[i] + (mm.txt ? ' ' + esc(mm.txt) : '') + '</span>'; }
-      h += '<details class="day" data-d="' + esc(d.d) + '"><summary><span class="d" data-today="' + L.today + '">' + esc(d.label) + '</span><span class="s">' + esc(d.summary) + '</span><span class="ar">▶</span></summary><div class="body">' +
+      h += '<details class="day" data-d="' + esc(d.d) + '" data-loc="' + esc(d.loc || D.loc || 'SEL') + '"><summary><span class="d" data-today="' + L.today + '">' + esc(d.label) + '</span><span class="s">' + esc(d.summary) + '</span><span class="ar">▶</span></summary><div class="body">' +
         '<ul class="tl">' + (d.items || []).map(function (it) { return '<li><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + who(it) + (it.x ? '<span class="x">' + esc(it.x) + '</span>' : '') + '</span></li>'; }).join('') + '</ul>' +
         '<div class="row"><span class="i">🍽</span><div class="meal">' + mealSpan(0, 'b') + mealSpan(1, 'l') + mealSpan(2, 'd') + '</div></div>' +
         (d.move ? '<div class="row"><span class="i">🚐</span><div>' + esc(d.move) + who(d.moveWho) + (d.moveSub ? '<br><span class="x">' + esc(d.moveSub) + '</span>' : '') + '</div></div>' : '') +
@@ -118,6 +146,9 @@
     days.forEach(function (d) { if (d.dataset.d === ymd) { d.open = true; d.classList.add('today'); hit = d; } });
     if (!hit && days.length) { var up = days.filter(function (d) { return d.dataset.d >= ymd; })[0] || days[0]; up.open = true; }
     else if (hit) setTimeout(function () { hit.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
+    // 날씨 (지역별 1회 조회) — 날짜 옆에 아이콘·기온·강수
+    var locs = {}; days.forEach(function (d) { var p = d.querySelector('.pray'); locs[(p && p.dataset.loc) || d.dataset.loc || 'SEL'] = 1; });
+    Object.keys(locs).forEach(function (loc) { weather(loc).then(function (W) { days.forEach(function (d) { var p = d.querySelector('.pray'); var l = (p && p.dataset.loc) || d.dataset.loc || 'SEL'; if (l !== loc) return; var w = W[d.dataset.d]; if (!w) return; var el = d.querySelector('summary .d'); if (!el || el.querySelector('.wx')) return; var sp = document.createElement('span'); sp.className = 'wx'; sp.textContent = wxIcon(w.c) + ' ' + w.lo + '°/' + w.hi + '°' + (w.mm > 0 ? ' · ' + w.mm + 'mm' : (w.pp >= 40 ? ' · ' + (EN ? 'rain ' : '비 ') + w.pp + '%' : '')); el.appendChild(sp); }); }); });
     // 할 일 체크 — 이 휴대폰에 저장 (다시 열어도 유지)
     document.querySelectorAll('.todo li[data-k]').forEach(function (li) {
       var key = 'atk:' + SLUG + ':' + li.dataset.k, cb = li.querySelector('input');

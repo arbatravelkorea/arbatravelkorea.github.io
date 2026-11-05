@@ -26,6 +26,9 @@ h2{font-size:12.5px;letter-spacing:.12em;color:var(--red);font-weight:800;margin
 .btn.halal{background:#F7F5F0;color:#1F5A3A;border:1.5px solid #C5A46D;font-weight:800}
 .btn.season{background:#FFF0F2;color:#B0264B;border-color:#F3C9CE}
 .btn.kakao{background:#FEE500;color:#191919;border-color:#FEE500;margin-top:10px;flex:none;width:100%}
+.btn .nmap{height:18px}
+.btn.greet{flex:1 1 100%;background:#E6F4EC;color:var(--green);border-color:#CFE7DA}
+.wx{font-size:12px;font-weight:700;color:var(--mut);display:block;margin-top:2px;white-space:nowrap}
 .btn.wide{flex:1 1 100%;margin-top:10px;background:var(--soft)}
 .hint{font-size:12.5px;color:var(--mut);margin:4px 2px 8px;line-height:1.5}
 /* 항공 */
