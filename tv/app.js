@@ -8,13 +8,13 @@
     sched: '예정', est: '변경', term: '터미널', exit: '출구', counter: '카운터', checking: '조회 중…', fsOnly: ' 공항은 FlightStats로 확인', track: '실시간 추적 (FlightStats)', notYet: '아직 공항 조회 전 (3일 전부터 조회됨)', liveFail: '실시간 조회 실패 — FlightStats로 확인', belt: '벨트 ', sign: '공항 피켓 보기/인쇄',
     status: { ontime: '정시', delay: '지연', landed: '도착함', departed: '출발함', cancel: '결항', divert: '회항' }, tba: '미정',
     booking: '예약번호', checkin: '체크인', checkout: '체크아웃', bf: '조식', rooms: '객실', pay: '결제', addr: '주소', tel: '전화', map: '📍 지도', call: '📞 전화', sms: '💬 문자', copy: '복사', copied: '복사됨', namelist: '📋 명단(룸리스트) 보기', nonamelist: '📋 명단 — 아직 없음 (받는 대로 여기에)',
-    today: '오늘', meal: ['아침', '점심', '저녁'], free: '손님 자유', pray: '오늘 기도', after: ' 이후', before: ' 전에', left: '해 지기까지 ', h: '시간 ', m: '분', sunset: '해 졌음 → Maghrib+Isha', draft: '초안 · 확정 전', waBtn: 'WhatsApp', halal: '할랄&무슬림 프렌들리 식당 리스트', season: '시즌 추천 · 지금 가볼 만한 곳', settle: '정산하기 · 정산하는 법', kakao: '아르바트래블 비즈카톡', greet: '손님께 첫 인사 보내기 (왓츠앱 · 자동 입력)', greetHint: '누르면 인사말이 영어로 채워집니다 → 이 팀 단톡방을 고르고 보내기만 누르세요. 내용은 고쳐서 보내셔도 됩니다.',
+    today: '오늘', meal: ['아침', '점심', '저녁'], free: '손님 자유', pray: '오늘 기도', after: ' 이후', before: ' 전에', left: '해 지기까지 ', h: '시간 ', m: '분', sunset: '해 졌음 → Maghrib+Isha', draft: '초안 · 확정 전', waBtn: 'WhatsApp', halal: '할랄&무슬림 프렌들리 식당 리스트', season: '시즌 추천 · 지금 가볼 만한 곳', settle: '정산하기 · 정산하는 법', kakao: '아르바트래블 비즈카톡', greet: '손님께 첫 인사 보내기 (왓츠앱 · 자동 입력)', greetHint: '① 위 WhatsApp 버튼으로 이 팀 단톡방에 먼저 들어가세요 → ② 이 버튼을 누르면 왓츠앱이 열리면서 영어 인사말이 채워집니다 → ③ 방 목록에서 이 팀 단톡방을 고르고 보내기. 내용은 고쳐서 보내셔도 됩니다.',
     foot: 'ARBA Travel Korea · 지침서 내용은 바뀔 수 있으니 투어 전날 다시 열어 확인해주세요.' };
   var L_EN = { voucher: 'TOUR VOUCHER · FOR GUIDE', guide: '', in: 'Arrival', out: 'Departure', city: 'City', tl: 'Tour leader', none: 'None', links: '🔗 LINKS', flights: '✈️ FLIGHTS · LIVE', hotel: '🏨 HOTEL', days: '📅 ITINERARY', memo: '📌 NOTES FOR THE WHOLE TOUR', contacts: '☎️ EMERGENCY CONTACT',
     sched: 'Sched.', est: 'Est.', term: 'Terminal', exit: 'Exit', counter: 'Counter', checking: 'Checking…', fsOnly: ' airport: check on FlightStats', track: 'Live tracking (FlightStats)', notYet: 'Not in the airport system yet (opens 3 days before)', liveFail: 'Live lookup unavailable — use FlightStats', belt: 'belt ', sign: 'Airport sign — view / print',
     status: { ontime: 'On time', delay: 'Delayed', landed: 'Landed', departed: 'Departed', cancel: 'Cancelled', divert: 'Diverted' }, tba: 'TBA',
     booking: 'Booking no.', checkin: 'Check-in', checkout: 'Check-out', bf: 'Breakfast', rooms: 'Rooms', pay: 'Payment', addr: 'Address', tel: 'Phone', map: '📍 Map', call: '📞 Call', sms: '💬 SMS', copy: 'Copy', copied: 'Copied', namelist: '📋 Name list (rooming list)', nonamelist: '📋 Name list — not yet',
-    today: 'TODAY', meal: ['Breakfast', 'Lunch', 'Dinner'], free: 'own arrangement', pray: 'Prayer today', after: ' onwards', before: ' before', left: 'Sunset in ', h: 'h ', m: 'min', sunset: 'Sun has set → Maghrib+Isha', draft: 'DRAFT · not final', waBtn: 'WhatsApp', halal: 'Halal & Muslim-friendly restaurants', season: 'Seasonal picks on our route', settle: 'Settle expenses · how to', kakao: 'ARBA Travel on KakaoTalk', greet: 'Send first greeting to guests (WhatsApp · prefilled)', greetHint: 'Opens WhatsApp with the greeting filled in — pick this group and tap send. Feel free to edit it.',
+    today: 'TODAY', meal: ['Breakfast', 'Lunch', 'Dinner'], free: 'own arrangement', pray: 'Prayer today', after: ' onwards', before: ' before', left: 'Sunset in ', h: 'h ', m: 'min', sunset: 'Sun has set → Maghrib+Isha', draft: 'DRAFT · not final', waBtn: 'WhatsApp', halal: 'Halal & Muslim-friendly restaurants', season: 'Seasonal picks on our route', settle: 'Settle expenses · how to', kakao: 'ARBA Travel on KakaoTalk', greet: 'Send first greeting to guests (WhatsApp · prefilled)', greetHint: '① Join the group with the WhatsApp button above first → ② tap this button: WhatsApp opens with the greeting filled in → ③ choose this group and send. Feel free to edit it.',
     foot: 'ARBA Travel Korea · Details can change — please reopen this page the day before the tour.' };
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function nl(s) { return esc(s).replace(/\n/g, '<br>'); }
@@ -31,22 +31,34 @@
       (pl ? '<a class="mini nm" target="_blank" rel="noopener" href="https://map.naver.com/p/search/' + encodeURIComponent(pl) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' : cpBtn(c.phone)) + (c.note ? ' <span class="x">' + esc(c.note) + '</span>' : '') + '</span>';
   }
 
-  // 손님 첫 인사 (영어) — WhatsApp wa.me/?text= 로 자동 입력. 월별 날씨 안내는 서울·제주·부산 평년 기준
-  var WX_M = { SEL: ['-6~2°C, very cold with occasional snow', '-4~5°C, cold and dry', '1~11°C, chilly mornings, mild afternoons', '7~18°C, mild and pleasant', '12~23°C, warm and sunny', '18~27°C, warm with some rain', '23~30°C, hot and humid (rainy season)', '24~31°C, hot and humid', '18~27°C, warm and clear', '10~20°C, cool and crisp', '3~12°C, cold mornings and evenings', '-3~5°C, cold with possible snow'],
-    JJU: ['2~9°C, windy and cold', '2~10°C, windy', '6~13°C, cool and windy', '10~18°C, mild', '15~22°C, pleasant', '19~25°C, warm, some rain', '24~29°C, hot and humid', '25~31°C, hot', '21~27°C, warm', '15~22°C, mild', '9~16°C, cool and windy', '4~11°C, cold and windy'],
-    BUS: ['-1~8°C, cold', '1~10°C, cold', '5~13°C, cool', '10~18°C, mild', '15~22°C, pleasant', '19~24°C, warm', '23~28°C, hot and humid', '25~30°C, hot', '20~26°C, warm', '14~22°C, mild', '8~15°C, cool', '2~10°C, cold'] };
-  var WX_C = { cold: 'Please bring a warm padded jacket or coat, a scarf, gloves and layers (thermal inner wear helps). Indoors and buses are heated, so layers you can take off are best.', cool: 'A jacket or light coat with layers is ideal — mornings and evenings are chilly.', mild: 'Light layers and a thin jacket are enough; comfortable walking shoes please.', hot: 'Light, breathable clothes, a cap and sunscreen — and a small umbrella for sudden showers.' };
+  // 손님 첫 인사 (영어) — 대표 확정 템플릿 (claude/tour_voucher/가이드_왓츠앱_자기소개_템플릿.md 2026-11-06). WhatsApp wa.me/?text= 로 자동 입력
+  var WX_LO = { SEL: [-6, -4, 1, 7, 12, 18, 23, 24, 18, 10, 3, -3], JJU: [2, 2, 6, 10, 15, 19, 24, 25, 21, 15, 9, 4], BUS: [-1, 1, 5, 10, 15, 19, 23, 25, 20, 14, 8, 2] };
+  var WX_HI = { SEL: [2, 5, 11, 18, 23, 27, 30, 31, 27, 20, 12, 5], JJU: [9, 10, 13, 18, 22, 25, 29, 31, 27, 22, 16, 11], BUS: [8, 10, 13, 18, 22, 24, 28, 30, 26, 22, 15, 10] };
+  var FRUIT = ['🍓🍊 strawberries & Jeju tangerines (gyul)', '🍓🍊 strawberries & Hallabong oranges', '🍓🍊 strawberries & Cheonhyehyang oranges', '🍓🍈 strawberries & Korean melon (chamoe, early)', '🍈🍅 Korean melon (chamoe) & cherry tomatoes', '🍈🍉 Korean melon & watermelon', '🍉🍑 watermelon & peaches', '🍑🍇 peaches & grapes', '🍇🍐 Shine Muscat grapes & Korean pears', '🍎🍐 apples & Korean pears', '🍎🟠 apples & persimmons', '🍊🍓 Jeju tangerines & strawberries'];
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var WXR = null; // 투어 기간 실제 예보 {lo,hi} (Open-Meteo 받으면 채움)
   function greet(D) {
     if (D.greeting) return D.greeting;
-    var g = D.guide || {}, name = g.eng || g.name || '', m = +((D.days && D.days[0] && D.days[0].d) || '').slice(5, 7) || 11, loc = D.loc || 'SEL';
-    var wx = (WX_M[loc] || WX_M.SEL)[m - 1], cl = (m <= 2 || m === 12) ? WX_C.cold : (m <= 4 || m >= 10) ? WX_C.cool : (m >= 7 && m <= 8) ? WX_C.hot : WX_C.mild;
+    var g = D.guide || {}, name = g.eng || g.name || '', G = D.greet || {}, loc = D.loc || 'SEL';
+    var ds = (D.days || []).map(function (d) { return d.d; }).filter(Boolean), d0 = ds[0] || '', d1 = ds[ds.length - 1] || d0;
+    var m0 = +d0.slice(5, 7) || 11, m1 = +d1.slice(5, 7) || m0, y = d0.slice(0, 4);
+    var per = m0 === m1 ? (+d0.slice(8)) + '–' + (+d1.slice(8)) + ' ' + MON[m0 - 1] + ' ' + y : (+d0.slice(8)) + ' ' + MON[m0 - 1] + '–' + (+d1.slice(8)) + ' ' + MON[m1 - 1] + ' ' + y;
+    var lo = WXR ? WXR.lo : (WX_LO[loc] || WX_LO.SEL)[m0 - 1], hi = WXR ? WXR.hi : (WX_HI[loc] || WX_HI.SEL)[m0 - 1];
+    var wl = lo < 0 ? 'very cold, below 0°C at night. Please bring a thick winter coat, gloves and a scarf.' : lo <= 5 ? 'cold in the morning and evening. A warm jacket and layers are recommended.' : hi >= 28 ? 'hot and humid. Light clothes, a hat and sunscreen are recommended.' : lo >= 15 ? 'pleasant but cooler at night. A light jacket is enough.' : 'cool, especially in the morning and evening. A jacket and layers are recommended.';
+    if (m0 >= 7 && m0 <= 9) wl += ' Rain is likely — please bring a small umbrella.';
+    var exp = G.exp === 'new' ? "I'm really looking forward to meeting you all and making this a comfortable, memorable trip." : G.exp === 'before' ? "I've guided Muslim groups with ARBA before, so you're in good hands." : "I've guided many Muslim groups with ARBA, so you're in good hands.";
+    var taxi = G.taxi != null ? G.taxi : /\/JT\//.test(D.tripId || '');
     var ap = loc === 'JJU' ? 'Jeju Airport' : loc === 'BUS' ? 'Gimhae Airport' : 'Incheon Airport';
-    return 'Hi everyone! 👋 I\'m ' + name + ', your ARBA tour guide in Korea for ' + (D.period || '') + '. Thank you so much for choosing Korea — we are really looking forward to welcoming you!\n\n' +
-      '🌡 Weather: ' + wx + '. ' + cl + '\n\n' +
-      '🧳 Good to bring: comfortable walking shoes, a small day bag, a reusable water bottle, a Korean plug adapter (type C/F, 220V), and any personal medicine. Prayer mats and small bottles of water for wudu are handy too.\n\n' +
-      '✈️ Before you fly: please keep power banks and spare batteries in your carry-on (not in checked luggage). If you already have K-ETA, you do NOT need to fill in the Arrival Card. Please keep your passport and K-ETA/visa handy for immigration.\n\n' +
-      '🛬 On arrival at ' + ap + ', I will be waiting at the arrival exit holding an ARBA Travel sign. Please follow me after you collect your luggage.\n\n' +
-      'If you have any questions before the trip, feel free to ask here anytime. See you very soon in Korea! 🇰🇷\n— ' + name;
+    var tips = ["🗺️ Use Naver Map instead of Google Maps — it's much more accurate in Korea."];
+    if (lo < 0) tips.push('🔥 Hand warmers (hot packs) are sold at convenience stores — very useful on freezing days!');
+    if (taxi) tips.push('🚕 For taxis, please use the Kakao T app.');
+    tips.push("🛂 With K-ETA, you don't need the Arrival Card. Keep your passport handy.");
+    return 'Hi everyone! 😊\nI\'m ' + name + ', your tour guide in Korea for ' + per + '. Thank you for choosing ARBA Travel!\n\n' + exp + '\n\n' +
+      '🍽️ All meals are Halal — please tell me about any allergies in advance.\n🕌 I\'ll arrange suitable places for prayer during the trip.\n' +
+      '🧥 Weather: ' + lo + '–' + hi + '°C, ' + wl + '\n' + FRUIT[m0 - 1].split(' ')[0] + ' Seasonal fruit now: ' + FRUIT[m0 - 1].split(' ').slice(1).join(' ') + " — I'll stop by a fruit shop if you're interested!\n\n" +
+      'Useful tips:\n' + tips.join('\n') + '\n\n' +
+      "✈️ I'll meet you at the " + ap + ' arrival exit with an ARBA Travel sign.\n\n' +
+      'Feel free to message me here anytime. See you soon in Korea! 🇰🇷\n— ' + name;
   }
   // 날씨 (Open-Meteo, 키 없음, 16일 예보) — WMO 코드 → 이모지
   function wxIcon(c) { c = +c; if (c === 0) return '☀️'; if (c <= 2) return '🌤'; if (c === 3) return '☁️'; if (c <= 49) return '🌫'; if (c <= 57) return '🌦'; if (c <= 67) return '🌧'; if (c <= 77) return '🌨'; if (c <= 82) return '🌧'; if (c <= 86) return '🌨'; return '⛈'; }
@@ -58,7 +70,7 @@
       return out;
     }).catch(function () { return {}; });
   }
-  var L = L_KO, EN = false, SLUG = '';
+  var L = L_KO, EN = false, SLUG = '', CUR = {};
 
   function render(slug) {
     SLUG = slug;
@@ -72,7 +84,7 @@
   }
 
   function draw(D) {
-    var h = '';
+    CUR = D; var h = '';
     var alt = EN ? '?lang=ko' : '?lang=en';
     h += '<header>' + (D.draft ? '<span class="draft">' + L.draft + '</span>' : '') + '<a class="lang" href="' + alt + '">' + (EN ? '한국어' : 'English') + '</a><div class="t">ARBA TRAVEL KOREA · ' + L.voucher + '</div><h1>' + esc(D.tripId) + '</h1><div class="m">' + esc(D.title) + '</div></header>';
     // 가이드 카드
@@ -152,7 +164,7 @@
     else if (hit) setTimeout(function () { hit.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
     // 날씨 (지역별 1회 조회) — 날짜 옆에 아이콘·기온·강수
     var locs = {}; days.forEach(function (d) { var p = d.querySelector('.pray'); locs[(p && p.dataset.loc) || d.dataset.loc || 'SEL'] = 1; });
-    Object.keys(locs).forEach(function (loc) { weather(loc).then(function (W) { days.forEach(function (d) { var p = d.querySelector('.pray'); var l = (p && p.dataset.loc) || d.dataset.loc || 'SEL'; if (l !== loc) return; var w = W[d.dataset.d]; if (!w) return; var el = d.querySelector('summary .d'); if (!el || el.querySelector('.wx')) return; var sp = document.createElement('span'); sp.className = 'wx'; sp.textContent = wxIcon(w.c) + ' ' + w.lo + '°/' + w.hi + '°' + (w.mm > 0 ? ' · ' + w.mm + 'mm' : (w.pp >= 40 ? ' · ' + (EN ? 'rain ' : '비 ') + w.pp + '%' : '')); el.appendChild(sp); }); }); });
+    Object.keys(locs).forEach(function (loc) { weather(loc).then(function (W) { if (loc === (CUR.loc || 'SEL')) { var los = [], his = []; days.forEach(function (d) { var w = W[d.dataset.d]; if (w) { los.push(w.lo); his.push(w.hi); } }); if (los.length) { WXR = { lo: Math.min.apply(null, los), hi: Math.max.apply(null, his) }; var gb = document.querySelector('.btn.greet'); if (gb) { gb.href = 'https://wa.me/?text=' + encodeURIComponent(greet(CUR)); var cb = gb.parentNode.nextElementSibling && gb.parentNode.nextElementSibling.querySelector('.cp'); if (cb) cb.dataset.copy = greet(CUR); } } } days.forEach(function (d) { var p = d.querySelector('.pray'); var l = (p && p.dataset.loc) || d.dataset.loc || 'SEL'; if (l !== loc) return; var w = W[d.dataset.d]; if (!w) return; var el = d.querySelector('summary .d'); if (!el || el.querySelector('.wx')) return; var sp = document.createElement('span'); sp.className = 'wx'; sp.textContent = wxIcon(w.c) + ' ' + w.lo + '°/' + w.hi + '°' + (w.mm > 0 ? ' · ' + w.mm + 'mm' : (w.pp >= 40 ? ' · ' + (EN ? 'rain ' : '비 ') + w.pp + '%' : '')); el.appendChild(sp); }); }); });
     // 할 일 체크 — 이 휴대폰에 저장 (다시 열어도 유지)
     document.querySelectorAll('.todo li[data-k]').forEach(function (li) {
       var key = 'atk:' + SLUG + ':' + li.dataset.k, cb = li.querySelector('input');
