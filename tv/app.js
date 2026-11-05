@@ -28,9 +28,9 @@
   function halalLink(pl) { var H = window.HALAL_LINKS || {}; if (!pl) return ''; var k = pl.replace(/\s*\(.*$/, '').replace(/\s+/g, ' ').trim().toLowerCase(); var best = ''; Object.keys(H).forEach(function (n) { var nn = n.toLowerCase(); if (nn === k || nn.indexOf(k) === 0 || k.indexOf(nn) === 0) { if (!best || n.length > best.length) best = n; } }); if (!best) Object.keys(H).forEach(function (n) { var w = n.toLowerCase().split(' ')[0]; if (w.length >= 2 && k.indexOf(w) === 0 && !best) best = n; }); return best ? H[best] : ''; }
   function who(c) {
     if (!c || !c.phone) return '';
-    var pl = placeOf(c), mp = c.map || halalLink(pl);
-    return '<span class="who">' + (c.contact ? esc(c.contact) + ' ' : '') + '<a class="mini" href="tel:' + num(c.phone) + '">' + L.call + '</a>' + (c.sms ? '<a class="mini" href="sms:' + num(c.phone) + '">' + L.sms + '</a>' : '') +
-      (pl ? '<a class="mini nm" target="_blank" rel="noopener" href="' + esc(mp || ('https://map.naver.com/p/search/' + encodeURIComponent(pl))) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' : cpBtn(c.phone)) + (c.note ? ' <span class="x">' + esc(c.note) + '</span>' : '') + '</span>';
+    var pl = c.nomap ? '' : placeOf(c), mp = c.map || halalLink(pl);
+    return '<span class="who">' + (c.contact ? esc(c.contact) + ' ' : '') + '<a class="mini" href="tel:' + num(c.phone) + '">' + (c.callLabel ? '📞 ' + esc(c.callLabel) : L.call) + '</a>' + (c.sms ? '<a class="mini" href="sms:' + num(c.phone) + '">' + L.sms + '</a>' : '') +
+      ((pl || mp) ? '<a class="mini nm" target="_blank" rel="noopener" href="' + esc(mp || ('https://map.naver.com/p/search/' + encodeURIComponent(pl))) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' : (c.nomap ? '' : cpBtn(c.phone))) + (c.note ? ' <span class="x">' + esc(c.note) + '</span>' : '') + '</span>';
   }
 
   // 손님 첫 인사 (영어) — 대표 확정 템플릿 (claude/tour_voucher/가이드_왓츠앱_자기소개_템플릿.md 2026-11-06). WhatsApp wa.me/?text= 로 자동 입력
