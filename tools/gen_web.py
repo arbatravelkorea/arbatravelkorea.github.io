@@ -99,10 +99,10 @@ def flights_html():
         who = f'<p class="fw">{e(f["who"])}</p>' if f.get('who') else ''
         pnr = f'<p class="pnr">PNR <b>{e(f["pnr"])}</b> <button type="button" class="cp" data-copy="{e(f["pnr"])}">복사</button>' + (f' <span class="fs">{e(f.get("airline",""))}</span>' if f.get('airline') else '') + '</p>' if f.get('pnr') else '<p class="pnr">PNR 없음</p>'
         out += f'<div class="flt">{who}{pnr}<ul class="legs">{legs}</ul></div>'
-    # 공항 미팅 버튼 (2026-11-04 대표 확정): 항공 카드 바로 밑 → GitHub airport 페이지 (실시간 도착편 조회·출구·연착 추적, PT는 단기주차장 안내)
-    import urllib.parse as _u2
+    # 항공 실시간 칸 (2026-11-05 대표 확정, 공항 미팅 버튼 대체): 인천편은 ATK_FlightApi(인천공항공사 API)로 열 때 조회 — 예정/변경·터미널·출구(입국)·카운터(출국)·벨트·상태
+    #   제주·부산·김포는 FlightStats 링크만. 편마다 <div class="live" data-f="편명|YYYYMMDD|A/D|HHMM" data-ap="ICN">
     _yr = '20' + (t.get('arrival', '') or '00 Nov 26').split()[-1][-2:]
-    _fs = []
+    _live = ''
     for f in fl:
         for l in f['legs']:
             _w = l.get('when', ''); _m = re.search(r'(\d{1,2})/(\d{1,2}).*?(\d{1,2}:\d{2})', _w)
@@ -110,16 +110,19 @@ def flights_html():
             if _m: _mo, _dy, _tm = int(_m.group(1)), int(_m.group(2)), _m.group(3)
             elif _me: _mo, _dy, _tm = 'JanFebMarAprMayJunJulAugSepOctNovDec'.index(_me.group(2)) // 3 + 1, int(_me.group(1)), _me.group(3)
             else: continue
-            _d = f"{_yr}-{_mo:02d}-{_dy:02d}"
             _ap = 'CJU' if ('제주' in _w or 'Jeju' in _w) else ('PUS' if any(x in _w for x in ('김해', '부산', 'Gimhae', 'Busan')) else 'ICN')
-            _fs.append('|'.join([l['no'], _d, _tm, 'in' if l['dir'] in ('입국', 'IN') else 'out', _ap]))
-    _ab = ''
-    if _fs:
-        _q = {'k': 'JT' if _IS_JT else 'PT', 't': ' + '.join(x['tripId'] for x in T), 'f': '~'.join(_fs)}
-        if job.get('lang') == 'en': _q['lang'] = 'en'
-        _ab = (f'<a class="btn sec airport" href="https://arbatravelkorea.github.io/airport/?{e(_u2.urlencode(_q))}" target="_blank" rel="noopener">'
-               '✈️ 공항 미팅 · 실시간 도착 정보</a>')
-    return f'<section><h2>항공</h2><div class="card fl">{out}</div>{_ab}{sign_btn}</section>'  # 2026-11-04: 공항 피켓 버튼도 공항 미팅 버튼 바로 밑
+            _dir = 'A' if l['dir'] in ('입국', 'IN') else 'D'
+            _no = re.sub(r'\s+', '', l['no']).upper(); _mm = re.match(r'^([A-Z0-9]{2})(\d+)', _no)
+            _fs_url = f'https://www.flightstats.com/v2/flight-tracker/{_mm.group(1)}/{_mm.group(2)}?year={_yr}&month={_mo}&date={_dy}' if _mm else ''
+            _spec = f"{_no}|{_yr}{_mo:02d}{_dy:02d}|{_dir}|{_tm.replace(':', '')}"
+            _cells = (('<div><small>예정</small><span class="sch">' + e(_tm) + '</span></div><div><small>변경</small><span class="est">—</span></div>'
+                       '<div><small>터미널</small><span class="term">—</span></div><div><small>' + ('출구' if _dir == 'A' else '카운터') + '</small><span class="exit">—</span></div>')
+                      if _ap == 'ICN' else '')
+            _live += (f'<div class="live" data-f="{e(_spec)}" data-ap="{_ap}" data-dir="{_dir}"><div class="lh"><b>{e(_no)}</b> <span class="fd">{e(l["dir"])}</span> <span class="fs">{e(_w)}</span></div>'
+                      + (f'<div class="lg">{_cells}</div><span class="st na">조회 중…</span>' if _ap == 'ICN' else f'<span class="st na">{_ap} 공항은 FlightStats로 확인</span>')
+                      + (f'<a class="lnk" target="_blank" rel="noopener" href="{e(_fs_url)}">실시간 추적 (FlightStats)</a>' if _fs_url else '') + '</div>')
+    _ab = f'<div class="card livebox">{_live}</div>' if _live else ''
+    return f'<section><h2>항공</h2><div class="card fl">{out}</div>{_ab}{sign_btn}</section>'  # 2026-11-05: 실시간 칸 + 피켓 버튼
 
 days = ''.join(
     f'<li class="day{" free" if d.get("free") else ""}"><div class="dd"><b>{e(d["date"])}</b><span>{e(d["dow"])}</span></div>'
@@ -251,7 +254,16 @@ h1.multi {{ font-size:clamp(20px,6vw,28px) }}
 .btn.sign {{ background:#fff; color:#1C1716; border:1.5px solid #BE1E2D }}
 .btn .sgi {{ display:inline-flex; align-items:center; justify-content:center; width:34px; height:24px; background:#fff; border:1.5px solid #BE1E2D; border-radius:3px }}
 .btn .sgi img {{ height:9px; width:auto }}
-.btn.airport {{ margin-top:10px }}
+.livebox {{ margin-top:10px; padding:12px 14px }}
+.live {{ padding:8px 0 }} .live + .live {{ border-top:1px dashed var(--line) }}
+.live .lh b {{ font-size:18px }} .live .lh .fd {{ font-size:12px; font-weight:800; background:#F1EEEC; border-radius:6px; padding:1px 7px; margin:0 4px }}
+.live .lg {{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:8px }}
+.live .lg div {{ background:#F7F4F2; border-radius:10px; padding:7px 4px; text-align:center }} .live .lg small {{ display:block; font-size:11px; color:var(--mut) }} .live .lg span {{ font-size:17px; font-weight:800 }}
+.live .st {{ display:inline-block; margin-top:8px; font-size:13px; font-weight:800; border-radius:20px; padding:3px 11px; background:#E6F4EC; color:#1F7A4D }}
+.live .st.delay, .live .st.cancel, .live .st.divert {{ background:#FFF0F2; color:var(--red) }} .live .st.na {{ background:#F1EEEC; color:var(--mut) }}
+.live .lnk {{ display:inline-block; margin:8px 10px 0 0; font-size:13.5px; color:#1A5FD0; text-decoration:none; font-weight:700 }}
+@media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) .live .lg div {{ background:#2a2423 }} :root:not([data-theme="light"]) .live .st {{ background:#1F3A2B; color:#9FE0B8 }} :root:not([data-theme="light"]) .live .st.na {{ background:#2a2423; color:#C9C2BE }} :root:not([data-theme="light"]) .live .st.delay, :root:not([data-theme="light"]) .live .st.cancel, :root:not([data-theme="light"]) .live .st.divert {{ background:#3A1F23; color:#FF9AA5 }} }}
+:root[data-theme="dark"] .live .lg div {{ background:#2a2423 }} :root[data-theme="dark"] .live .st {{ background:#1F3A2B; color:#9FE0B8 }} :root[data-theme="dark"] .live .st.na {{ background:#2a2423; color:#C9C2BE }} :root[data-theme="dark"] .live .st.delay, :root[data-theme="dark"] .live .st.cancel, :root[data-theme="dark"] .live .st.divert {{ background:#3A1F23; color:#FF9AA5 }}
 .card.fl ~ .btn {{ margin-top:10px }}
 .btn.settle {{ background:var(--red); color:var(--red-ink) }}
 .btn.season {{ background:#FFF6F7; color:#8A1D2A; border:1.5px solid #E8A0A8 }}
@@ -346,6 +358,30 @@ a:focus-visible, button:focus-visible {{ outline:3px solid var(--gold); outline-
 <script>
 const st = document.getElementById('sched-toggle');
 if (st) st.addEventListener('click', () => {{ const box = document.getElementById('sched'); box.hidden = !box.hidden; st.setAttribute('aria-expanded', String(!box.hidden)); st.textContent = box.hidden ? '일정표 보기' : '일정표 닫기'; }});
+// 항공 실시간 (2026-11-05): ATK_FlightApi — 인천편만. 열 때 + 60초마다
+(function(){{
+  const L = [...document.querySelectorAll('.live[data-ap="ICN"]')]; if (!L.length) return;
+  const API = 'https://script.google.com/macros/s/AKfycbysvuoEsBZzKvuVvfSqg3P7rqQcaaLyUz1U-gwm11YwkIaC86-v5vQRE9Kb2WPoGvzfRA/exec';
+  const KO = {{ ontime:'정시', delay:'지연', landed:'도착함', departed:'출발함', cancel:'결항', divert:'회항' }}, EN = {{ ontime:'On time', delay:'Delayed', landed:'Landed', departed:'Departed', cancel:'Cancelled', divert:'Diverted' }};
+  const T = document.documentElement.lang === 'en' ? EN : KO, en = document.documentElement.lang === 'en';
+  async function go() {{
+    try {{
+      const r = await fetch(API + '?flights=' + encodeURIComponent(L.map(x => x.dataset.f).join('~'))); const j = await r.json();
+      (j.list || []).forEach((d, i) => {{
+        const el = L[i]; if (!el) return; const st = el.querySelector('.st');
+        if (!d.ok || !d.found) {{ st.className = 'st na'; st.textContent = en ? 'Not in the airport system yet (opens 3 days before)' : '아직 공항 조회 전 (3일 전부터 조회됨)'; return; }}
+        el.querySelector('.est').textContent = d.estimated && d.estimated !== d.scheduled ? d.estimated : (d.estimated ? '=' : '—');
+        el.querySelector('.term').textContent = d.terminal || '—';
+        el.querySelector('.exit').textContent = (d.dir === 'A' ? d.exit : d.counter) || (en ? 'TBA' : '미정');
+        let txt = T[d.status] || d.status, cls = 'st ' + d.status;
+        if (d.status === 'delay' && d.delayMin > 0) txt += ' ' + (d.delayMin >= 60 ? Math.floor(d.delayMin / 60) + (en ? 'h ' : '시간 ') : '') + (d.delayMin % 60) + (en ? 'min' : '분');
+        if (d.belt) txt += ' · ' + (en ? 'belt ' : '벨트 ') + d.belt;
+        txt += ' · ' + d.fetchedAt; st.className = cls; st.textContent = txt;
+      }});
+    }} catch (e) {{ L.forEach(el => {{ const st = el.querySelector('.st'); st.className = 'st na'; st.textContent = en ? 'Live lookup unavailable — use FlightStats' : '실시간 조회 실패 — FlightStats로 확인'; }}); }}
+  }}
+  go(); setInterval(go, 60000);
+}})();
 document.addEventListener('click', async ev => {{
   const b = ev.target.closest('.cp'); if (!b) return;
   const v = b.dataset.copy;
@@ -357,7 +393,8 @@ document.addEventListener('click', async ev => {{
 '''
 EN_LABELS = [
     ('🌸 시즌 추천 · 지금 가볼 만한 곳', '🌸 Seasonal picks on our route'),
-    ('✈️ 공항 미팅 · 실시간 도착 정보', '✈️ Airport meeting · live arrivals'),
+    ('<small>예정</small>', '<small>Sched.</small>'), ('<small>변경</small>', '<small>Est.</small>'), ('<small>터미널</small>', '<small>Terminal</small>'), ('<small>출구</small>', '<small>Exit</small>'), ('<small>카운터</small>', '<small>Counter</small>'),
+    ('조회 중…', 'Checking…'), ('공항은 FlightStats로 확인', 'airport: check on FlightStats'), ('실시간 추적 (FlightStats)', 'Live tracking (FlightStats)'),
     ('명단(룸리스트) 보기', 'View name list (rooming list)'),
     ('명단은 아직 없습니다. 받는 대로 따로 전달드리겠습니다.', 'Name list not received yet — we will send it separately.'),
     ('🕌 할랄&amp;무슬림 프렌들리 식당 리스트', '🕌 Halal &amp; Muslim-friendly restaurant list'),
