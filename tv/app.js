@@ -100,7 +100,7 @@
     h += '<h2>' + L.links + '</h2><div class="btnrow">' +
       (K.wa ? '<a class="btn wa" target="_blank" rel="noopener" href="' + esc(K.wa) + '">' + WA_SVG + '① ' + L.waBtn + '</a>' : '<span class="btn wa dis">' + WA_SVG + L.waBtn + ' (' + L.tba + ')</span>') +
       '<button type="button" class="btn greet cp" data-label="💬 ② ' + esc(L.greet) + '" data-copy="' + esc(greet(D)) + '">💬 ② ' + L.greet + '</button></div>' +
-      '<p class="hint">' + (K.hint ? esc(K.hint) + ' ' : '') + L.greetHint + '</p>' +
+      '<p class="hint">' + (K.hint ? esc(K.hint) + '<br>' : '') + L.greetHint + '</p>' +
       '<div class="btnrow">' +
       (K.season ? '<a class="btn season" target="_blank" rel="noopener" href="' + esc(K.season) + '">🌸 ' + L.season + '</a>' : '<span class="btn dis"></span>') +
       (K.halal ? '<a class="btn halal" target="_blank" rel="noopener" href="' + esc(K.halal) + '">🕌 ' + L.halal + '</a>' : '<span class="btn dis"></span>') +
