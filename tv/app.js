@@ -30,7 +30,7 @@
     if (!c || !c.phone) return '';
     var pl = c.nomap ? '' : placeOf(c), mp = c.map || halalLink(pl);
     return '<span class="who">' + (c.contact ? esc(c.contact) + ' ' : '') + '<a class="mini" href="tel:' + num(c.phone) + '">' + (c.callLabel ? '📞 ' + esc(c.callLabel) : L.call) + '</a>' + (c.sms ? '<a class="mini" href="sms:' + num(c.phone) + '">' + L.sms + '</a>' : '') +
-      ((pl || mp) ? '<a class="mini nm" target="_blank" rel="noopener" href="' + esc(mp || ('https://map.naver.com/p/search/' + encodeURIComponent(pl))) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' : (c.nomap ? '' : cpBtn(c.phone))) + (c.note ? ' <span class="x">' + esc(c.note) + '</span>' : '') + '</span>';
+      ((pl || mp) ? '<a class="mini nm" target="_blank" rel="noopener" href="' + esc(mp || ('https://map.naver.com/p/search/' + encodeURIComponent(pl))) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' : (c.nomap ? '' : cpBtn(c.phone))) + (c.note ? ' <span class="x">' + esc(c.note).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span>';
   }
 
   // 손님 첫 인사 (영어) — 대표 확정 템플릿 (claude/tour_voucher/가이드_왓츠앱_자기소개_템플릿.md 2026-11-06). WhatsApp wa.me/?text= 로 자동 입력
