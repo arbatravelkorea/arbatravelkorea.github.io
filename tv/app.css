@@ -21,6 +21,12 @@ h2{font-size:12.5px;letter-spacing:.12em;color:var(--red);font-weight:800;margin
 .btn{flex:1 1 45%;display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none;border:1px solid var(--line);background:var(--card);color:var(--fg);text-align:center;padding:6px 10px}
 .btn.red{background:var(--red);color:#fff;border-color:var(--red)}
 .btn.dis{opacity:.5;pointer-events:none}
+.btn svg{margin-right:7px;flex:none}
+.btn.wa{background:#1DAA54;color:#fff;border-color:#1DAA54}
+.btn.halal{background:#F7F5F0;color:#1F5A3A;border:1.5px solid #C5A46D;font-weight:800}
+.btn.season{background:#FFF0F2;color:#B0264B;border-color:#F3C9CE}
+.btn.kakao{background:#FEE500;color:#191919;border-color:#FEE500;margin-top:10px;flex:none;width:100%}
+.btn.wide{flex:1 1 100%;margin-top:10px;background:var(--soft)}
 .hint{font-size:12.5px;color:var(--mut);margin:4px 2px 8px;line-height:1.5}
 /* 항공 */
 .fl{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline}
@@ -39,8 +45,8 @@ h2{font-size:12.5px;letter-spacing:.12em;color:var(--red);font-weight:800;margin
 .pnr{font-size:13.5px;color:var(--mut);margin-top:6px}.pnr b{color:var(--fg);font-size:15px}
 .cp{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:6px;padding:2px 8px;margin-left:6px}
 /* 호텔 */
-.ht b.n{font-size:17px}
-.kv{display:grid;grid-template-columns:72px 1fr;gap:4px 10px;font-size:14px;margin-top:8px;line-height:1.5}
+.ht b.n{font-size:17px;display:block}.ht .en{display:block;font-size:13px;color:var(--mut);margin-top:2px}
+.kv{display:grid;grid-template-columns:76px 1fr;gap:4px 10px;font-size:14px;margin-top:8px;line-height:1.5}
 .kv dt{color:var(--mut)}.kv dd{margin:0}
 /* 날짜 카드 */
 .day{border:1px solid var(--line);border-radius:14px;background:var(--card);margin-bottom:10px;overflow:hidden}
@@ -55,10 +61,13 @@ h2{font-size:12.5px;letter-spacing:.12em;color:var(--red);font-weight:800;margin
 .day.today summary .d::after{content:attr(data-today);font-size:11px;background:var(--red);color:#fff;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
 .body{padding:12px 16px 14px}
 .tl{margin:0;padding:0;list-style:none}
-.tl li{display:grid;grid-template-columns:52px 1fr;gap:8px;padding:5px 0;font-size:15px;line-height:1.45}
+.tl li{display:grid;grid-template-columns:minmax(14px,max-content) 1fr;gap:8px;padding:5px 0;font-size:15px;line-height:1.45}
 .tl li .tm{font-weight:800;color:var(--red);font-size:13.5px;padding-top:2px}
 .tl li .tm:empty::before{content:"·";color:#C9C2BE}
 .tl li .x{color:var(--mut);font-size:13px;display:block}
+.who{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px;font-size:13px}
+.who .mini{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;text-decoration:none;color:var(--blue);background:var(--card)}
+.who .x{display:inline}
 .row{display:grid;grid-template-columns:30px 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:14.5px;line-height:1.5}
 .row .i{font-size:18px;line-height:1.2}
 .meal{display:flex;gap:6px;flex-wrap:wrap}
@@ -66,8 +75,10 @@ h2{font-size:12.5px;letter-spacing:.12em;color:var(--red);font-weight:800;margin
 .meal span.no{background:var(--soft);color:var(--mut);text-decoration:line-through}
 .meal span.alt{background:var(--amber-bg);color:var(--amber)}
 .todo{margin:0;padding:0;list-style:none}
-.todo li{position:relative;padding-left:26px;margin:4px 0}
-.todo li::before{content:"";position:absolute;left:0;top:3px;width:16px;height:16px;border:2px solid var(--red);border-radius:5px}
+.todo li{margin:4px 0}
+.todo li label{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.todo li input{width:18px;height:18px;accent-color:var(--red);margin:2px 0 0;flex:none}
+.todo li.done span{text-decoration:line-through;color:var(--mut)}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .chips span{font-size:12.5px;border-radius:20px;padding:3px 10px;background:var(--blue-bg);color:var(--blue);font-weight:700}
 .chips span.s{background:#FCE4EC;color:#B0264B}
@@ -76,6 +87,7 @@ h2{font-size:12.5px;letter-spacing:.12em;color:var(--red);font-weight:800;margin
 .pray .i{font-size:18px}.pray b{color:var(--green)}
 .pray .tm{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}.pray .tm span{background:#fff;border:1px solid #CFE7DA;border-radius:8px;padding:2px 8px;font-size:12.5px;font-weight:700}
 .pray .tm span.dl{background:var(--red);color:#fff;border-color:var(--red)}
+.pray .tm span.ok{background:var(--green);color:#fff;border-color:var(--green)}
 .pray .cd{font-weight:800;color:var(--red)}
 ul.memo{margin:0;padding-left:18px;font-size:14.5px;line-height:1.55;display:grid;gap:6px}
 ul.memo li::marker{color:var(--red)}

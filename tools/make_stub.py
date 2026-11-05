@@ -12,10 +12,11 @@ page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta property="og:description" content="ARBA Travel Korea Tour Voucher · {e(dest)} · 눌러서 지침서 열기">
 <meta property="og:image" content="{e(img)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png"><link rel="icon" type="image/png" href="/img/favicon.png"><link rel="apple-touch-icon" href="/img/favicon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css">
-<link rel="stylesheet" href="/tv/app.css?v=1">
+<link rel="stylesheet" href="/tv/app.css?v=2">
 </head><body><div class="wrap" id="app"><p class="loading">투어지침서를 여는 중…</p></div>
-<script src="/tv/prayer.js?v=1"></script><script src="/tv/app.js?v=1"></script>
+<script src="/tv/prayer.js?v=1"></script><script src="/tv/app.js?v=2"></script>
 <script>ATK.render({slug!r});</script></body></html>"""
 d = pathlib.Path(repo) / 'v' / slug; d.mkdir(parents=True, exist_ok=True)
 (d / 'index.html').write_text(page); print(d / 'index.html')
