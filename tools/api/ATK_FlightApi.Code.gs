@@ -12,6 +12,8 @@ var FS_TERM_ = { P01: 'T1', P02: '탑승동', P03: 'T2' };
 function doGet(e) {
   var p = (e && e.parameter) || {};
   var r;
+  if (p.v) return ContentService.createTextOutput(JSON.stringify(voucherJson_(p.v, p.lang))).setMimeType(ContentService.MimeType.JSON);
+  if (p.dbg) return ContentService.createTextOutput(JSON.stringify(fsDbg_(p.dbg, p.q || 'KUL', p.dir))).setMimeType(ContentService.MimeType.JSON);
   try { r = p.flights ? { ok: true, list: flightStatusMany(p.flights) } : flightStatus(p.flight, p.date, p.dir, p.t); } catch (err) { r = { ok: false, error: String(err) }; }
   return ContentService.createTextOutput(JSON.stringify(r)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -92,3 +94,29 @@ function flightStatusMany(spec) {
 }
 /** 편집기에서 직접 시험 */
 function fsTest() { Logger.log(JSON.stringify(flightStatus('AK1624', Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyyMMdd'), 'D'))); }
+
+/** 지침서 JSON (A안, 2026-11-06): Google Drive 폴더 ATK_Vouchers 안의 <슬러그>.json (영문은 <슬러그>-EN.json, 없으면 한국어) → {ok, data}. 60초 캐시 */
+function voucherJson_(slug, lang) {
+  slug = String(slug || '').replace(/[^A-Za-z0-9_-]/g, '');
+  if (!slug) return { ok: false, error: 'slug' };
+  var name = slug + (String(lang || '') === 'en' ? '-EN' : '') + '.json';
+  var cache = CacheService.getScriptCache(), ck = 'v:' + name, hit = cache.get(ck);
+  if (hit) return { ok: true, data: JSON.parse(hit), cached: true };
+  var fo = DriveApp.getFoldersByName('ATK_Vouchers'); if (!fo.hasNext()) return { ok: false, error: 'folder' };
+  var folder = fo.next(), fs = folder.getFilesByName(name);
+  if (!fs.hasNext() && name.indexOf('-EN.json') > 0) fs = folder.getFilesByName(slug + '.json');
+  if (!fs.hasNext()) return { ok: false, error: 'not found' };
+  var txt = fs.next().getBlob().getDataAsString('UTF-8');
+  var data; try { data = JSON.parse(txt); } catch (err) { return { ok: false, error: 'json ' + err }; }
+  if (txt.length < 90000) cache.put(ck, txt, 60);
+  return { ok: true, data: data };
+}
+/** 디버그: ?dbg=YYYYMMDD&q=KUL&dir=A|D → 그날 편 중 공항코드/편명에 q 포함 (최대 40) */
+function fsDbg_(date, q, dir) {
+  var fn = String(dir || 'A').toUpperCase() === 'D' ? 'getPassengerDeparturesDeOdp' : 'getPassengerArrivalsDeOdp';
+  var url = FS_BASE_ + fn + '?serviceKey=' + encodeURIComponent(fsKey_()) + '&type=json&pageNo=1&lang=K&numOfRows=2000&searchday=' + date;
+  var body = UrlFetchApp.fetch(url, { muteHttpExceptions: true }).getContentText();
+  var j = JSON.parse(body); var items = (j.response && j.response.body && j.response.body.items) || [];
+  var out = []; for (var i = 0; i < items.length; i++) { var it = items[i]; var s = (it.flightId || '') + ' ' + (it.airportCode || '') + ' ' + (it.airport || ''); if (s.indexOf(q) >= 0) out.push([it.flightId, it.airportCode, it.scheduleDateTime, it.estimatedDateTime, it.terminalid || it.terminalId, it.exitnumber || it.chkinrange, it.carousel || it.gatenumber, it.remark, it.codeshare].join('|')); }
+  return { total: items.length, hits: out.slice(0, 40) };
+}
