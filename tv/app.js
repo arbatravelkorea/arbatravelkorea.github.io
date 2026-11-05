@@ -17,6 +17,7 @@
     today: 'TODAY', meal: ['Breakfast', 'Lunch', 'Dinner'], free: 'own arrangement', pray: 'Prayer today', after: ' onwards', before: ' before', left: 'Sunset in ', h: 'h ', m: 'min', sunset: 'Sun has set → Maghrib+Isha', draft: 'DRAFT · not final', waBtn: 'WhatsApp', halal: 'Halal & Muslim-friendly restaurants', season: 'Seasonal picks on our route', settle: 'Settle expenses · how to', kakao: 'ARBA Travel on KakaoTalk',
     foot: 'ARBA Travel Korea · Details can change — please reopen this page the day before the tour.' };
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function nl(s) { return esc(s).replace(/\n/g, '<br>'); }
   function num(p) { return esc(String(p || '').replace(/[^\d+]/g, '')); }
   function cpBtn(v) { return '<button type="button" class="cp" data-copy="' + esc(v) + '">' + L.copy + '</button>'; }
   function tel(p) { return p ? '<a href="tel:' + num(p) + '">' + esc(p) + '</a> ' + cpBtn(p) : ''; }
@@ -41,13 +42,13 @@
   function draw(D) {
     var h = '';
     var alt = EN ? '?lang=ko' : '?lang=en';
-    h += '<header>' + (D.draft ? '<span class="draft">' + L.draft + '</span>' : '') + '<a class="lang" href="' + alt + '">' + (EN ? '한국어' : 'English') + '</a><div class="t">ARBA TRAVEL KOREA · ' + L.voucher + '</div><h1>' + esc(D.tripId) + '</h1><div class="m">' + esc(D.title) + ' · ' + esc(D.period) + '</div></header>';
+    h += '<header>' + (D.draft ? '<span class="draft">' + L.draft + '</span>' : '') + '<a class="lang" href="' + alt + '">' + (EN ? '한국어' : 'English') + '</a><div class="t">ARBA TRAVEL KOREA · ' + L.voucher + '</div><h1>' + esc(D.tripId) + '</h1><div class="m">' + esc(D.title) + '</div></header>';
     // 가이드 카드
     var g = D.guide || {}, px = D.pax || {};
     h += '<div class="card gd"><b class="gn">' + esc(g.name) + L.guide + (g.eng ? ' <span style="font-size:14px;color:var(--mut)">(' + esc(g.eng) + ')</span>' : '') + '</b>' +
-      '<div class="kv2"><div><small>' + L.in + '</small>' + esc(D.arrival) + '</div><div><small>' + L.out + '</small>' + esc(D.departure) + '</div><div><small>' + L.city + '</small>' + esc(D.dest) + '</div><div><small>' + L.tl + '</small>' + esc(D.tlName || L.none) + '</div></div>' +
+      '<div class="kv2"><div><small>' + L.in + '</small>' + esc(D.arrival) + '</div><div><small>' + L.out + '</small>' + esc(D.departure) + '</div><div><small>' + L.city + '</small>' + esc(D.dest) + '</div><div><small>' + L.tl + '</small><b>' + esc(D.tlName || L.none) + '</b></div></div>' +
       '<div class="pax"><div><small>TL</small><b>' + (px.tl || 0) + '</b></div><div><small>Adult</small><b>' + (px.adult || 0) + '</b></div><div><small>Child<br>w bed</small><b>' + (px.cwb || 0) + '</b></div><div><small>Child<br>w/o bed</small><b>' + (px.cnb || 0) + '</b></div><div><small>Infant</small><b>' + (px.inf || 0) + '</b></div><div class="tot"><small>Total</small><b>' + (px.total || 0) + '</b></div></div>' +
-      (D.chips && D.chips.length ? '<div>' + D.chips.map(function (c) { return '<span class="hon' + (c.amber ? ' amber' : '') + '">' + esc(c.text || c) + '</span>'; }).join('') + '</div>' : '') + '</div>';
+      (D.chips && D.chips.length ? '<div style="margin-top:12px">' + D.chips.map(function (c) { return '<span class="hon' + (c.amber ? ' amber' : '') + '">' + esc(c.text || c) + '</span>'; }).join('') + '</div>' : '') + '</div>';
     // 링크: 왓츠앱(왼쪽 위) 할랄(오른쪽 위) 시즌(왼쪽 아래) 정산(오른쪽 아래)
     var K = D.links || {};
     h += '<h2>' + L.links + '</h2><div class="btnrow">' +
@@ -71,14 +72,14 @@
       h += '<h2>' + L.hotel + '</h2>';
       D.hotels.forEach(function (ht) {
         h += '<div class="card ht"><b class="n">' + esc(ht.name) + '</b>' + (ht.en ? '<span class="en">' + esc(ht.en) + '</span>' : '') + '<dl class="kv">' +
-          (ht.booking ? '<dt>' + L.booking + '</dt><dd>' + esc(ht.booking) + ' ' + cpBtn(ht.booking) + '</dd>' : '') +
+          (ht.booking ? '<dt>' + L.booking + '</dt><dd><b>' + esc(ht.booking) + '</b> ' + cpBtn(ht.booking) + '</dd>' : '') +
           (ht.checkin ? '<dt>' + L.checkin + '</dt><dd>' + esc(ht.checkin) + '</dd>' : '') + (ht.checkout ? '<dt>' + L.checkout + '</dt><dd>' + esc(ht.checkout) + '</dd>' : '') +
-          (ht.breakfast ? '<dt>' + L.bf + '</dt><dd>' + esc(ht.breakfast) + '</dd>' : '') + (ht.rooms ? '<dt>' + L.rooms + '</dt><dd>' + esc(ht.rooms) + '</dd>' : '') + (ht.pay ? '<dt>' + L.pay + '</dt><dd>' + esc(ht.pay) + '</dd>' : '') +
+          (ht.breakfast ? '<dt>' + L.bf + '</dt><dd>' + esc(ht.breakfast) + '</dd>' : '') + (ht.rooms ? '<dt>' + L.rooms + '</dt><dd>' + nl(ht.rooms) + '</dd>' : '') + (ht.pay ? '<dt>' + L.pay + '</dt><dd>' + esc(ht.pay) + '</dd>' : '') +
           (ht.address ? '<dt>' + L.addr + '</dt><dd>' + esc(ht.address) + ' ' + cpBtn(ht.address) + '</dd>' : '') + (ht.phone ? '<dt>' + L.tel + '</dt><dd>' + tel(ht.phone) + '</dd>' : '') +
           (ht.notes || []).map(function (n) { return '<dt>·</dt><dd>' + esc(n) + '</dd>'; }).join('') + '</dl>' +
           (K.namelist ? '<a class="btn wide" target="_blank" rel="noopener" href="' + esc(K.namelist) + '">' + L.namelist + '</a>' : '<span class="btn wide dis">' + L.nonamelist + '</span>') +
           (D.honorific ? '<p class="hint" style="margin:6px 2px 4px">👑 ' + esc(D.honorific) + '</p>' : '') +
-          ((ht.map || ht.phone) ? '<div class="btnrow" style="margin-top:8px">' + (ht.map ? '<a class="btn" target="_blank" rel="noopener" href="' + esc(ht.map) + '">' + L.map + '</a>' : '') + (ht.phone ? '<a class="btn" href="tel:' + num(ht.phone) + '">' + L.call + '</a>' : '') + '</div>' : '') + '</div>';
+          ((ht.map || ht.phone) ? '<div class="btnrow" style="margin-top:8px">' + (ht.map ? '<a class="btn" target="_blank" rel="noopener" href="' + esc(ht.map) + '"><img class="nmap" src="/img/naver_map.png" alt="' + L.map + '"></a>' : '') + (ht.phone ? '<a class="btn" href="tel:' + num(ht.phone) + '">' + L.call + '</a>' : '') + '</div>' : '') + '</div>';
       });
     }
     // 날짜 카드
@@ -126,7 +127,7 @@
     // 기도 시간
     if (window.prayerTimes) document.querySelectorAll('.pray[data-pray]').forEach(function (p) {
       var loc = PRAYER_LOC[p.dataset.loc] || PRAYER_LOC.SEL, t = prayerTimes(loc[0], loc[1], p.dataset.pray);
-      p.querySelector('[data-tm]').innerHTML = '<span class="ok">✅ Dhuhr ' + t.dhuhr + L.after + '</span><span class="dl">⛔ Maghrib ' + t.maghrib + L.before + '</span><span>Asr ' + t.asr + '</span><span>Isha ' + t.isha + '</span><span>Fajr ' + t.fajr + '</span>';
+      p.querySelector('[data-tm]').innerHTML = '<span class="ok">✅ Dhuhr ' + t.dhuhr + L.after + '</span><span class="dl">⛔ Maghrib ' + t.maghrib + L.before + '</span>';
       if (p.dataset.pray === ymd) { var cd = p.querySelector('[data-cd]'); var tick = function () { var now = new Date(); var left = (+t.maghrib.slice(0, 2)) * 60 + (+t.maghrib.slice(3)) - (now.getHours() * 60 + now.getMinutes()); cd.textContent = left > 0 ? '· ' + L.left + Math.floor(left / 60) + L.h + (left % 60) + L.m : '· ' + L.sunset; }; tick(); setInterval(tick, 30000); }
     });
     // 복사
