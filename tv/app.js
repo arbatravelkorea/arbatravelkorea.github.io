@@ -134,7 +134,7 @@
       var meals = d.meals || {};
       function mealSpan(i, key) { var mm = meals[key]; if (!mm) return '<span class="no">' + L.meal[i] + '</span>'; if (mm.ok === false) return '<span class="no">' + L.meal[i] + (mm.txt ? ' — ' + esc(mm.txt) : ' — ' + L.free) + '</span>'; return '<span class="' + (mm.alt ? 'alt' : '') + '">' + L.meal[i] + (mm.txt ? ' ' + esc(mm.txt) : '') + '</span>'; }
       h += '<details class="day" data-d="' + esc(d.d) + '" data-loc="' + esc(d.loc || D.loc || 'SEL') + '"><summary><span class="d" data-today="' + L.today + '">' + esc(d.label) + '</span><span class="s">' + esc(d.summary) + '</span><span class="ar">▶</span></summary><div class="body">' +
-        '<ul class="tl">' + (d.items || []).map(function (it) { return '<li><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + who(it) + (it.x ? '<span class="x">' + esc(it.x) + '</span>' : '') + '</span></li>'; }).join('') + '</ul>' +
+        '<ul class="tl">' + (d.items || []).map(function (it) { return '<li><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + who(it) + (it.x ? '<span class="x">' + nl(it.x) + '</span>' : '') + '</span></li>'; }).join('') + '</ul>' +
         '<div class="row"><span class="i">🍽</span><div class="meal">' + mealSpan(0, 'b') + mealSpan(1, 'l') + mealSpan(2, 'd') + '</div></div>' +
         (d.move ? '<div class="row"><span class="i">🚐</span><div>' + esc(d.move) + who(d.moveWho) + (d.moveSub ? '<br><span class="x">' + esc(d.moveSub) + '</span>' : '') + '</div></div>' : '') +
         (d.stay ? '<div class="row"><span class="i">🏨</span><div>' + esc(d.stay) + '</div></div>' : '') +
