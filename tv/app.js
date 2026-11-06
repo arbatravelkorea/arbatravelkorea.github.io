@@ -8,13 +8,13 @@
     sched: '예정', est: '변경', term: '터미널', exit: '출구', counter: '카운터', checking: '조회 중…', fsOnly: ' 공항은 FlightStats로 확인', track: '실시간 추적 (FlightStats)', notYet: '아직 공항 조회 전 (3일 전부터 조회됨)', liveFail: '실시간 조회 실패 — FlightStats로 확인', belt: '벨트 ', sign: '공항 피켓 보기/인쇄',
     status: { ontime: '정시', delay: '지연', landed: '도착함', departed: '출발함', cancel: '결항', divert: '회항' }, tba: '미정',
     booking: '예약번호', checkin: '체크인', checkout: '체크아웃', bf: '조식', rooms: '객실', pay: '결제', addr: '주소', tel: '전화', map: '📍 지도', call: '📞 전화', reserve: '예약', sms: '💬 문자', copy: '복사', copied: '복사됨', namelist: '📋 명단(룸리스트) 보기', nonamelist: '📋 명단 — 아직 없음 (받는 대로 여기에)',
-    today: '오늘', meal: ['아침', '점심', '저녁'], free: '손님 자유', pray: '오늘 기도', after: ' 이후', before: ' 전에', left: '해 지기까지 ', h: '시간 ', m: '분', sunset: '해 졌음 → Maghrib+Isha', draft: '초안 · 확정 전', waBtn: 'WhatsApp', halal: '할랄&무슬림 프렌들리 식당 리스트', season: '시즌 추천 · 지금 가볼 만한 곳', settle: '정산하기 · 정산하는 법', kakao: '아르바트래블 비즈카톡', greet: '손님께 첫 인사 복사', copiedGreet: '복사됨 — 왓츠앱 단톡방에 붙여넣기', greetHint: '① WhatsApp 버튼으로 단톡방에 들어간 뒤 → ② 첫 인사 버튼을 눌러 복사하고 단톡방에 붙여넣기 하세요. 내용은 고쳐서 보내셔도 됩니다.',
+    today: '오늘', meal: ['아침', '점심', '저녁'], free: '손님 자유', pray: '오늘 기도', after: ' 이후', before: ' 전에', left: '해 지기까지 ', h: '시간 ', m: '분', sunset: '해 졌음 → Maghrib+Isha', draft: '초안 · 확정 전', waBtn: 'WhatsApp 단톡방 입장하기', halal: '할랄&무슬림 프렌들리 식당 리스트', season: '시즌 추천 · 지금 가볼 만한 곳', settle: '정산하기 · 정산하는 법', kakao: '아르바트래블 비즈카톡', greet: '단톡방 인사말 복사하기', greetHo: '교대 인사말 복사하기', copiedGreet: '복사됨 — 왓츠앱 단톡방에 붙여넣기', greetHint: '① 단톡방 입장하기 → ② 인사말 복사하기 → 단톡방 입력창을 길게 눌러 붙여넣기 후 보내기. 공항에서 만나기 전날까지 보내주세요. 내용은 고쳐서 보내셔도 됩니다.', greetHintHo: '① 단톡방 입장하기 → ② 교대 인사말 복사하기 → 단톡방 입력창을 길게 눌러 붙여넣기 후 보내기. 맡는 날 전날 보내주세요 (만나는 시간·장소는 직접 적어 주세요).',
     foot: 'ARBA Travel Korea · 지침서 내용은 바뀔 수 있으니 투어 전날 다시 열어 확인해주세요.' };
   var L_EN = { voucher: 'TOUR VOUCHER · FOR GUIDE', guide: '', in: 'Arrival', out: 'Departure', city: 'City', tl: 'Tour leader', none: 'None', links: '🔗 LINKS', flights: '✈️ FLIGHTS · LIVE', hotel: '🏨 HOTEL', days: '📅 ITINERARY', memo: '📌 NOTES FOR THE WHOLE TOUR', contacts: '☎️ EMERGENCY CONTACT',
     sched: 'Sched.', est: 'Est.', term: 'Terminal', exit: 'Exit', counter: 'Counter', checking: 'Checking…', fsOnly: ' airport: check on FlightStats', track: 'Live tracking (FlightStats)', notYet: 'Not in the airport system yet (opens 3 days before)', liveFail: 'Live lookup unavailable — use FlightStats', belt: 'belt ', sign: 'Airport sign — view / print',
     status: { ontime: 'On time', delay: 'Delayed', landed: 'Landed', departed: 'Departed', cancel: 'Cancelled', divert: 'Diverted' }, tba: 'TBA',
     booking: 'Booking no.', checkin: 'Check-in', checkout: 'Check-out', bf: 'Breakfast', rooms: 'Rooms', pay: 'Payment', addr: 'Address', tel: 'Phone', map: '📍 Map', call: '📞 Call', reserve: 'Book', sms: '💬 SMS', copy: 'Copy', copied: 'Copied', namelist: '📋 Name list (rooming list)', nonamelist: '📋 Name list — not yet',
-    today: 'TODAY', meal: ['Breakfast', 'Lunch', 'Dinner'], free: 'own arrangement', pray: 'Prayer today', after: ' onwards', before: ' before', left: 'Sunset in ', h: 'h ', m: 'min', sunset: 'Sun has set → Maghrib+Isha', draft: 'DRAFT · not final', waBtn: 'WhatsApp', halal: 'Halal & Muslim-friendly restaurants', season: 'Seasonal picks on our route', settle: 'Settle expenses · how to', kakao: 'ARBA Travel on KakaoTalk', greet: 'Copy first greeting', copiedGreet: 'Copied — paste it in the WhatsApp group', greetHint: '① Join the group with WhatsApp → ② tap the greeting button to copy, then paste it in the group. Feel free to edit it.',
+    today: 'TODAY', meal: ['Breakfast', 'Lunch', 'Dinner'], free: 'own arrangement', pray: 'Prayer today', after: ' onwards', before: ' before', left: 'Sunset in ', h: 'h ', m: 'min', sunset: 'Sun has set → Maghrib+Isha', draft: 'DRAFT · not final', waBtn: 'Join WhatsApp group', halal: 'Halal & Muslim-friendly restaurants', season: 'Seasonal picks on our route', settle: 'Settle expenses · how to', kakao: 'ARBA Travel on KakaoTalk', greet: 'Copy group greeting', greetHo: 'Copy handover greeting', copiedGreet: 'Copied — paste it in the WhatsApp group', greetHint: '① Join WhatsApp group → ② Copy group greeting → long-press the message box in the group, paste and send. Please send it by the day before you meet at the airport. Feel free to edit it.', greetHintHo: '① Join WhatsApp group → ② Copy handover greeting → long-press the message box, paste and send. Send it the day before your first day (add the meeting time and place yourself).',
     foot: 'ARBA Travel Korea · Details can change — please reopen this page the day before the tour.' };
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function nl(s) { return esc(s).replace(/\n/g, '<br>'); }
@@ -42,6 +42,17 @@
   var WXR = null; // 투어 기간 실제 예보 {lo,hi} (Open-Meteo 받으면 채움)
   function greet(D) {
     if (D.greeting) return D.greeting;
+    var GH = D.greet || {};
+    if (GH.handover) {
+      var gg = D.guide || {}, nm = gg.eng || gg.name || '', hd = GH.handover, hm = +hd.slice(5, 7), hdd = +hd.slice(8, 10);
+      var dl = (D.days || []).map(function (d) { return d.d; }).filter(Boolean), last = GH.until || dl[dl.length - 1] || hd;
+      var lm = +last.slice(5, 7), ldd = +last.slice(8, 10);
+      var span = GH.span ? GH.span : last === hd ? hdd + ' ' + MON[hm - 1] : (hm === lm ? hdd + '–' + ldd + ' ' + MON[hm - 1] : hdd + ' ' + MON[hm - 1] + '–' + ldd + ' ' + MON[lm - 1]);
+      return 'Hi everyone! 😊\nI\'m ' + nm + ', and I\'ll be your tour guide on ' + span + (GH.prev ? ', taking over from ' + GH.prev : '') + '. Thank you for traveling with ARBA Travel!\n\n' +
+        (GH.prev ? GH.prev + ' has shared your preferences with me, so please feel free to tell me anything else you\'d like.\n' : '') +
+        '🕌 I\'ll arrange suitable places for prayer, and all meals will be Halal.\n\n' +
+        '⏰ Tomorrow I\'ll pick you up at: (time) / (place)\n\nFeel free to message me here anytime. See you tomorrow! 🇰🇷\n— ' + nm;
+    }
     var g = D.guide || {}, name = g.eng || g.name || '', G = D.greet || {}, loc = D.loc || 'SEL';
     var ds = (D.days || []).map(function (d) { return d.d; }).filter(Boolean), d0 = ds[0] || '', d1 = ds[ds.length - 1] || d0;
     var m0 = +d0.slice(5, 7) || 11, m1 = +d1.slice(5, 7) || m0, y = d0.slice(0, 4);
@@ -97,15 +108,15 @@
       '<div class="pax"><div><small>TL</small><b>' + (px.tl || 0) + '</b></div><div><small>Adult</small><b>' + (px.adult || 0) + '</b></div><div><small>Child<br>w bed</small><b>' + (px.cwb || 0) + '</b></div><div><small>Child<br>w/o bed</small><b>' + (px.cnb || 0) + '</b></div><div><small>Infant</small><b>' + (px.inf || 0) + '</b></div><div class="tot"><small>Total</small><b>' + (px.total || 0) + '</b></div></div>' +
       (D.chips && D.chips.length ? '<div style="margin-top:12px">' + D.chips.map(function (c) { return '<span class="hon' + (c.amber ? ' amber' : '') + '">' + esc(c.text || c) + '</span>'; }).join('') + '</div>' : '') + '</div>';
     // 링크: 왓츠앱(왼쪽 위) 할랄(오른쪽 위) 시즌(왼쪽 아래) 정산(오른쪽 아래)
-    var K = D.links || {};
+    var K = D.links || {}; var HO = !!((D.greet || {}).handover);
     // 2026-11-06 대표: 버튼 5개를 한 격자(투어 전 → 투어 중 → 투어 후 순)로, 설명은 격자 아래 한 번만
     h += '<h2>' + L.links + '</h2><div class="linkgrid">' +
       (K.wa ? '<a class="btn wa" target="_blank" rel="noopener" href="' + esc(K.wa) + '">' + WA_SVG + '① ' + L.waBtn + '</a>' : '<span class="btn wa dis">' + WA_SVG + L.waBtn + ' (' + L.tba + ')</span>') +
-      '<button type="button" class="btn wa greet cp" data-label="💬 ② ' + esc(L.greet) + '" data-copy="' + esc(greet(D)) + '">💬 ② ' + L.greet + '</button>' +
+      '<button type="button" class="btn wa greet cp" data-label="💬 ② ' + esc(HO ? L.greetHo : L.greet) + '" data-copy="' + esc(greet(D)) + '">💬 ② ' + (HO ? L.greetHo : L.greet) + '</button>' +
       (K.season ? '<a class="btn season" target="_blank" rel="noopener" href="' + esc(K.season) + '">🌸 ' + L.season + '</a>' : '') +
       (K.halal ? '<a class="btn halal' + (K.season ? '' : ' wide2') + '" target="_blank" rel="noopener" href="' + esc(K.halal) + '">🕌 ' + L.halal + '</a>' : '') +
       (K.settle ? '<a class="btn red wide2" target="_blank" rel="noopener" href="' + esc(K.settle) + '">🧾 ' + L.settle + '</a>' : '') + '</div>' +
-      '<p class="hint linkhint">' + (K.hint ? esc(K.hint) + '<br>' : '') + L.greetHint + '</p>';
+      '<p class="hint linkhint">' + (K.hint ? esc(K.hint) + '<br>' : '') + (HO ? L.greetHintHo : L.greetHint) + '</p>';
     // 항공
     h += '<h2>' + L.flights + '</h2>';
     (D.flights || []).forEach(function (f) {
@@ -146,7 +157,7 @@
         (d.notes && d.notes.length ? '<div class="row"><span class="i">📝</span><div>' + d.notes.map(function (n) { return '<div style="margin-bottom:4px">' + esc(n) + '</div>'; }).join('') + '</div></div>' : '') +
         (d.warn ? '<div class="warn">' + esc(d.warn) + '</div>' : '') +
         (d.chips && d.chips.length ? '<div class="chips">' + d.chips.map(function (c) { return '<span' + (c.s ? ' class="s"' : '') + '>' + esc(c.text || c) + '</span>'; }).join('') + '</div>' : '') +
-        (d.pray !== false ? '<div class="pray" data-pray="' + esc(d.d) + '" data-loc="' + esc(d.loc || D.loc || 'SEL') + '"><span class="i">☪️</span><div><b>' + L.pray + '</b> <span class="cd" data-cd></span><div class="tm" data-tm></div>' + (d.prayPlace ? esc(d.prayPlace) : '') + '</div></div>' : '') +
+        (d.pray !== false ? '<div class="pray" data-pray="' + esc(d.d) + '" data-loc="' + esc(d.loc || D.loc || 'SEL') + '"><span class="i">☪️</span><div><b>' + L.pray + '</b> <span class="cd" data-cd></span>' + (d.prayPlace ? '<div class="pp">' + esc(d.prayPlace) + '</div>' : '') + '<div class="tm" data-tm></div></div></div>' : '') +
         '</div></details>';
     });
     // 전체 메모

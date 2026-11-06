@@ -105,3 +105,5 @@ ul.memo li::marker{color:var(--red)}
 .tel{font-size:15px;line-height:1.8}
 .tel a{color:var(--blue);text-decoration:none;font-weight:700}
 .foot{font-size:12px;color:var(--mut);margin-top:18px;line-height:1.5}
+
+.pray .pp{font-weight:800;color:#1C1716;margin:3px 0 2px}
