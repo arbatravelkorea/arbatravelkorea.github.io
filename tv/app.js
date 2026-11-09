@@ -23,7 +23,7 @@
   function tel(p) { return p ? '<a href="tel:' + num(p) + '">' + esc(p) + '</a> ' + cpBtn(p) : ''; }
   // 담당자·전화·문자 묶음: {contact:'박현성', phone:'010-…', sms:true, note:'문자 예약'}
   // 식당 등: 전화·문자 옆에 네이버 지도 아이콘(place 또는 "점심/저녁 — 식당명"에서 자동) — 지도가 없으면 [복사]
-  function placeOf(c) { if (c.place) return c.place; var t = String(c.text || ''); if (/불포함|할랄 식당|자유|Not included|own expense|free time|halal restaurant/i.test(t)) return ''; var m = t.match(/^(?:점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]?\s*([^(—–\-·]+)/); return m ? m[1].trim() : ''; }
+  function placeOf(c) { if (c.place) return c.place; var t = String(c.text || ''); if (/불포함|할랄 식당|자유|가이드 선택|가이드님 식당 결정|Guide's choice|Not included|own expense|free time|halal restaurant/i.test(t)) return ''; var m = t.match(/^(?:점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]?\s*([^(—–\-·]+)/); return m ? m[1].trim() : ''; }
   // 할랄 리스트에 있는 식당이면 리스트의 정확한 네이버지도 링크 (이름 앞부분 일치: "고삼이 신촌점", "EID (이태원)…" → "EID 할랄 코리안푸드")
   function halalLink(pl) { var H = window.HALAL_LINKS || {}; if (!pl) return ''; var k = pl.replace(/\s*\(.*$/, '').replace(/\s+/g, ' ').trim().toLowerCase(); var best = ''; Object.keys(H).forEach(function (n) { var nn = n.toLowerCase(); if (nn === k || nn.indexOf(k) === 0 || k.indexOf(nn) === 0) { if (!best || n.length > best.length) best = n; } }); if (!best) Object.keys(H).forEach(function (n) { var w = n.toLowerCase().split(' ')[0]; if (w.length >= 2 && k.indexOf(w) === 0 && !best) best = n; }); return best ? H[best] : ''; }
   // 문자 버튼 기본 양식 (2026-11-09 대표 지시): 인사 + 날짜·끼니 + 인원 + 도착 시간. 식당은 항상 한국어
@@ -306,7 +306,7 @@
         var o = M[x.r]; if (!o) return; var it = JSON.parse(JSON.stringify(o)), ch = false;
         if (x.r.split(':')[0] !== d.d || +x.r.split(':')[1] !== i) ch = true;
         if (x.tm !== undefined && x.tm !== (o.tm || '')) { it.tm = x.tm; ch = true; }
-        if (x.rest) { ['text', 'contact', 'phone', 'sms', 'place', 'map'].forEach(function (k) { if (x.rest[k] !== undefined) it[k] = x.rest[k]; else if (k !== 'text') delete it[k]; }); delete it.note; delete it.jt; ch = true; }
+        if (x.rest) { ['text', 'contact', 'phone', 'sms', 'place', 'map', 'pick', 'nomap'].forEach(function (k) { if (x.rest[k] !== undefined) it[k] = x.rest[k]; else if (k !== 'text') delete it[k]; }); delete it.note; delete it.jt; ch = true; }
         if (x.note) { it.cnote = x.note; ch = true; }
         if (ch) it.chg = true; it._r = x.r; items.push(it);
       });
@@ -337,7 +337,7 @@
     var days = O.days.map(function (d) { return d.d; });
     // 다른 가이드 담당일 (day.other 또는 첫 항목 "○○ 가이드님 진행")
     var OTH = {}; O.days.forEach(function (d) { var o = d.other; if (!o) { var m = String(((d.items || [])[0] || {}).text || '').match(/^(\S+?)(\(.*?\))?\s*가이드님 진행|^Guide (.+?) runs this day/); if (m) o = m[1] || m[3]; } if (o) OTH[d.d] = o; });
-    function item(x) { var o = M[x.r] || {}, it = JSON.parse(JSON.stringify(o)); if (x.tm !== undefined) it.tm = x.tm; if (x.rest) { it.text = x.rest.text; it.phone = x.rest.phone; } return it; }
+    function item(x) { var o = M[x.r] || {}, it = JSON.parse(JSON.stringify(o)); if (x.tm !== undefined) it.tm = x.tm; if (x.rest) { it.text = x.rest.text; it.phone = x.rest.phone; it.pick = !!x.rest.pick; } return it; }
     function short(t) { var s = mealName(t) || String(t || ''); s = s.replace(/\s*[—–(].*$/, '').trim() || s; return s.length > 14 ? s.slice(0, 13) + '…' : s; }
     var SEL = null; // {d, i}
     function draw2() {
@@ -347,7 +347,7 @@
         h += '<div class="erow' + (oth ? ' oth' : '') + '"><div class="edl">' + esc(dlabel(dd)).replace(' ', '<br>') + '</div><div class="eli" data-d="' + dd + '">';
         st[dd].forEach(function (x, i) {
           var it = item(x), lk = oth ? 'oth' : lockOf(M[x.r] || {}), moved = x.r.split(':')[0] !== dd, mk = mealKey(it.text), ch = moved || x.tm !== undefined || x.rest || x.note;
-          h += '<div class="ec2' + (lk ? ' lk' : '') + (mk ? ' ml' : '') + (ch ? ' ch' : '') + (SEL && SEL.d === dd && SEL.i === i ? ' sel' : '') + '" data-r="' + esc(x.r) + '" data-d="' + dd + '" data-i="' + i + '">' + (it.tm ? '<small>' + esc(it.tm) + '</small>' : '') + (lk && !oth ? '🔒' : '') + esc(short(it.text)) + (x.note ? ' 📝' : '') + '</div>';
+          h += '<div class="ec2' + (lk ? ' lk' : '') + (mk ? ' ml' : '') + (it.pick ? ' pk' : '') + (ch ? ' ch' : '') + (SEL && SEL.d === dd && SEL.i === i ? ' sel' : '') + '" data-r="' + esc(x.r) + '" data-d="' + dd + '" data-i="' + i + '">' + (it.tm ? '<small>' + esc(it.tm) + '</small>' : '') + (lk && !oth ? '🔒' : '') + esc(short(it.text)) + (x.note ? ' 📝' : '') + '</div>';
         });
         h += '</div></div>';
         if (oth) h += '<div class="eoth">' + esc(dlabel(dd)) + T.other + esc(oth) + T.otherE + '</div>';
@@ -369,7 +369,9 @@
       if (lk) h += '<div class="lkr">🔒 ' + esc(lk) + '</div>';
       else {
         h += '<label>' + T.tm + ' <input class="tmi" data-a="tm" value="' + esc(it.tm || '') + '" placeholder="--:--"></label>';
-        if (mk) h += '<select data-a="rest"><option value="">' + T.rest + '</option>' + (window.HALAL_CONTACTS || []).map(function (r, ri) { return '<option value="' + ri + '">' + esc(r.n) + '</option>'; }).join('') + '<option value="own">' + T.own + '</option></select>';
+        if (mk) { var dl0 = (O.days.filter(function (d) { return d.d === SEL.d; })[0] || {}).loc || O.loc || 'SEL', RG = { SEL: ['seoul', 'outer'], JJU: ['jeju'], BUS: ['busan'] }[dl0] || ['seoul', 'outer'];
+          if (it.pick && !x.rest) h += '<div class="pkh">' + (EN ? '👉 Once you decide, pick the restaurant below — it is reported to the office.' : '👉 식당을 정하면 아래에서 골라주세요 — 회사에 보고됩니다.') + '</div>';
+          h += '<select data-a="rest"><option value="">' + T.rest + '</option>' + (window.HALAL_CONTACTS || []).map(function (r, ri) { return RG.indexOf(r.g) >= 0 ? '<option value="' + ri + '">' + esc(r.n) + '</option>' : ''; }).join('') + '<option value="pick">' + (EN ? '🧭 Guide\'s choice (decide on site)' : '🧭 가이드 선택 (현장에서 결정)') + '</option><option value="own">' + T.own + '</option></select>'; }
         h += '<input class="memo" data-a="note" value="' + esc(x.note || '') + '" placeholder="' + esc(T.memo) + '">';
       }
       h += '<button type="button" class="btn ok" data-a="desel">' + T.ok + '</button></div>';
@@ -383,6 +385,7 @@
       if (a === 'note') { x.note = e.value.trim(); if (!x.note) delete x.note; draw2(); }
       if (a === 'rest') { var o = M[x.r], pre = (String(o.text).match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]\s*/) || [''])[0], r;
         if (e.value === 'own') { var nm = prompt(EN ? 'Restaurant name' : '식당 이름'); if (!nm) { draw2(); return; } var ph = prompt(EN ? 'Phone (optional)' : '전화번호 (없으면 비워두기)') || ''; r = { n: nm, p: ph, s: /^01/.test(ph.replace(/\D/g, '')) }; }
+        else if (e.value === 'pick') { x.rest = { text: pre + (EN ? "Guide's choice (halal street)" : '가이드 선택 (할랄거리)'), pick: true, nomap: true }; draw2(); return; }
         else if (e.value !== '') r = window.HALAL_CONTACTS[+e.value];
         if (r) x.rest = { text: pre + r.n, contact: r.c || '', phone: r.p || '', sms: !!r.s, place: r.n }; draw2(); }
     });
@@ -416,7 +419,6 @@
           if (/하루 전|1 day ahead|halal preparation/i.test((o.note || '') + (o.jt || '')) && (od !== dd || x.rest)) { var days2 = (new Date(dd + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5; if (days2 < 2) warn.push((EN ? 'Halal needs a booking 1 day ahead — ' : '할랄은 하루 전 예약 필수 — ') + mealName(o.text) + (EN ? ': too late?' : ': 시간이 부족할 수 있어요')); }
         });
         var cnt = {}; st[dd].forEach(function (x) { var k = mealKey(item(x).text); if (k === 'l' || k === 'd') cnt[k] = (cnt[k] || 0) + 1; });
-        Object.keys(cnt).forEach(function (k) { if (cnt[k] > 1) warn.push(dlabel(dd) + (EN ? (k === 'l' ? ' has 2 lunches' : ' has 2 dinners') + ' — check' : (k === 'l' ? ' 점심이 2곳' : ' 저녁이 2곳') + ' — 하나는 다른 날로 옮기거나 확인')); });
         var movedIO = st[dd].some(function (x) { return x.r.split(':')[0] !== dd; }) || O.days.filter(function (d) { return d.d === dd; })[0].items.some(function (it, i) { return !st[dd].some(function (x) { return x.r === dd + ':' + i; }); });
         if (origOrder !== now && !movedIO) diff.push(dlabel(dd) + (EN ? ' order: ' : ' 순서: ') + st[dd].map(function (x) { return mealName(item(x).text) || item(x).text; }).join(' → '));
       });
@@ -425,6 +427,8 @@
     function send(reset) {
       var pin = (document.getElementById('epin').value || '').replace(/\D/g, ''), msg = document.getElementById('emsg');
       if (pin.length !== 4) { msg.textContent = T.pin; return; }
+      if (!reset) { var bad = []; days.forEach(function (dd) { var c = {}; st[dd].forEach(function (x) { var k = mealKey(item(x).text); if (k) c[k] = (c[k] || 0) + 1; }); Object.keys(c).forEach(function (k) { if (c[k] > 1) bad.push(dlabel(dd) + ' ' + (EN ? { b: 'breakfast', l: 'lunch', d: 'dinner' }[k] : { b: '아침', l: '점심', d: '저녁' }[k]) + ' ' + c[k] + (EN ? '' : '곳')); }); });
+        if (bad.length) { msg.textContent = (EN ? '❌ Only one restaurant per meal: ' : '❌ 한 끼에 식당은 한 곳만 — ') + bad.join(', ') + (EN ? '. Move one to another day.' : '. 하나를 다른 날로 옮겨주세요.'); return; } }
       var W = reset ? { diff: [], warn: [], acts: [] } : diffWarn();
       if (!reset && !W.diff.length) { ov.remove(); document.body.style.overflow = ''; return; }
       var body = { act: 'chg', slug: SLUG, pin: pin, ov: reset ? null : { v: 1, days: st }, diff: W.diff, warn: W.warn };
