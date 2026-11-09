@@ -30,15 +30,17 @@
   function smsBody(c, d) {
     var D = CUR || {}, g = D.guide || {}, px = D.pax || {}, nm = EN ? (g.name || '') : (g.ko || g.name || '');
     var dt = d && d.d ? new Date(d.d + 'T00:00:00') : null;
-    var t = String(c.text || ''), mm = t.match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)/);
+    var t = String(c.text || ''), mm = t.match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)/), gim = !mm && /김밥|gimbap/i.test(t);
+    if (gim) mm = [0, EN ? 'Breakfast' : '아침'];
     if (!mm) return EN ? 'Hello,\nThis is ' + nm + ', tour guide from ARBA Travel' + (D.tripId ? ' (' + D.tripId + ')' : '') + '.' : '안녕하세요\n아르바트래블 ' + nm + ' 가이드입니다.' + (D.tripId ? '\n' + D.tripId + ' 팀 관련 연락드립니다.' : '');
     var meal = { 점심: 'L', Lunch: 'L', 저녁: 'D', Dinner: 'D', 아침: 'B', Breakfast: 'B' }[mm[1]];
-    var dl = /배달|delivery/i.test(t), tl = +px.tl || 0, inf = +px.inf || 0, H = null, tm = c.tm || '';
-    if (dl) {
+    var dl = /배달|delivery/i.test(t), tl = +px.tl || 0, inf = +px.inf || 0, H = null, tm = /^\d\d:\d\d$/.test(c.tm || '') ? c.tm : '';
+    if (gim && /공항|airport/i.test(t)) { var df = (D.flights || []).filter(function (f) { return f.dir === 'D'; })[0]; H = { name: EN ? 'Incheon Airport ' + ((df && df.term) || 'T1') : '인천공항 ' + ((df && df.term) || 'T1') + (df ? ' (' + df.no + ' ' + df.time + ' 출발)' : ''), address: '' }; dl = true; }
+    if (dl && !H) {
       var hs = D.hotels || [], st = String((d && d.stay) || ''); hs.forEach(function (h) { if (!H && h.name && st.indexOf(h.name) >= 0) H = h; }); H = H || hs[0] || {};
       var xm = String(c.x || '').match(/(\d{1,2}:\d{2})\s*까지|until\s*(\d{1,2}:\d{2})/i); if (!tm && xm) tm = xm[1] || xm[2];
     }
-    var J = d && d.joint, ex = null; if (dl && J && J.hotel && J.meals && J.meals.indexOf(meal.toLowerCase()) >= 0) H = { name: J.hotel, address: J.addr || '' }; if (J && J.meals && J.meals.indexOf(meal.toLowerCase()) >= 0 && J.pax) ex = { label: J.label || J.team, guests: +J.pax, tl: +J.tl || 0 };
+    var J = d && d.joint, ex = null; if (dl && !gim && J && J.hotel && c.jt) H = { name: J.hotel, address: J.addr || '' }; if (J && c.jt && J.pax) ex = { label: J.label || J.team, guests: +J.pax, tl: +J.tl || 0 };
     return window.ATK_SMS({ en: EN, name: nm, date: dt, meal: meal, guests: (+px.total || 0) - tl - inf, tl: tl, inf: inf, dl: dl, hotel: H ? H.name : '', addr: H ? H.address : '', time: tm, extra: ex });
   }
   // 할랄 리스트에 가이드·인원·호텔을 넘겨 문자하기 양식을 채움
@@ -49,11 +51,11 @@
     return u + (u.indexOf('?') >= 0 ? '&' : '?') + Object.keys(q).filter(function (k) { return q[k] !== '' && q[k] !== 0 || k === 'n'; }).map(function (k) { return k + '=' + encodeURIComponent(q[k]); }).join('&');
   }
   // 🤝 같은 날 같은 곳에 가는 다른 팀과 합동 (예약 한 건으로·뷔페 최소 인원·합동 발권). joint = {team, guide, phone, pax, tl, lead, items:[], meals:['l','d']}
-  function jointHtml(j, d) {
-    var ttl = EN ? '🤝 Joint with ' + esc(j.team) : '🤝 합동 — ' + esc(j.team);
-    var c = j.phone ? who({ contact: j.guide, phone: j.phone, sms: true, nomap: true }, d) : (j.guide ? ' <span class="who">' + esc(j.guide) + '</span>' : '');
-    return '<div class="joint"><b>' + ttl + '</b>' + c + (j.lead ? '<div class="x">' + esc(j.lead) + '</div>' : '') +
-      (j.items && j.items.length ? '<ul>' + j.items.map(function (t) { return '<li>' + esc(t).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</li>'; }).join('') + '</ul>' : '') + '</div>';
+  // 🤝 합동 — 해당 항목 바로 아래 (에버랜드·비발디 발권 / 김밥 / 신촌버거 / 캄풍쿠 15명 뷔페만). d.joint = 상대 팀 정보, item.jt = 그 항목의 합동 내용
+  function jointHtml(j, d, txt) {
+    var c = j.phone ? who({ contact: j.guide, phone: j.phone, sms: true, nomap: true }, d) : '';
+    return '<span class="joint"><b>🤝 ' + (EN ? 'Joint · ' : '합동 · ') + esc(j.team) + '</b>' + c + '<span class="jt">' + esc(txt).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' +
+      '<span class="x">' + (EN ? '💳 Whoever pays with the corporate card settles the receipt' : '💳 법인카드로 결제한 가이드가 영수증 정산') + '</span></span>';
   }
   function smsHref(c, d) { return 'sms:' + num(c.phone) + '?&body=' + encodeURIComponent(smsBody(c, d)); }
   function who(c, d) {
@@ -179,12 +181,11 @@
       var meals = d.meals || {};
       function mealSpan(i, key) { var mm = meals[key]; if (!mm) return '<span class="no">' + L.meal[i] + '</span>'; if (mm.ok === false) return '<span class="no">' + L.meal[i] + (mm.txt ? ' — ' + esc(mm.txt) : ' — ' + L.free) + '</span>'; return '<span class="' + (mm.alt ? 'alt' : '') + '">' + L.meal[i] + (mm.txt ? ' ' + esc(mm.txt) : '') + '</span>'; }
       h += '<details class="day" data-d="' + esc(d.d) + '" data-loc="' + esc(d.loc || D.loc || 'SEL') + '"><summary><span class="d" data-today="' + L.today + '">' + esc(d.label) + '</span><span class="s">' + esc(d.summary) + '</span><span class="ar">▶</span></summary><div class="body">' +
-        '<ul class="tl" data-d="' + esc(d.d) + '">' + (d.items || []).map(function (it, ii) { return '<li data-i="' + ii + '"><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + who(it, d) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span></li>'; }).join('') + '</ul>' +
+        '<ul class="tl" data-d="' + esc(d.d) + '">' + (d.items || []).map(function (it, ii) { return '<li data-i="' + ii + '"><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + who(it, d) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + (it.jt && d.joint ? jointHtml(d.joint, d, it.jt) : '') + '</span></li>'; }).join('') + '</ul>' +
         (D.reorder ? '<div class="reo"><button type="button" class="rbtn" data-reo="' + esc(d.d) + '">✏️ ' + (EN ? 'Change order' : '순서 바꾸기') + '</button><span class="rst" data-rst="' + esc(d.d) + '"></span></div>' : '') +
         '<div class="row"><span class="i">🍽</span><div class="meal">' + mealSpan(0, 'b') + mealSpan(1, 'l') + mealSpan(2, 'd') + '</div></div>' +
         (d.move ? '<div class="row"><span class="i">🚐</span><div>' + esc(d.move) + who(d.moveWho, d) + (d.moveSub ? '<br><span class="x">' + esc(d.moveSub) + '</span>' : '') + '</div></div>' : '') +
         (d.stay ? '<div class="row"><span class="i">🏨</span><div>' + esc(d.stay) + '</div></div>' : '') +
-        (d.joint ? jointHtml(d.joint, d) : '') +
         (d.todo && d.todo.length ? '<div class="row"><span class="i">✅</span><ul class="todo">' + d.todo.map(function (t, ti) { return '<li data-k="' + esc(d.d + ':' + ti) + '"><label><input type="checkbox"> <span>' + esc(t) + '</span></label></li>'; }).join('') + '</ul></div>' : '') +
         (d.notes && d.notes.length ? '<div class="row"><span class="i">📝</span><div>' + d.notes.map(function (n) { return '<div style="margin-bottom:4px">' + esc(n) + '</div>'; }).join('') + '</div></div>' : '') +
         (d.warn ? '<div class="warn">' + esc(d.warn) + '</div>' : '') +
