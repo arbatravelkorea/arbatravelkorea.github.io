@@ -171,7 +171,7 @@
           (ht.address ? '<dt>' + L.addr + '</dt><dd>' + esc(ht.address) + ' ' + cpBtn(ht.address) + '</dd>' : '') + (ht.phone ? '<dt>' + L.tel + '</dt><dd>' + tel(ht.phone) + '</dd>' : '') +
           (ht.notes || []).map(function (n) { return '<dt>·</dt><dd>' + esc(n) + '</dd>'; }).join('') + '</dl>' +
           (K.namelist ? '<a class="btn wide" target="_blank" rel="noopener" href="' + esc(K.namelist) + '">' + L.namelist + '</a>' : '<span class="btn wide dis">' + L.nonamelist + '</span>') +
-          (D.honorific ? '<p class="hint" style="margin:6px 2px 4px">👑 ' + esc(D.honorific) + '</p>' : '') +
+          (D.honorific && !/없음|none|해당 없|N\/A/i.test(D.honorific) ? '<p class="hint" style="margin:6px 2px 4px">👑 ' + esc(D.honorific) + '</p>' : '') +
           ((ht.map || ht.phone) ? '<div class="btnrow" style="margin-top:8px">' + (ht.map ? '<a class="btn" target="_blank" rel="noopener" href="' + esc(ht.map) + '"><img class="nmap" src="/img/naver_map.png" alt="' + L.map + '"></a>' : '') + (ht.phone ? '<a class="btn" href="tel:' + num(ht.phone) + '">' + L.call + '</a>' : '') + '</div>' : '') + '</div>';
       });
     }
