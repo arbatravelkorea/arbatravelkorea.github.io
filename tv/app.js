@@ -178,7 +178,7 @@
           (ht.breakfast ? '<dt>' + L.bf + '</dt><dd>' + esc(ht.breakfast) + '</dd>' : '') + (ht.rooms ? '<dt>' + L.rooms + '</dt><dd>' + nl(ht.rooms) + '</dd>' : '') + (ht.pay ? '<dt>' + L.pay + '</dt><dd>' + esc(ht.pay) + '</dd>' : '') +
           (ht.address ? '<dt>' + L.addr + '</dt><dd>' + esc(ht.address) + ' ' + cpBtn(ht.address) + '</dd>' : '') + (ht.phone ? '<dt>' + L.tel + '</dt><dd>' + tel(ht.phone) + '</dd>' : '') +
           (ht.notes || []).map(function (n) { return '<dt>·</dt><dd>' + esc(n) + '</dd>'; }).join('') + '</dl>' +
-          (K.namelist ? '<a class="btn wide" target="_blank" rel="noopener" href="' + esc(K.namelist) + '">' + L.namelist + '</a>' : '<span class="btn wide dis">' + L.nonamelist + '</span>') +
+          (K.namelists && K.namelists.length ? '<button type="button" class="btn wide nlbtn">' + L.namelist + (K.namelists.length > 1 ? ' (' + K.namelists.map(function (x) { return esc(x.n); }).join(' + ') + ')' : '') + '</button>' : K.namelist ? '<a class="btn wide" target="_blank" rel="noopener" href="' + esc(K.namelist) + '">' + L.namelist + '</a>' : '<span class="btn wide dis">' + L.nonamelist + '</span>') +
           (D.honorific && !/없음|none|해당 없|N\/A/i.test(D.honorific) ? '<p class="hint" style="margin:6px 2px 4px">👑 ' + esc(D.honorific) + '</p>' : '') +
           ((ht.map || ht.phone) ? '<div class="btnrow" style="margin-top:8px">' + (ht.map ? '<a class="btn" target="_blank" rel="noopener" href="' + esc(ht.map) + '"><img class="nmap" src="/img/naver_map.png" alt="' + L.map + '"></a>' : '') + (ht.phone ? '<a class="btn" href="tel:' + num(ht.phone) + '">' + L.call + '</a>' : '') + '</div>' : '') + '</div>';
       });
@@ -261,6 +261,15 @@
     });
     // 복사
     function copyText(v) { if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(v); return new Promise(function (res, rej) { var t = document.createElement('textarea'); t.value = v; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); try { document.execCommand('copy') ? res() : rej(); } catch (e) { rej(e); } document.body.removeChild(t); }); }
+    // 명단 여러 장(합류 투어): 버튼 한 번에 Drive 미리보기를 위아래로 (2026-11-09 대표 — 파일 내용은 Drive에만, 이 페이지엔 파일 id만)
+    document.addEventListener('click', function (ev) {
+      var nb = ev.target.closest('.nlbtn'), cl = ev.target.closest('.nlx');
+      if (cl) { var o = document.getElementById('nlov'); if (o) o.remove(); document.body.style.overflow = ''; return; }
+      if (!nb) return; var K = (CUR.links || {}).namelists || [];
+      var ov = document.createElement('div'); ov.id = 'nlov'; ov.className = 'nlov';
+      ov.innerHTML = '<div class="nlbar"><b>' + L.namelist + '</b><button type="button" class="nlx">✕</button></div>' + K.map(function (x) { var id = String(x.id || '').replace(/[^\w-]/g, ''); return '<div class="nlh">' + esc(x.n || '') + '</div><iframe class="nlf" src="https://drive.google.com/file/d/' + id + '/preview" allow="autoplay"></iframe><a class="nlo" target="_blank" rel="noopener" href="https://drive.google.com/file/d/' + id + '/view">' + (EN ? 'Open in new tab' : '새 창으로 열기') + ' ↗</a>'; }).join('');
+      document.body.appendChild(ov); document.body.style.overflow = 'hidden';
+    });
     document.addEventListener('click', function (ev) { var b = ev.target.closest('.cp'); if (!b) return; ev.preventDefault(); var lab = b.dataset.label || L.copy; copyText(b.dataset.copy).then(function () { b.textContent = b.dataset.label ? '✅ ' + L.copiedGreet : L.copied; setTimeout(function () { b.textContent = lab; }, 2500); }).catch(function () { }); });
     // 항공 실시간
     var LV = [].slice.call(document.querySelectorAll('.live[data-f]')); if (!LV.length) return;
