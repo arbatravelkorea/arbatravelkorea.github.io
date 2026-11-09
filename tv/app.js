@@ -106,7 +106,7 @@
   var RT = {}; // 식당 예약 시간 (가이드가 문자 버튼 누를 때 입력, 이 휴대폰 저장)
   // 🔒 이름 워터마크: 본인 기기 0.8% (거의 안 보임) / 다른 기기 진하게 / 인쇄·PDF 진하게 (대표 11/9 23:08)
   // 대표 확인 전: 예시 지침서(demo)와 secure:true 인 지침서만. 확정되면 기본 켜기로 바꿈
-  function SECURE(D) { return D.secure === true || SLUG === 'demo-k7p2qx'; }
+  function SECURE(D) { return D.secure !== false; } // 11/9 대표 확정: 모든 지침서 (끄려면 "secure":false)
   function watermark(D) {
     var g = D.guide || {}, nm = (g.ko || g.name || ''), ph = String(g.phone || '').replace(/\D/g, ''), sub = (D.tripId || '') + (ph ? ' · 010-****-' + ph.slice(-4) : '');
     function svg(a, big) { var w = big ? 280 : 260, h = big ? 190 : 170; return 'url("data:image/svg+xml;utf8,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='" + w + "' height='" + h + "'><g transform='rotate(-24 " + w / 2 + " " + h / 2 + ")' font-family='sans-serif' font-weight='800' fill='rgba(176,38,75," + a + ")'><text x='8' y='" + (h / 2 - 4) + "' font-size='" + (big ? 20 : 17) + "'>" + nm + " 가이드님 전용</text><text x='12' y='" + (h / 2 + 18) + "' font-size='11'>" + sub + "</text></g></svg>") + '")'; }
