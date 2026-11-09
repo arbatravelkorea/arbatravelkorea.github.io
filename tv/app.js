@@ -26,11 +26,28 @@
   function placeOf(c) { if (c.place) return c.place; var t = String(c.text || ''); if (/불포함|할랄 식당|자유|Not included|own expense|free time|halal restaurant/i.test(t)) return ''; var m = t.match(/^(?:점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]?\s*([^(—–\-·]+)/); return m ? m[1].trim() : ''; }
   // 할랄 리스트에 있는 식당이면 리스트의 정확한 네이버지도 링크 (이름 앞부분 일치: "고삼이 신촌점", "EID (이태원)…" → "EID 할랄 코리안푸드")
   function halalLink(pl) { var H = window.HALAL_LINKS || {}; if (!pl) return ''; var k = pl.replace(/\s*\(.*$/, '').replace(/\s+/g, ' ').trim().toLowerCase(); var best = ''; Object.keys(H).forEach(function (n) { var nn = n.toLowerCase(); if (nn === k || nn.indexOf(k) === 0 || k.indexOf(nn) === 0) { if (!best || n.length > best.length) best = n; } }); if (!best) Object.keys(H).forEach(function (n) { var w = n.toLowerCase().split(' ')[0]; if (w.length >= 2 && k.indexOf(w) === 0 && !best) best = n; }); return best ? H[best] : ''; }
-  function who(c) {
+  // 문자 버튼 기본 양식 (2026-11-09 대표 지시): 인사 + 날짜·끼니 + 인원 + 도착 시간. 식당은 항상 한국어
+  var WD = ['일', '월', '화', '수', '목', '금', '토'];
+  function smsBody(c, d) {
+    var D = CUR || {}, g = D.guide || {}, px = D.pax || {}, nm = g.ko || g.name || '';
+    var b = '안녕하세요 아르바트래블 ' + nm + ' 가이드입니다.';
+    var dt = d && d.d ? new Date(d.d + 'T00:00:00') : null, ds = dt ? (dt.getMonth() + 1) + '월 ' + dt.getDate() + '일(' + WD[dt.getDay()] + ')' : '';
+    var t = String(c.text || ''), mm = t.match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)/), meal = mm ? ({ Lunch: '점심', Dinner: '저녁', Breakfast: '아침' }[mm[1]] || mm[1]) : '';
+    if (!meal) return b + (ds ? '\n' + ds + ' ' + (D.tripId || '') + ' 팀 관련 연락드립니다.' : '');
+    var tl = +px.tl || 0, gu = +px.total || 0, tot = gu + 1;
+    var who = '손님 ' + (gu - tl) + '명' + (tl ? ' + 인솔자 ' + tl + '명' : '') + ' + 가이드 1명';
+    return b + '\n' + ds + ' ' + meal + (/배달|delivery/i.test(t) ? ' 배달' : '') + ' 예약 부탁드립니다.' +
+      '\n- 인원: 총 ' + tot + '명 (' + who + ')' +
+      '\n- ' + (/배달|delivery/i.test(t) ? '배달 시간' : '도착 예정') + ': ' + (c.tm || '') +
+      '\n- 말레이시아 무슬림 단체입니다 (돼지고기·술 제외 부탁드립니다).' +
+      '\n확인 부탁드립니다. 감사합니다!';
+  }
+  function smsHref(c, d) { return 'sms:' + num(c.phone) + '?&body=' + encodeURIComponent(smsBody(c, d)); }
+  function who(c, d) {
     if (!c) return '';
     var pl = c.nomap ? '' : placeOf(c), mp = c.map || halalLink(pl);
     if (!c.phone) { if (c.nomap || !(c.map || (pl && /^(점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]/.test(c.text || '')))) return ''; return '<span class="who"><a class="mini nm" target="_blank" rel="noopener" href="' + esc(mp || ('https://map.naver.com/p/search/' + encodeURIComponent(pl))) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' + (c.note ? ' <span class="x">' + esc(c.note).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span>'; }
-    return '<span class="who">' + (c.contact ? esc(c.contact) + ' ' : '') + '<a class="mini" href="tel:' + num(c.phone) + '">' + ((c.callLabel || (/^(점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]/.test(c.text || '') ? L.reserve : '')) ? '📞 ' + esc(c.callLabel || L.reserve) : L.call) + '</a>' + (c.sms ? '<a class="mini" href="sms:' + num(c.phone) + '">' + L.sms + '</a>' : '') +
+    return '<span class="who">' + (c.contact ? esc(c.contact) + ' ' : '') + '<a class="mini" href="tel:' + num(c.phone) + '">' + ((c.callLabel || (/^(점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]/.test(c.text || '') ? L.reserve : '')) ? '📞 ' + esc(c.callLabel || L.reserve) : L.call) + '</a>' + (c.sms ? '<a class="mini" href="' + esc(smsHref(c, d)) + '">' + L.sms + '</a>' : '') +
       ((pl || mp) ? '<a class="mini nm" target="_blank" rel="noopener" href="' + esc(mp || ('https://map.naver.com/p/search/' + encodeURIComponent(pl))) + '"><img src="/img/naver_map.png" alt="' + L.map + '"></a>' : (c.nomap ? '' : cpBtn(c.phone))) + (c.note ? ' <span class="x">' + esc(c.note).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span>';
   }
 
@@ -149,9 +166,9 @@
       var meals = d.meals || {};
       function mealSpan(i, key) { var mm = meals[key]; if (!mm) return '<span class="no">' + L.meal[i] + '</span>'; if (mm.ok === false) return '<span class="no">' + L.meal[i] + (mm.txt ? ' — ' + esc(mm.txt) : ' — ' + L.free) + '</span>'; return '<span class="' + (mm.alt ? 'alt' : '') + '">' + L.meal[i] + (mm.txt ? ' ' + esc(mm.txt) : '') + '</span>'; }
       h += '<details class="day" data-d="' + esc(d.d) + '" data-loc="' + esc(d.loc || D.loc || 'SEL') + '"><summary><span class="d" data-today="' + L.today + '">' + esc(d.label) + '</span><span class="s">' + esc(d.summary) + '</span><span class="ar">▶</span></summary><div class="body">' +
-        '<ul class="tl">' + (d.items || []).map(function (it) { return '<li><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + who(it) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span></li>'; }).join('') + '</ul>' +
+        '<ul class="tl">' + (d.items || []).map(function (it) { return '<li><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + who(it, d) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span></li>'; }).join('') + '</ul>' +
         '<div class="row"><span class="i">🍽</span><div class="meal">' + mealSpan(0, 'b') + mealSpan(1, 'l') + mealSpan(2, 'd') + '</div></div>' +
-        (d.move ? '<div class="row"><span class="i">🚐</span><div>' + esc(d.move) + who(d.moveWho) + (d.moveSub ? '<br><span class="x">' + esc(d.moveSub) + '</span>' : '') + '</div></div>' : '') +
+        (d.move ? '<div class="row"><span class="i">🚐</span><div>' + esc(d.move) + who(d.moveWho, d) + (d.moveSub ? '<br><span class="x">' + esc(d.moveSub) + '</span>' : '') + '</div></div>' : '') +
         (d.stay ? '<div class="row"><span class="i">🏨</span><div>' + esc(d.stay) + '</div></div>' : '') +
         (d.todo && d.todo.length ? '<div class="row"><span class="i">✅</span><ul class="todo">' + d.todo.map(function (t, ti) { return '<li data-k="' + esc(d.d + ':' + ti) + '"><label><input type="checkbox"> <span>' + esc(t) + '</span></label></li>'; }).join('') + '</ul></div>' : '') +
         (d.notes && d.notes.length ? '<div class="row"><span class="i">📝</span><div>' + d.notes.map(function (n) { return '<div style="margin-bottom:4px">' + esc(n) + '</div>'; }).join('') + '</div></div>' : '') +
