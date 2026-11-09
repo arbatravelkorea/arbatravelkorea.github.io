@@ -115,6 +115,19 @@ def contact(r):
         c.update({'담당자': g(r, '담당자'), '전화': g(r, '담당자 전화'), '문자': g(r, '문자') or 'O'})
     return c
 
+# 문자하기 → 식당 예약 양식 자동 입력 (지침서에서 열면 ?g=가이드&n=손님&tl=&inf=&h=호텔&ha=주소 로 채움, 날짜는 빈칸)
+SMSJS = r'''
+(function(){var P=new URLSearchParams(location.search),en=P.get('en')==='1'||document.documentElement.lang==='en';
+function iv(k){var v=P.get(k);return v===null||v===''?null:+v;}
+document.addEventListener('click',function(ev){var a=ev.target.closest&&ev.target.closest('a.cbtn.sms');if(!a||!window.ATK_SMS)return;
+var dl=a.getAttribute('data-dl')==='1',b=window.ATK_SMS({en:en,name:P.get('g')||'',date:null,meal:'',guests:iv('n'),tl:iv('tl')||0,inf:iv('inf')||0,dl:dl,hotel:dl?(P.get('h')||''):'',addr:dl?(P.get('ha')||''):'',time:''});
+a.setAttribute('href','sms:'+a.getAttribute('data-num')+'?&body='+encodeURIComponent(b));},true);})();
+'''
+
+def dl_attr(r, c):  # 배달 식당(신촌버거 등) → 문자 양식이 배달 양식
+    t = ' '.join([g(r, '식당명'), g(r, 'Name'), g(r, '메모'), c.get('추가메모') or ''])
+    return ' data-dl="1"' if re.search(r'배달|버거|delivery|burger', t, re.I) else ''
+
 def page(lang, preset):
     ko = lang == 'ko'
     cards = []
@@ -135,7 +148,7 @@ def page(lang, preset):
             num = re.sub(r'[^\d+]', '', c['전화'])
             sms = (c.get('문자') or 'O').strip().upper() not in ('X', 'N', '불가', '없음')
             ct = (f'<div class="ct"><span class="who">담당 <b>{e(c.get("담당자") or "")}</b></span>'
-                  f'<a class="cbtn call" href="tel:{num}">전화하기</a>' + (f'<a class="cbtn sms" href="sms:{num}">문자하기</a>' if sms else '') + '</div>')
+                  f'<a class="cbtn call" href="tel:{num}">전화하기</a>' + (f'<a class="cbtn sms" href="sms:{num}" data-num="{num}"{dl_attr(r, c)}>문자하기</a>' if sms else '') + '</div>')
         acts = (f'<a class="act nav" href="{e(nv)}" target="_blank" rel="noopener">{"네이버지도" if ko else "Naver Map"}</a>' if nv else '') + \
                f'<a class="act gmap" href="{e(gmap(r))}" target="_blank" rel="noopener">{"구글맵" if ko else "Google Maps"}</a>'
         s = ' '.join([g(r, '식당명'), g(r, 'Name'), reg, reg_en]).lower()
@@ -173,7 +186,7 @@ def page(lang, preset):
 <div class="bar"><div class="wrap"><div class="chips" id="fr">{chips}</div></div></div>
 <main><div class="wrap"><p class="legend">{e(legend)}</p><p class="count" id="cnt" data-t="{"식당 #곳" if ko else "# restaurants"}"></p>
 <ol>{"".join(cards)}</ol><p class="empty" id="none" hidden>{"조건에 맞는 식당이 없습니다." if ko else "No restaurants match."}</p></div></main>
-<footer>ARBA Travel Korea · korea@arbatravel.com</footer><script>{JS}</script></body></html>'''
+<footer>ARBA Travel Korea · korea@arbatravel.com</footer><script src="/tv/smsform.js?v=1"></script><script>{JS}{SMSJS}</script></body></html>'''
 
 h = root / 'halal'
 from itertools import combinations

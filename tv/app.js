@@ -27,17 +27,25 @@
   // 할랄 리스트에 있는 식당이면 리스트의 정확한 네이버지도 링크 (이름 앞부분 일치: "고삼이 신촌점", "EID (이태원)…" → "EID 할랄 코리안푸드")
   function halalLink(pl) { var H = window.HALAL_LINKS || {}; if (!pl) return ''; var k = pl.replace(/\s*\(.*$/, '').replace(/\s+/g, ' ').trim().toLowerCase(); var best = ''; Object.keys(H).forEach(function (n) { var nn = n.toLowerCase(); if (nn === k || nn.indexOf(k) === 0 || k.indexOf(nn) === 0) { if (!best || n.length > best.length) best = n; } }); if (!best) Object.keys(H).forEach(function (n) { var w = n.toLowerCase().split(' ')[0]; if (w.length >= 2 && k.indexOf(w) === 0 && !best) best = n; }); return best ? H[best] : ''; }
   // 문자 버튼 기본 양식 (2026-11-09 대표 지시): 인사 + 날짜·끼니 + 인원 + 도착 시간. 식당은 항상 한국어
-  var WD = ['일', '월', '화', '수', '목', '금', '토'];
   function smsBody(c, d) {
-    var D = CUR || {}, g = D.guide || {}, px = D.pax || {}, nm = g.ko || g.name || '';
-    var b = '안녕하세요\n아르바트래블 ' + nm + ' 가이드입니다.';
-    var dt = d && d.d ? new Date(d.d + 'T00:00:00') : null, ds = dt ? (dt.getMonth() + 1) + '월 ' + dt.getDate() + '일(' + WD[dt.getDay()] + ')' : '';
-    var t = String(c.text || ''), mm = t.match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)/), meal = mm ? ({ Lunch: '점심', Dinner: '저녁', Breakfast: '아침' }[mm[1]] || mm[1]) : '';
-    if (!meal) return b + (ds ? '\n' + ds + ' ' + (D.tripId || '') + ' 팀 관련 연락드립니다.' : '');
-    var tl = +px.tl || 0, inf = +px.inf || 0, gu = (+px.total || 0) - tl - inf, tot = gu + tl + 1, dl = /배달|delivery/i.test(t);
-    return '안녕하세요\n아르바트래블 ' + nm + ' 가이드입니다.\n아래와 같이 ' + (dl ? '배달 ' : '') + '예약 부탁드립니다.\n\n' + ds + ' ' + meal +
-      '\n- 인원: 총 ' + tot + '명\n(손님 ' + gu + '명' + (tl ? ' + 인솔자 ' + tl + '명' : '') + ' + 가이드 1명)' + (inf ? '\n※ 유아 ' + inf + '명 별도 (식사 없음)' : '') +
-      '\n- ' + (dl ? '배달 시간' : '도착 예정') + ': ' + (c.tm || '') + '\n\n확인 부탁드립니다. 감사합니다!';
+    var D = CUR || {}, g = D.guide || {}, px = D.pax || {}, nm = EN ? (g.name || '') : (g.ko || g.name || '');
+    var dt = d && d.d ? new Date(d.d + 'T00:00:00') : null;
+    var t = String(c.text || ''), mm = t.match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)/);
+    if (!mm) return EN ? 'Hello,\nThis is ' + nm + ', tour guide from ARBA Travel' + (D.tripId ? ' (' + D.tripId + ')' : '') + '.' : '안녕하세요\n아르바트래블 ' + nm + ' 가이드입니다.' + (D.tripId ? '\n' + D.tripId + ' 팀 관련 연락드립니다.' : '');
+    var meal = { 점심: 'L', Lunch: 'L', 저녁: 'D', Dinner: 'D', 아침: 'B', Breakfast: 'B' }[mm[1]];
+    var dl = /배달|delivery/i.test(t), tl = +px.tl || 0, inf = +px.inf || 0, H = null, tm = c.tm || '';
+    if (dl) {
+      var hs = D.hotels || [], st = String((d && d.stay) || ''); hs.forEach(function (h) { if (!H && h.name && st.indexOf(h.name) >= 0) H = h; }); H = H || hs[0] || {};
+      var xm = String(c.x || '').match(/(\d{1,2}:\d{2})\s*까지|until\s*(\d{1,2}:\d{2})/i); if (!tm && xm) tm = xm[1] || xm[2];
+    }
+    return window.ATK_SMS({ en: EN, name: nm, date: dt, meal: meal, guests: (+px.total || 0) - tl - inf, tl: tl, inf: inf, dl: dl, hotel: H ? H.name : '', addr: H ? H.address : '', time: tm });
+  }
+  // 할랄 리스트에 가이드·인원·호텔을 넘겨 문자하기 양식을 채움
+  function halalUrl(u, D) {
+    var g = D.guide || {}, px = D.pax || {}, tl = +px.tl || 0, inf = +px.inf || 0, h = (D.hotels || [])[0] || {};
+    var q = { g: EN ? (g.name || '') : (g.ko || g.name || ''), n: (+px.total || 0) - tl - inf, tl: tl, inf: inf, h: h.name || '', ha: h.address || '' };
+    if (EN) q.en = 1;
+    return u + (u.indexOf('?') >= 0 ? '&' : '?') + Object.keys(q).filter(function (k) { return q[k] !== '' && q[k] !== 0 || k === 'n'; }).map(function (k) { return k + '=' + encodeURIComponent(q[k]); }).join('&');
   }
   function smsHref(c, d) { return 'sms:' + num(c.phone) + '?&body=' + encodeURIComponent(smsBody(c, d)); }
   function who(c, d) {
@@ -128,7 +136,7 @@
       (K.wa ? '<a class="btn wa" target="_blank" rel="noopener" href="' + esc(K.wa) + '">' + WA_SVG + '① ' + L.waBtn + '</a>' : '<span class="btn wa dis">' + WA_SVG + L.waBtn + ' (' + L.tba + ')</span>') +
       '<button type="button" class="btn wa greet cp" data-label="💬 ② ' + esc(HO ? L.greetHo : L.greet) + '" data-copy="' + esc(greet(D)) + '">💬 ② ' + (HO ? L.greetHo : L.greet) + '</button>' +
       (K.season ? '<a class="btn season" target="_blank" rel="noopener" href="' + esc(K.season) + '">🌸 ' + L.season + '</a>' : '') +
-      (K.halal ? '<a class="btn halal' + (K.season ? '' : ' wide2') + '" target="_blank" rel="noopener" href="' + esc(K.halal) + '">🕌 ' + L.halal + '</a>' : '') +
+      (K.halal ? '<a class="btn halal' + (K.season ? '' : ' wide2') + '" target="_blank" rel="noopener" href="' + esc(halalUrl(K.halal, D)) + '">🕌 ' + L.halal + '</a>' : '') +
       (K.settle ? '<a class="btn red wide2" target="_blank" rel="noopener" href="' + esc(K.settle) + '">🧾 ' + L.settle + '</a>' : '') + '</div>' +
       '<p class="hint linkhint">' + (K.hint ? esc(K.hint) + '<br>' : '') + (HO ? L.greetHintHo : L.greetHint) + '</p>';
     // 항공
