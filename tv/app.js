@@ -57,6 +57,12 @@
     return '<span class="joint"><b>🤝 ' + (EN ? 'Joint · ' : '합동 · ') + esc(j.team) + '</b>' + c + '<span class="jt">' + esc(txt).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' +
       '<span class="x">' + (EN ? '💳 Whoever pays with the corporate card settles the receipt' : '💳 법인카드로 결제한 가이드가 영수증 정산') + '</span></span>';
   }
+  // 시간 입력 정리: "1100"→"11:00", "930"→"09:30" (대표 11/9 21:57)
+  function normTm(v) { v = String(v || '').trim(); var m = v.match(/^(\d{1,2})[:.]?(\d{2})$/); if (!m) return ''; var h = +m[1], mi = +m[2]; if (h > 23 || mi > 59) return ''; return (h < 10 ? '0' : '') + h + ':' + (mi < 10 ? '0' : '') + mi; }
+  var WK2 = ['일', '월', '화', '수', '목', '금', '토'], WE2 = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], ME2 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function fmtD(dd) { var t = new Date(dd + 'T00:00:00'); if (isNaN(t)) return dd; return EN ? WE2[t.getDay()] + ', ' + t.getDate() + ' ' + ME2[t.getMonth()] : (t.getMonth() + 1) + '월 ' + t.getDate() + '일(' + WK2[t.getDay()] + ')'; }
+  function LS(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
+  var RT = {}; // 식당 예약 시간 (가이드가 문자 버튼 누를 때 입력, 이 휴대폰 저장)
   function smsHref(c, d) { return 'sms:' + num(c.phone) + '?&body=' + encodeURIComponent(smsBody(c, d)); }
   function who(c, d) {
     if (!c) return '';
@@ -185,12 +191,12 @@
     }
     // 날짜 카드
     h += '<h2>' + L.days + '</h2>';
-    if (D.edit) h += '<div class="editbar">' + (CHG ? '<span class="chgnote">📅 ' + esc(CHG.at || '') + ' ' + esc(CHG.by || '') + (EN ? ' changed the schedule (reported to the office)' : ' 가이드님이 일정 변경 (회사 보고됨)') + '</span>' : '') + '<button type="button" class="btn editbtn" id="openEdit">📅 ' + (EN ? 'Change schedule' : '일정 변경하기') + '</button></div>';
+    if (D.edit) h += '<div class="editbar">' + (CHG ? '<span class="chgnote">📅 ' + esc(CHG.at || '') + ' ' + esc(CHG.by || '') + (EN ? ' changed the schedule (reported to the office)' : ' 가이드님이 일정 변경 (회사 보고됨)') + '</span>' : '') + '<button type="button" class="btn editbtn" id="openEdit">📅 ' + (EN ? 'Change schedule' : '일정 변경하기') + '</button>' + (pendingActs().length ? '<button type="button" class="btn editbtn acts" id="openActs">📨 ' + (EN ? 'Contacts to make' : '연락할 곳') + ' ' + pendingActs().length + '</button>' : '') + '</div>';
     (D.days || []).forEach(function (d, di) {
       var meals = d.meals || {};
       function mealSpan(i, key) { var mm = meals[key]; if (!mm) return '<span class="no">' + L.meal[i] + '</span>'; if (mm.ok === false) return '<span class="no">' + L.meal[i] + (mm.txt ? ' — ' + esc(mm.txt) : ' — ' + L.free) + '</span>'; return '<span class="' + (mm.alt ? 'alt' : '') + '">' + L.meal[i] + (mm.txt ? ' ' + esc(mm.txt) : '') + '</span>'; }
       h += '<details class="day" data-d="' + esc(d.d) + '" data-loc="' + esc(d.loc || D.loc || 'SEL') + '"><summary><span class="d" data-today="' + L.today + '">' + esc(d.label) + '</span><span class="s">' + esc(d.summary) + '</span><span class="ar">▶</span></summary><div class="body">' +
-        '<ul class="tl" data-d="' + esc(d.d) + '">' + (d.items || []).map(function (it, ii) { return '<li data-i="' + ii + '"' + (it.chg ? ' class="chg"' : '') + '><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + (it.chg ? ' <span class="chgb">' + (EN ? 'changed' : '변경됨') + '</span>' : '') + (it.cnote ? '<span class="x cnote">📝 ' + esc(it.cnote) + '</span>' : '') + who(it, d) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + (it.jt && d.joint ? jointHtml(d.joint, d, it.jt) : '') + '</span></li>'; }).join('') + '</ul>' +
+        '<ul class="tl" data-d="' + esc(d.d) + '">' + (d.items || []).map(function (it, ii) { return '<li data-i="' + ii + '" data-r="' + esc(it._r || (d.d + ':' + ii)) + '"' + (it.chg ? ' class="chg"' : '') + (mealKey(it.text) && it.phone ? ' data-meal="1"' : '') + '><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + (it.chg ? ' <span class="chgb">' + (EN ? 'changed' : '변경됨') + '</span>' : '') + (it.cnote ? '<span class="x cnote">📝 ' + esc(it.cnote) + '</span>' : '') + who(it, d) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + (it.jt && d.joint ? jointHtml(d.joint, d, it.jt) : '') + '</span></li>'; }).join('') + '</ul>' +
         (D.reorder ? '<div class="reo"><button type="button" class="rbtn" data-reo="' + esc(d.d) + '">✏️ ' + (EN ? 'Change order' : '순서 바꾸기') + '</button><span class="rst" data-rst="' + esc(d.d) + '"></span></div>' : '') +
         '<div class="row"><span class="i">🍽</span><div class="meal">' + mealSpan(0, 'b') + mealSpan(1, 'l') + mealSpan(2, 'd') + '</div></div>' +
         (d.move ? '<div class="row"><span class="i">🚐</span><div>' + esc(d.move) + who(d.moveWho, d) + (d.moveSub ? '<br><span class="x">' + esc(d.moveSub) + '</span>' : '') + '</div></div>' : '') +
@@ -224,6 +230,22 @@
     // 날씨 (지역별 1회 조회) — 날짜 옆에 아이콘·기온·강수
     var locs = {}; days.forEach(function (d) { var p = d.querySelector('.pray'); locs[(p && p.dataset.loc) || d.dataset.loc || 'SEL'] = 1; });
     Object.keys(locs).forEach(function (loc) { weather(loc).then(function (W) { if (loc === (CUR.loc || 'SEL')) { var los = [], his = []; days.forEach(function (d) { var w = W[d.dataset.d]; if (w) { los.push(w.lo); his.push(w.hi); } }); if (los.length) { WXR = { lo: Math.min.apply(null, los), hi: Math.max.apply(null, his) }; var gb = document.querySelector('.btn.greet'); if (gb) gb.dataset.copy = greet(CUR); } } days.forEach(function (d) { var p = d.querySelector('.pray'); var l = (p && p.dataset.loc) || d.dataset.loc || 'SEL'; if (l !== loc) return; var w = W[d.dataset.d]; if (!w) return; var el = d.querySelector('summary .d'); if (!el || el.querySelector('.wx')) return; var sp = document.createElement('span'); sp.className = 'wx'; sp.textContent = wxIcon(w.c) + ' ' + w.lo + '°/' + w.hi + '°' + (w.mm > 0 ? ' · ' + w.mm + 'mm' : (w.pp >= 40 ? ' · ' + (EN ? 'rain ' : '비 ') + w.pp + '%' : '')); el.appendChild(sp); }); }); });
+    // 식당 문자 버튼 → 예약 시간 입력(이 휴대폰 저장) → 문자에 도착 시간 자동, 일정 변경 화면에도 자동 반영 (대표 11/9 21:57)
+    var IT = {}; (CUR.days || []).forEach(function (d) { (d.items || []).forEach(function (it, i) { IT[it._r || (d.d + ':' + i)] = { it: it, d: d }; }); });
+    document.querySelectorAll('.tl li[data-meal]').forEach(function (li) {
+      var r = li.dataset.r, saved = LS('atk:rt:' + SLUG + ':' + r); if (saved) RT[r] = saved;
+      var a = li.querySelector('a[href^="sms:"]'); if (!a) return;
+      function badge() { var b = li.querySelector('.rt'); if (saved) { if (!b) { b = document.createElement('span'); b.className = 'rt'; li.querySelector('span:nth-child(2)').appendChild(b); } b.textContent = (EN ? '📞 booked ' : '📞 예약 ') + saved; } else if (b) b.remove(); }
+      badge();
+      a.addEventListener('click', function (ev) {
+        ev.preventDefault(); var x = IT[r]; if (!x) { location.href = a.getAttribute('href'); return; }
+        var v = prompt(EN ? 'Arrival time for the booking (e.g. 1100 → 11:00). Leave empty if not decided.' : '예약(도착) 시간을 넣어주세요 (예: 1100 → 11:00). 아직 모르면 비워두세요.', saved || x.it.tm || '');
+        if (v === null) return; var t = normTm(v); if (v.trim() && !t) { alert(EN ? 'Time format: 1100 or 11:00' : '시간은 1100 또는 11:00 형식으로 넣어주세요'); return; }
+        saved = t || ''; LS('atk:rt:' + SLUG + ':' + r, saved || null); if (saved) RT[r] = saved; else delete RT[r]; badge();
+        var c2 = JSON.parse(JSON.stringify(x.it)); if (saved) c2.tm = saved; location.href = smsHref(c2, x.d);
+      });
+    });
+    document.addEventListener('click', function (ev) { if (ev.target.closest('#openActs')) { ev.preventDefault(); showActs(loadActs(), null); } });
     // 할 일 체크 — 이 휴대폰에 저장 (다시 열어도 유지)
     document.querySelectorAll('.todo li[data-k]').forEach(function (li) {
       var key = 'atk:' + SLUG + ':' + li.dataset.k, cb = li.querySelector('input');
@@ -336,6 +358,7 @@
     var O = ORIG, st = {}; // st[day] = [{r, tm, note, rest}]
     var M = {}; O.days.forEach(function (d) { d.items.forEach(function (it, i) { M[d.d + ':' + i] = it; }); });
     O.days.forEach(function (d) { st[d.d] = (CHG && CHG.days && CHG.days[d.d]) ? JSON.parse(JSON.stringify(CHG.days[d.d])) : d.items.map(function (it, i) { return { r: d.d + ':' + i }; }); });
+    days_prefill: { var dk = Object.keys(st); dk.forEach(function (dd) { st[dd].forEach(function (x) { var rt = RT[x.r]; if (rt && x.tm === undefined && !(M[x.r] || {}).tm) { x.tm = rt; x.rt = true; } }); }); }
     var T = EN ? { t: '📅 Change schedule', hint: 'Drag items to reorder or move to another day. Tap an item to change time, restaurant or add a note. 🔒 = cannot change (joint tickets/orders, flights, hotel, vehicles, another guide\'s day) — call the office. ☔ = joint item unlocked by rain forecast.', pin: 'Last 4 digits of your phone', apply: 'Apply', reset: 'Back to the original schedule', close: 'Close', rest: '🍽 Change restaurant', memo: 'Note (e.g. Tom yum set 7+1)', own: 'Type a name…', done: 'Applied — the office has been notified', send: 'Please send these messages', bad: 'Wrong PIN', fail: 'Could not save. Please try again or call the office.', tm: 'Time', other: ' — guide ', otherE: '\'s day (cannot change)', ok: 'OK' }
       : { t: '📅 일정 변경', hint: '항목을 끌어서 순서·날짜를 옮기세요. 항목을 누르면 시간·식당·메모를 바꿀 수 있어요. 🔒 = 변경 불가 (합동 발권·주문, 항공, 호텔, 차량, 다른 가이드 담당일) — 회사에 전화해주세요. ☔ = 비 예보로 잠금 해제된 합동 일정.', pin: '전화번호 뒤 4자리', apply: '적용하기', reset: '원래 일정으로 되돌리기', close: '닫기', rest: '🍽 식당 바꾸기', memo: '메모 (예: 똠얌 세트 7+1)', own: '직접 입력…', done: '적용 완료 — 회사에 보고되었습니다', send: '아래 연락을 꼭 해주세요', bad: '전화번호 뒤 4자리가 맞지 않습니다', fail: '저장하지 못했습니다. 다시 시도하거나 회사로 전화해주세요.', tm: '시간', other: ' · ', otherE: ' 가이드님 담당 (변경 불가)', ok: '확인' };
     var ov = document.createElement('div'); ov.className = 'edit'; document.body.appendChild(ov); document.body.style.overflow = 'hidden';
@@ -375,7 +398,7 @@
       if (lk) h += '<div class="lkr">🔒 ' + esc(lk) + '</div>';
       else if (rainOpen(o, x.r.split(':')[0])) h += '<div class="pkh">☔ ' + (EN ? 'Rain forecast — unlocked. If you move it, you must tell the joint guide (button after applying).' : '비 예보로 잠금 해제 — 옮기면 합동 가이드님께 꼭 알려 일정을 같이 조율해주세요 (적용 후 문자 버튼).') + '</div>';
       else {
-        h += '<label>' + T.tm + ' <input class="tmi" data-a="tm" value="' + esc(it.tm || '') + '" placeholder="--:--"></label>';
+        h += '<label>' + T.tm + ' <input class="tmi" data-a="tm" inputmode="numeric" value="' + esc(it.tm || '') + '" placeholder="1100"></label>';
         if (mk) { var dl0 = (O.days.filter(function (d) { return d.d === SEL.d; })[0] || {}).loc || O.loc || 'SEL', RG = { SEL: ['seoul', 'outer'], JJU: ['jeju'], BUS: ['busan'] }[dl0] || ['seoul', 'outer'];
           if (it.pick && !x.rest) h += '<div class="pkh">' + (EN ? '👉 Once you decide, pick the restaurant below — it is reported to the office.' : '👉 식당을 정하면 아래에서 골라주세요 — 회사에 보고됩니다.') + '</div>';
           h += '<select data-a="rest"><option value="">' + T.rest + '</option>' + (window.HALAL_CONTACTS || []).map(function (r, ri) { return RG.indexOf(r.g) >= 0 ? '<option value="' + ri + '">' + esc(r.n) + '</option>' : ''; }).join('') + '<option value="pick">' + (EN ? '🧭 Guide\'s choice (decide on site)' : '🧭 가이드 선택 (현장에서 결정)') + '</option><option value="own">' + T.own + '</option></select>'; }
@@ -390,7 +413,7 @@
     loadSortable(draw2); draw2();
     ov.addEventListener('change', function (ev) {
       var e = ev.target, a = e.dataset.a; if (!a || !SEL) return; var x = st[SEL.d][SEL.i];
-      if (a === 'tm') { x.tm = e.value.trim(); draw2(); }
+      if (a === 'tm') { var tv = normTm(e.value); if (e.value.trim() && !tv) { alert(EN ? 'Time format: 1100 or 11:00' : '시간은 1100 또는 11:00 형식으로 넣어주세요'); draw2(); return; } x.tm = tv; draw2(); }
       if (a === 'note') { x.note = e.value.trim(); if (!x.note) delete x.note; draw2(); }
       if (a === 'rest') { var o = M[x.r], pre = (String(o.text).match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]\s*/) || [''])[0], r;
         if (e.value === 'own') { var nm = prompt(EN ? 'Restaurant name' : '식당 이름'); if (!nm) { draw2(); return; } var ph = prompt(EN ? 'Phone (optional)' : '전화번호 (없으면 비워두기)') || ''; r = { n: nm, p: ph, s: /^01/.test(ph.replace(/\D/g, '')) }; }
@@ -407,32 +430,50 @@
       if (a === 'apply' || a === 'reset') send(a === 'reset');
     });
     function diffWarn() {
-      var diff = [], warn = [], acts = [], px = mealPx(CUR), tl = +px.tl || 0, inf = +px.inf || 0;
+      var diff = [], warn = [], acts = [], imp = false, px = mealPx(CUR), tl = +px.tl || 0, inf = +px.inf || 0, gn = (CUR.guide || {}).name || '';
+      var JG = {}; // 합동 가이드별 묶음 {guide, phone, title, lines[], rain}
       days.forEach(function (dd) {
         var origOrder = O.days.filter(function (d) { return d.d === dd; })[0].items.map(function (it, i) { return dd + ':' + i; }).join(','), now = st[dd].map(function (x) { return x.r; }).join(',');
         st[dd].forEach(function (x) {
-          var o = M[x.r] || {}, od = x.r.split(':')[0], it = item(x), ch = [];
-          if (od !== dd) ch.push(dlabel(od) + ' → ' + dlabel(dd));
-          if (x.tm !== undefined && x.tm !== (o.tm || '')) ch.push((EN ? 'time ' : '시간 ') + (x.tm || '-'));
+          var o = M[x.r] || {}, od = x.r.split(':')[0], it = item(x), ch = [], moved = od !== dd, tmCh = x.tm !== undefined && x.tm !== (o.tm || ''), mk = mealKey(o.text);
+          if (moved) ch.push(dlabel(od) + ' → ' + dlabel(dd));
+          if (tmCh) ch.push((EN ? 'time ' : '시간 ') + (x.tm || '-') + (x.rt ? (EN ? ' (booked)' : ' (예약)') : ''));
           if (x.rest) ch.push(mealName(o.text) + ' → ' + mealName(x.rest.text));
           if (x.note) ch.push((EN ? 'note: ' : '메모: ') + x.note);
           if (!ch.length) return;
           diff.push(dlabel(od) + ' ' + o.text + ' — ' + ch.join(' · '));
           var J = (O.days.filter(function (d) { return d.d === od; })[0] || {}).joint;
-          if (o.jt && J && J.phone) { warn.push((EN ? 'Joint item changed — tell ' : '합동 일정 변경 — ') + J.guide + (EN ? '' : ' 가이드님께도 알려주세요'));
-            acts.push({ t: (EN ? 'Tell ' : '') + J.guide + (EN ? '' : ' 가이드님께 알리기'), href: 'sms:' + num(J.phone) + '?&body=' + encodeURIComponent((EN ? '[Schedule change] ' : '[일정 변경] ') + (CUR.tripId || '') + '\n' + (RAINY[od] ? (EN ? '☔ Rain forecast — ' : '☔ 비 예보로 ') : '') + o.text + ' — ' + ch.join(' · ') + '\n' + (EN ? 'Our joint booking (tickets / order) needs to move too. Shall we arrange it together?' : '합동으로 정했던 발권·주문도 같이 옮겨야 해요. 일정 함께 조율 부탁드립니다.')) }); }
-          var mk = mealKey(o.text);
-          if (mk && o.phone && (od !== dd || x.rest || (x.tm !== undefined && x.tm !== (o.tm || '')))) {
-            acts.push({ t: (EN ? 'Tell the restaurant: ' : '식당에 변경 연락: ') + mealName(o.text), href: 'sms:' + num(o.phone) + '?&body=' + encodeURIComponent((EN ? 'Hello, this is ' : '안녕하세요\n아르바트래블 ') + ((CUR.guide || {}).name || '') + (EN ? ' from ARBA Travel.\nPlease change our booking: ' : ' 가이드입니다.\n예약 변경 부탁드립니다: ') + dlabel(od) + ' → ' + dlabel(dd) + (x.tm ? ' ' + x.tm : '') + (x.rest ? (EN ? ' (cancel — new restaurant)' : ' (취소 — 다른 식당으로 변경)') : '')) });
+          if (o.jt && J && J.phone && (moved || x.rest || (tmCh && !x.rt))) {
+            imp = true; var key = num(J.phone), g = JG[key] || (JG[key] = { guide: J.guide, phone: J.phone, title: short(o.text), date: od, lines: [], rain: false });
+            if (RAINY[od]) g.rain = true;
+            g.lines.push('· ' + short(o.text) + ': ' + fmtD(od) + (moved ? ' → ' + fmtD(dd) : '') + (tmCh ? ' ' + (x.tm || '') : '') + (x.rest ? ' → ' + mealName(x.rest.text) : ''));
           }
-          if (x.rest && x.rest.phone) acts.push({ t: (EN ? 'Book: ' : '새 식당 예약: ') + mealName(x.rest.text), href: 'sms:' + num(x.rest.phone) + '?&body=' + encodeURIComponent(window.ATK_SMS({ en: EN, name: (CUR.guide || {}).name || '', date: new Date(dd + 'T00:00:00'), meal: mk.toUpperCase(), guests: (+px.total || 0) - tl - inf, tl: tl, inf: inf, time: x.tm || it.tm || '' })) });
-          if (/하루 전|1 day ahead|halal preparation/i.test((o.note || '') + (o.jt || '')) && (od !== dd || x.rest)) { var days2 = (new Date(dd + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5; if (days2 < 2) warn.push((EN ? 'Halal needs a booking 1 day ahead — ' : '할랄은 하루 전 예약 필수 — ') + mealName(o.text) + (EN ? ': too late?' : ': 시간이 부족할 수 있어요')); }
+          // 식당 연락: 날짜·식당·시간이 바뀐 경우 (예약 시간 기록만 한 것은 제외)
+          if (mk && o.phone && !o.pick && (moved || x.rest || (tmCh && !x.rt))) {
+            var who = EN ? 'Hello,\nThis is ' + gn + ', tour guide from ARBA Travel.\n' : '안녕하세요\n아르바트래블 ' + gn + ' 가이드입니다.\n';
+            var mealW = EN ? ({ b: 'breakfast', l: 'lunch', d: 'dinner' })[mk] : ({ b: '아침', l: '점심', d: '저녁' })[mk];
+            var pxL = EN ? 'Pax: ' + ((+px.total || 0) - tl - inf + tl + 1) + ' (' + ((+px.total || 0) - tl - inf) + ' guests' + (tl ? ' + ' + tl + ' tour leader' : '') + ' + 1 guide)' : '인원: 총 ' + ((+px.total || 0) - tl - inf + tl + 1) + '명 (손님 ' + ((+px.total || 0) - tl - inf) + '명' + (tl ? ' + 인솔자 ' + tl + '명' : '') + ' + 가이드 1명)';
+            var body = x.rest
+              ? who + (EN ? 'Please cancel our booking for ' + fmtD(od) + ' ' + mealW + '. (schedule change)\nSorry for the trouble, thank you!' : fmtD(od) + ' ' + mealW + ' 예약을 취소 부탁드립니다. (일정 변경)\n죄송합니다. 감사합니다!')
+              : who + (EN ? 'Please change our booking.\n\nFrom: ' + fmtD(od) + ' ' + mealW + (o.tm ? ' ' + o.tm : '') + '\nTo: ' + fmtD(dd) + ' ' + mealW + (x.tm || it.tm ? ' ' + (x.tm || it.tm) : '') + '\n' + pxL + '\n\nPlease confirm. Thank you!'
+                : '예약 변경 부탁드립니다.\n\n기존: ' + fmtD(od) + ' ' + mealW + (o.tm ? ' ' + o.tm : '') + '\n변경: ' + fmtD(dd) + ' ' + mealW + (x.tm || it.tm ? ' ' + (x.tm || it.tm) : '') + '\n' + pxL + '\n\n확인 부탁드립니다. 감사합니다!');
+            acts.push({ k: 'r:' + x.r, t: (x.rest ? (EN ? 'Cancel: ' : '예약 취소: ') : (EN ? 'Change booking: ' : '예약 변경: ')) + mealName(o.text), sub: (o.contact || '') + ' ' + (o.phone || ''), phone: o.phone, body: body });
+          }
+          if (x.rest && x.rest.phone) acts.push({ k: 'n:' + x.r, t: (EN ? 'New booking: ' : '새 식당 예약: ') + mealName(x.rest.text), sub: (x.rest.contact || '') + ' ' + x.rest.phone, phone: x.rest.phone, body: window.ATK_SMS({ en: EN, name: gn, date: new Date(dd + 'T00:00:00'), meal: mk.toUpperCase(), guests: (+px.total || 0) - tl - inf, tl: tl, inf: inf, time: x.tm || it.tm || '' }) });
+          if (/하루 전|1 day ahead|halal preparation/i.test((o.note || '') + (o.jt || '')) && (moved || x.rest)) { var days2 = (new Date(dd + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5; if (days2 < 2) warn.push((EN ? 'Halal needs a booking 1 day ahead — ' : '할랄은 하루 전 예약 필수 — ') + mealName(o.text) + (EN ? ': too late?' : ': 시간이 부족할 수 있어요')); }
         });
-        var cnt = {}; st[dd].forEach(function (x) { var k = mealKey(item(x).text); if (k === 'l' || k === 'd') cnt[k] = (cnt[k] || 0) + 1; });
         var movedIO = st[dd].some(function (x) { return x.r.split(':')[0] !== dd; }) || O.days.filter(function (d) { return d.d === dd; })[0].items.some(function (it, i) { return !st[dd].some(function (x) { return x.r === dd + ':' + i; }); });
         if (origOrder !== now && !movedIO) diff.push(dlabel(dd) + (EN ? ' order: ' : ' 순서: ') + st[dd].map(function (x) { return mealName(item(x).text) || item(x).text; }).join(' → '));
       });
-      return { diff: diff, warn: warn, acts: acts };
+      // 합동 가이드 문자 — 가이드 한 명당 한 통 (맨 앞)
+      Object.keys(JG).forEach(function (k) {
+        var g = JG[k], body = EN
+          ? 'Hello ' + g.guide + ',\nThis is ' + gn + ', the guide joining you at ' + g.title + ' on ' + fmtD(g.date) + '.\n\n' + (g.rain ? '☔ Rain is forecast, so I would like to move:' : 'Our schedule has changed:') + '\n' + g.lines.join('\n') + '\n\nThe joint tickets / order need to move too — could we arrange it together? Thank you!'
+          : '안녕하세요 ' + g.guide + ' 가이드님\n' + fmtD(g.date) + ' ' + g.title + ' 같이 가는 ' + gn + ' 가이드입니다.\n\n' + (g.rain ? '☔ 비 예보로 아래 일정을 옮기려고 합니다.' : '아래 일정이 바뀌었습니다.') + '\n' + g.lines.join('\n') + '\n\n합동 발권·주문도 같이 옮겨야 해서 일정 조율 부탁드립니다. 감사합니다!';
+        acts.unshift({ k: 'j:' + k, t: '🤝 ' + g.guide + (EN ? ' (joint guide)' : ' 가이드님 (합동)'), sub: g.phone, phone: g.phone, body: body, joint: true });
+        warn.push((g.rain ? '☔ ' : '') + (EN ? 'Joint schedule changed — tell ' + g.guide : '합동 일정 변경 — ' + g.guide + ' 가이드님께 꼭 알려주세요'));
+      });
+      return { diff: diff, warn: warn, acts: acts, imp: imp };
     }
     function send(reset) {
       var pin = (document.getElementById('epin').value || '').replace(/\D/g, ''), msg = document.getElementById('emsg');
@@ -440,17 +481,39 @@
       if (reset && !confirm(EN ? 'Cancel all saved changes and go back to the office schedule?' : '저장된 변경을 모두 취소하고 회사가 정한 원래 일정으로 되돌릴까요?')) return;
       if (!reset) { var bad = []; days.forEach(function (dd) { var c = {}; st[dd].forEach(function (x) { var k = mealKey(item(x).text); if (k) c[k] = (c[k] || 0) + 1; }); Object.keys(c).forEach(function (k) { if (c[k] > 1) bad.push(dlabel(dd) + ' ' + (EN ? { b: 'breakfast', l: 'lunch', d: 'dinner' }[k] : { b: '아침', l: '점심', d: '저녁' }[k]) + ' ' + c[k] + (EN ? '' : '곳')); }); });
         if (bad.length) { msg.textContent = (EN ? '❌ Only one restaurant per meal: ' : '❌ 한 끼에 식당은 한 곳만 — ') + bad.join(', ') + (EN ? '. Move one to another day.' : '. 하나를 다른 날로 옮겨주세요.'); return; } }
-      var W = reset ? { diff: [], warn: [], acts: [] } : diffWarn();
+      var W = reset ? { diff: [], warn: [], acts: [], imp: !!(CHG && CHG.imp) } : diffWarn();
       if (!reset && !W.diff.length) { ov.remove(); document.body.style.overflow = ''; return; }
-      var body = { act: 'chg', slug: SLUG, pin: pin, ov: reset ? null : { v: 1, days: st }, diff: W.diff, warn: W.warn };
+      var body = { act: 'chg', slug: SLUG, pin: pin, ov: reset ? null : { v: 1, days: st, imp: W.imp }, diff: W.diff, warn: W.warn, imp: W.imp };
       msg.textContent = '…';
       fetch(API, { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json(); }).then(function (j) {
         if (!j.ok) { msg.textContent = j.error === 'pin' ? T.bad : T.fail; return; }
-        ov.innerHTML = '<div class="eh"><b>✅ ' + T.done + '</b><button type="button" class="x2" data-a="close2">✕</button></div>' + (W.warn.length ? '<div class="ew">' + W.warn.map(function (w) { return '⚠️ ' + esc(w); }).join('<br>') + '</div>' : '') +
-          (W.acts.length ? '<p class="hint"><b>' + T.send + '</b></p>' + W.acts.map(function (a) { return '<a class="btn wide" href="' + esc(a.href) + '">💬 ' + esc(a.t) + '</a>'; }).join('') : '') + '<button type="button" class="btn wide" data-a="close2">' + T.close + '</button>';
-        ov.onclick = function (ev) { if (ev.target.closest('[data-a="close2"]')) { ov.remove(); document.body.style.overflow = ''; render(SLUG); } };
+        saveActs(reset ? [] : W.acts);
+        ov.remove(); document.body.style.overflow = '';
+        if (W.acts.length || W.warn.length) showActs(W.acts, W.warn, true); else render(SLUG);
       }).catch(function () { msg.textContent = T.fail; });
     }
+  }
+  // ───── 적용 후 연락 목록 (체크하면 취소선, 이 휴대폰에 저장) ─────
+  function loadActs() { try { return JSON.parse(LS('atk:acts:' + SLUG) || '[]'); } catch (e) { return []; } }
+  function saveActs(a) { LS('atk:acts:' + SLUG, a.length ? JSON.stringify(a) : null); }
+  function pendingActs() { return loadActs().filter(function (a) { return !a.done; }); }
+  function showActs(acts, warn, fresh) {
+    var ov = document.createElement('div'); ov.className = 'edit acts'; document.body.appendChild(ov); document.body.style.overflow = 'hidden';
+    function draw3() {
+      var h = '<div class="eh"><b>' + (fresh ? '✅ ' + (EN ? 'Applied — ' : '적용 완료 — ') : '📨 ') + (EN ? 'Contacts to make' : '연락할 곳') + '</b><button type="button" class="x2" data-a="close3">✕</button></div>';
+      if (fresh && (!acts || !acts.length)) h += '<p class="hint">' + (EN ? 'Reported to the office.' : '회사에 보고되었습니다.') + '</p>';
+      if (warn && warn.length) h += '<div class="ew">' + warn.map(function (w) { return '⚠️ ' + esc(w); }).join('<br>') + '</div>';
+      if (acts && acts.length) h += '<p class="hint">' + (EN ? 'Tap 💬 to send. Tick the box when done.' : '💬 눌러서 보내고, 연락이 끝나면 체크해주세요.') + '</p>';
+      (acts || []).forEach(function (a, i) {
+        h += '<div class="act' + (a.done ? ' done' : '') + (a.joint ? ' joint' : '') + '"><label class="act-h"><input type="checkbox" data-i="' + i + '"' + (a.done ? ' checked' : '') + '><span><b>' + esc(a.t) + '</b><small>' + esc(a.sub || '') + '</small></span></label>' +
+          '<pre class="act-b">' + esc(a.body) + '</pre><a class="btn act-s" href="sms:' + num(a.phone) + '?&body=' + encodeURIComponent(a.body) + '">💬 ' + (EN ? 'Send SMS' : '문자 보내기') + '</a></div>';
+      });
+      h += '<div class="ef"><button type="button" class="btn apply" data-a="close3">' + (EN ? 'Close' : '닫기') + '</button></div>';
+      ov.innerHTML = h;
+    }
+    draw3();
+    ov.addEventListener('change', function (ev) { var cb = ev.target; if (cb.type !== 'checkbox') return; acts[+cb.dataset.i].done = cb.checked; saveActs(acts); draw3(); });
+    ov.addEventListener('click', function (ev) { if (ev.target.closest('[data-a="close3"]')) { ov.remove(); document.body.style.overflow = ''; render(SLUG); } });
   }
   document.addEventListener('click', function (ev) { if (ev.target.closest('#openEdit')) { ev.preventDefault(); openEdit(); } });
   window.ATK = { render: render };

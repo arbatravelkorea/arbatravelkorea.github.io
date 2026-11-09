@@ -151,10 +151,10 @@ function chgSave_(b) {
     else P.deleteProperty('chg:' + slug);
     var lines = (b.diff || []).map(String).slice(0, 30);
     var log = []; try { log = JSON.parse(P.getProperty('chglog') || '[]'); } catch (x) { }
-    log.push({ at: now, slug: slug, trip: (vj.data || {}).tripId || '', by: ov ? ov.by : String(((vj.data || {}).guide || {}).name || ''), reset: !ov, diff: lines, warn: (b.warn || []).map(String).slice(0, 10) });
+    log.push({ at: now, slug: slug, trip: (vj.data || {}).tripId || '', by: ov ? ov.by : String(((vj.data || {}).guide || {}).name || ''), reset: !ov, diff: lines, warn: (b.warn || []).map(String).slice(0, 10), imp: !!b.imp });
     while (JSON.stringify(log).length > 8500 && log.length > 1) log.shift();
     P.setProperty('chglog', JSON.stringify(log));
-    chgTg_(log[log.length - 1]);
+    if (b.imp) chgTg_(log[log.length - 1]); // 텔레그램은 중요 변경(합동·비 예보 이동)만 — 대표 11/9 21:57
     return { ok: true, at: now };
   } finally { lock.releaseLock(); }
 }
