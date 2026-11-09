@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """공항 피켓(사인보드) 페이지 — A4 가로, 흰 바탕, ARBA 로고만 빨강, 손님 이름 검정.
 사용: PT python3 make_sign.py "<Trip ID 또는 손님 이름>" <슬러그> <repo 경로>
-     JT python3 make_sign.py "JT|<상품명>|<가이드 영문>|<버스 번호>" <슬러그> <repo 경로>  (단체 미팅보드, 2026-11-02)
+     JT python3 make_sign.py "JT|<상품명(화면엔 안 씀)>|<가이드 영문>|<버스 번호>" <슬러그> <repo 경로>  (단체 미팅보드 — 11/9부터 로고·GUIDE·BUS만)
  → <repo>/v/<슬러그>/sign/index.html  (주소: https://arbatravelkorea.github.io/v/<슬러그>/sign/)
 이름 규칙(guest_title.py): 'Trip ID 숫자_'·괄호 부분 빼고, 이름 앞 Title(Puan·Datin·Dato'·Dr. 등)은 유지, Bin/Binti 뒤 생략, 대문자.
 GitHub에는 손님 이름·로고만 올라감 (명단·여권 정보 없음).
@@ -88,7 +88,8 @@ html, body {{ margin: 0; background: #E9E6E4; font-family: Pretendard, "Noto San
 
 
 def build_jt(product: str, guide: str, bus: str = '') -> str:
-    """단체(JT) 미팅보드 (2026-11-02 사용자 확정 C안): 로고 크게 · 상품명 · GUIDE <영문 이름> 크게 · BUS <차량번호>(받았을 때만, 얇은 테두리 박스)."""
+    """단체(JT) 미팅보드: 로고 크게 · GUIDE <영문 이름> 크게 · BUS <차량번호>(받았을 때만, 얇은 테두리 박스).
+    2026-11-09 대표: 상품명(패키지명)은 넣지 않음 — product 인자는 호환용으로만 받고 화면에 쓰지 않음 (합류 투어도 같음)."""
     logo = base64.b64encode(open(os.path.join(HERE, 'logo_red.png'), 'rb').read()).decode()
     P, G, B = html.escape(product.upper()), html.escape('GUIDE  ' + guide.upper()), html.escape(bus)
     busbox = f'<div class="bus" data-t="BUS  {B}">BUS&nbsp;&nbsp;{B}</div>' if bus else ''
@@ -96,7 +97,7 @@ def build_jt(product: str, guide: str, bus: str = '') -> str:
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>{P} — ARBA 미팅보드</title>
+<title>{G} — ARBA 미팅보드</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css">
 <style>
 @page {{ size: A4 landscape; margin: 0 }}
@@ -114,7 +115,7 @@ html, body {{ margin: 0; background: #E9E6E4; font-family: Pretendard, "Noto San
 .logo {{ position: absolute; left: 50%; top: 60px; width: 605px; transform: translateX(-50%) }}
 .body {{ position: absolute; left: 68px; right: 68px; top: 275px; bottom: 45px; display: flex; flex-direction: column;
   align-items: center; justify-content: space-evenly; color: #000; font-weight: 800; white-space: nowrap; line-height: 1 }}
-.bus {{ border: 2.6px solid #000; border-radius: 15px; padding: 14px 42px; font-size: 59px }}
+.bus {{ border: 2.6px solid #000; border-radius: 15px; padding: 16px 48px; font-size: 72px }}
 @media print {{
   html, body {{ background: #fff }}
   .bar {{ display: none }}
@@ -128,7 +129,7 @@ html, body {{ margin: 0; background: #E9E6E4; font-family: Pretendard, "Noto San
 <button type="button" onclick="window.print()">인쇄하기</button></div>
 <div class="wrap"><div class="frame" id="frame"><div class="sheet" id="sheet">
 <img class="logo" src="data:image/png;base64,{logo}" alt="ARBA TRAVEL">
-<div class="body"><div class="fit" data-cap="80">{P}</div><div class="fit" data-cap="112">{G}</div>{busbox}</div>
+<div class="body"><div class="fit" data-cap="130">{G}</div>{busbox}</div>
 </div></div></div>
 <script>
 (function () {{
