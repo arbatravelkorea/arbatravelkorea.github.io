@@ -16,7 +16,7 @@ page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="/tv/app.css?v=12">
 </head><body><div class="wrap" id="app"><p class="loading">투어지침서를 여는 중…</p></div>
-<script src="/tv/prayer.js?v=1"></script><script src="/tv/halal_links.js?v=2"></script><script src="/tv/app.js?v=21"></script>
+<script src="/tv/prayer.js?v=1"></script><script src="/tv/halal_links.js?v=2"></script><script src="/tv/app.js?v=22"></script>
 <script>ATK.render({slug!r});</script></body></html>"""
 d = pathlib.Path(repo) / 'v' / slug; d.mkdir(parents=True, exist_ok=True)
 (d / 'index.html').write_text(page); print(d / 'index.html')

@@ -30,17 +30,14 @@
   var WD = ['일', '월', '화', '수', '목', '금', '토'];
   function smsBody(c, d) {
     var D = CUR || {}, g = D.guide || {}, px = D.pax || {}, nm = g.ko || g.name || '';
-    var b = '안녕하세요 아르바트래블 ' + nm + ' 가이드입니다.';
+    var b = '안녕하세요\n아르바트래블 ' + nm + ' 가이드입니다.';
     var dt = d && d.d ? new Date(d.d + 'T00:00:00') : null, ds = dt ? (dt.getMonth() + 1) + '월 ' + dt.getDate() + '일(' + WD[dt.getDay()] + ')' : '';
     var t = String(c.text || ''), mm = t.match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)/), meal = mm ? ({ Lunch: '점심', Dinner: '저녁', Breakfast: '아침' }[mm[1]] || mm[1]) : '';
     if (!meal) return b + (ds ? '\n' + ds + ' ' + (D.tripId || '') + ' 팀 관련 연락드립니다.' : '');
-    var tl = +px.tl || 0, gu = +px.total || 0, tot = gu + 1;
-    var who = '손님 ' + (gu - tl) + '명' + (tl ? ' + 인솔자 ' + tl + '명' : '') + ' + 가이드 1명';
-    return b + '\n' + ds + ' ' + meal + (/배달|delivery/i.test(t) ? ' 배달' : '') + ' 예약 부탁드립니다.' +
-      '\n- 인원: 총 ' + tot + '명 (' + who + ')' +
-      '\n- ' + (/배달|delivery/i.test(t) ? '배달 시간' : '도착 예정') + ': ' + (c.tm || '') +
-      '\n- 말레이시아 무슬림 단체입니다 (돼지고기·술 제외 부탁드립니다).' +
-      '\n확인 부탁드립니다. 감사합니다!';
+    var tl = +px.tl || 0, inf = +px.inf || 0, gu = (+px.total || 0) - tl - inf, tot = gu + tl + 1, dl = /배달|delivery/i.test(t);
+    return '안녕하세요\n아르바트래블 ' + nm + ' 가이드입니다.\n아래와 같이 ' + (dl ? '배달 ' : '') + '예약 부탁드립니다.\n\n' + ds + ' ' + meal +
+      '\n- 인원: 총 ' + tot + '명\n(손님 ' + gu + '명' + (tl ? ' + 인솔자 ' + tl + '명' : '') + ' + 가이드 1명)' + (inf ? '\n※ 유아 ' + inf + '명 별도 (식사 없음)' : '') +
+      '\n- ' + (dl ? '배달 시간' : '도착 예정') + ': ' + (c.tm || '') + '\n\n확인 부탁드립니다. 감사합니다!';
   }
   function smsHref(c, d) { return 'sms:' + num(c.phone) + '?&body=' + encodeURIComponent(smsBody(c, d)); }
   function who(c, d) {
