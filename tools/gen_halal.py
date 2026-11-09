@@ -186,7 +186,7 @@ def page(lang, preset):
 <div class="bar"><div class="wrap"><div class="chips" id="fr">{chips}</div></div></div>
 <main><div class="wrap"><p class="legend">{e(legend)}</p><p class="count" id="cnt" data-t="{"식당 #곳" if ko else "# restaurants"}"></p>
 <ol>{"".join(cards)}</ol><p class="empty" id="none" hidden>{"조건에 맞는 식당이 없습니다." if ko else "No restaurants match."}</p></div></main>
-<footer>ARBA Travel Korea · korea@arbatravel.com</footer><script src="/tv/smsform.js?v=1"></script><script>{JS}{SMSJS}</script></body></html>'''
+<footer>ARBA Travel Korea · korea@arbatravel.com</footer><script src="/tv/smsform.js?v=2"></script><script>{JS}{SMSJS}</script></body></html>'''
 
 h = root / 'halal'
 from itertools import combinations

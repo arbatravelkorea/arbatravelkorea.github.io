@@ -38,7 +38,8 @@
       var hs = D.hotels || [], st = String((d && d.stay) || ''); hs.forEach(function (h) { if (!H && h.name && st.indexOf(h.name) >= 0) H = h; }); H = H || hs[0] || {};
       var xm = String(c.x || '').match(/(\d{1,2}:\d{2})\s*까지|until\s*(\d{1,2}:\d{2})/i); if (!tm && xm) tm = xm[1] || xm[2];
     }
-    return window.ATK_SMS({ en: EN, name: nm, date: dt, meal: meal, guests: (+px.total || 0) - tl - inf, tl: tl, inf: inf, dl: dl, hotel: H ? H.name : '', addr: H ? H.address : '', time: tm });
+    var J = d && d.joint, ex = null; if (J && J.meals && J.meals.indexOf(meal.toLowerCase()) >= 0 && J.pax) ex = { label: J.label || J.team, guests: +J.pax, tl: +J.tl || 0 };
+    return window.ATK_SMS({ en: EN, name: nm, date: dt, meal: meal, guests: (+px.total || 0) - tl - inf, tl: tl, inf: inf, dl: dl, hotel: H ? H.name : '', addr: H ? H.address : '', time: tm, extra: ex });
   }
   // 할랄 리스트에 가이드·인원·호텔을 넘겨 문자하기 양식을 채움
   function halalUrl(u, D) {
@@ -46,6 +47,13 @@
     var q = { g: EN ? (g.name || '') : (g.ko || g.name || ''), n: (+px.total || 0) - tl - inf, tl: tl, inf: inf, h: h.name || '', ha: h.address || '' };
     if (EN) q.en = 1;
     return u + (u.indexOf('?') >= 0 ? '&' : '?') + Object.keys(q).filter(function (k) { return q[k] !== '' && q[k] !== 0 || k === 'n'; }).map(function (k) { return k + '=' + encodeURIComponent(q[k]); }).join('&');
+  }
+  // 🤝 같은 날 같은 곳에 가는 다른 팀과 합동 (예약 한 건으로·뷔페 최소 인원·합동 발권). joint = {team, guide, phone, pax, tl, lead, items:[], meals:['l','d']}
+  function jointHtml(j, d) {
+    var ttl = EN ? '🤝 Joint with ' + esc(j.team) : '🤝 합동 — ' + esc(j.team);
+    var c = j.phone ? who({ contact: j.guide, phone: j.phone, sms: true, nomap: true }, d) : (j.guide ? ' <span class="who">' + esc(j.guide) + '</span>' : '');
+    return '<div class="joint"><b>' + ttl + '</b>' + c + (j.lead ? '<div class="x">' + esc(j.lead) + '</div>' : '') +
+      (j.items && j.items.length ? '<ul>' + j.items.map(function (t) { return '<li>' + esc(t).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</li>'; }).join('') + '</ul>' : '') + '</div>';
   }
   function smsHref(c, d) { return 'sms:' + num(c.phone) + '?&body=' + encodeURIComponent(smsBody(c, d)); }
   function who(c, d) {
@@ -175,6 +183,7 @@
         '<div class="row"><span class="i">🍽</span><div class="meal">' + mealSpan(0, 'b') + mealSpan(1, 'l') + mealSpan(2, 'd') + '</div></div>' +
         (d.move ? '<div class="row"><span class="i">🚐</span><div>' + esc(d.move) + who(d.moveWho, d) + (d.moveSub ? '<br><span class="x">' + esc(d.moveSub) + '</span>' : '') + '</div></div>' : '') +
         (d.stay ? '<div class="row"><span class="i">🏨</span><div>' + esc(d.stay) + '</div></div>' : '') +
+        (d.joint ? jointHtml(d.joint, d) : '') +
         (d.todo && d.todo.length ? '<div class="row"><span class="i">✅</span><ul class="todo">' + d.todo.map(function (t, ti) { return '<li data-k="' + esc(d.d + ':' + ti) + '"><label><input type="checkbox"> <span>' + esc(t) + '</span></label></li>'; }).join('') + '</ul></div>' : '') +
         (d.notes && d.notes.length ? '<div class="row"><span class="i">📝</span><div>' + d.notes.map(function (n) { return '<div style="margin-bottom:4px">' + esc(n) + '</div>'; }).join('') + '</div></div>' : '') +
         (d.warn ? '<div class="warn">' + esc(d.warn) + '</div>' : '') +
