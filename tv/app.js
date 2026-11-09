@@ -6,13 +6,13 @@
   var KA_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 3C6.48 3 2 6.58 2 11c0 2.83 1.86 5.31 4.66 6.73l-.98 3.67c-.09.33.29.6.57.4l4.2-2.86c.5.06 1.02.09 1.55.09 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/></svg>';
   var L_KO = { voucher: 'TOUR VOUCHER · 가이드용', guide: ' 가이드님', in: '입국', out: '출국', city: '도시', tl: '인솔자', none: '없음', links: '🔗 링크', flights: '✈️ 항공 · 실시간', hotel: '🏨 호텔', days: '📅 일정', memo: '📌 전체 메모 (투어 내내)', contacts: '☎️ 비상 연락처',
     sched: '예정', est: '변경', term: '터미널', exit: '출구', counter: '카운터', checking: '조회 중…', fsOnly: ' 공항은 FlightStats로 확인', track: '실시간 추적 (FlightStats)', notYet: '아직 공항 조회 전 (3일 전부터 조회됨)', liveFail: '실시간 조회 실패 — FlightStats로 확인', belt: '벨트 ', sign: '공항 피켓 보기/인쇄',
-    status: { ontime: '정시', delay: '지연', landed: '도착함', departed: '출발함', cancel: '결항', divert: '회항' }, tba: '미정',
+    status: { ontime: '정시', delay: '지연', landed: '도착함', departed: '출발함', cancel: '결항', divert: '회항' }, tba: '미정', meals: '식사 포함', noMeals: '식사 불포함 (자유 식사)', paxSum: '합류 합계', waTwo: '단톡방이 팀별로 2개입니다 — 두 방 모두 들어가 같은 인사·공지를 보내주세요.', settleTwo: '정산은 팀별 링크로 나눠서 — 일비는 두 링크에 반반, 입장료·차량비는 팀 인원대로 나눠 결제, 한 팀만 간 일정은 그 팀 링크에만.',
     booking: '예약번호', checkin: '체크인', checkout: '체크아웃', bf: '조식', rooms: '객실', pay: '결제', addr: '주소', tel: '전화', map: '📍 지도', call: '📞 전화', reserve: '예약', sms: '💬 문자', copy: '복사', copied: '복사됨', namelist: '📋 명단(룸리스트) 보기', nonamelist: '📋 명단 — 아직 없음 (받는 대로 여기에)',
     today: '오늘', meal: ['아침', '점심', '저녁'], free: '손님 자유', pray: '오늘 기도', after: ' 이후', before: ' 전에', left: '해 지기까지 ', h: '시간 ', m: '분', sunset: '해 졌음 → Maghrib+Isha', draft: '초안 · 확정 전', waBtn: '단톡방 입장하기', halal: '할랄&무슬림 프렌들리 식당 리스트', season: '시즌 추천 · 지금 가볼 만한 곳', settle: '정산하기 · 정산하는 법', kakao: '아르바트래블 비즈카톡', greet: '인사말 복사하기', greetHo: '교대 인사말 복사', copiedGreet: '복사됨 — 왓츠앱 단톡방에 붙여넣기', greetHint: '① 단톡방 입장하기 → ② 인사말 복사하기 → 단톡방 입력창을 길게 눌러 붙여넣기 후 보내기. 공항에서 만나기 전날까지 보내주세요. 내용은 고쳐서 보내셔도 됩니다.', greetHintHo: '① 단톡방 입장하기 → ② 교대 인사말 복사 → 단톡방 입력창을 길게 눌러 붙여넣기 후 보내기. 맡는 날 전날 보내주세요 (만나는 시간·장소는 직접 적어 주세요).',
     foot: 'ARBA Travel Korea · 지침서 내용은 바뀔 수 있으니 투어 전날 다시 열어 확인해주세요.' };
   var L_EN = { voucher: 'TOUR VOUCHER · FOR GUIDE', guide: '', in: 'Arrival', out: 'Departure', city: 'City', tl: 'Tour leader', none: 'None', links: '🔗 LINKS', flights: '✈️ FLIGHTS · LIVE', hotel: '🏨 HOTEL', days: '📅 ITINERARY', memo: '📌 NOTES FOR THE WHOLE TOUR', contacts: '☎️ EMERGENCY CONTACT',
     sched: 'Sched.', est: 'Est.', term: 'Terminal', exit: 'Exit', counter: 'Counter', checking: 'Checking…', fsOnly: ' airport: check on FlightStats', track: 'Live tracking (FlightStats)', notYet: 'Not in the airport system yet (opens 3 days before)', liveFail: 'Live lookup unavailable — use FlightStats', belt: 'belt ', sign: 'Airport sign — view / print',
-    status: { ontime: 'On time', delay: 'Delayed', landed: 'Landed', departed: 'Departed', cancel: 'Cancelled', divert: 'Diverted' }, tba: 'TBA',
+    status: { ontime: 'On time', delay: 'Delayed', landed: 'Landed', departed: 'Departed', cancel: 'Cancelled', divert: 'Diverted' }, tba: 'TBA', meals: 'meals included', noMeals: 'meals not included (own arrangement)', paxSum: 'Combined total', waTwo: 'There are 2 WhatsApp groups (one per team) — please join both and send the same greeting and notices.', settleTwo: 'Settle per team link — split the guide fee half/half, split entrance and vehicle costs by each team\'s headcount, and put a one-team-only activity on that team\'s link only.',
     booking: 'Booking no.', checkin: 'Check-in', checkout: 'Check-out', bf: 'Breakfast', rooms: 'Rooms', pay: 'Payment', addr: 'Address', tel: 'Phone', map: '📍 Map', call: '📞 Call', reserve: 'Book', sms: '💬 SMS', copy: 'Copy', copied: 'Copied', namelist: '📋 Name list (rooming list)', nonamelist: '📋 Name list — not yet',
     today: 'TODAY', meal: ['Breakfast', 'Lunch', 'Dinner'], free: 'own arrangement', pray: 'Prayer today', after: ' onwards', before: ' before', left: 'Sunset in ', h: 'h ', m: 'min', sunset: 'Sun has set → Maghrib+Isha', draft: 'DRAFT · not final', waBtn: 'Join the group', halal: 'Halal & Muslim-friendly restaurants', season: 'Seasonal picks on our route', settle: 'Settle expenses · how to', kakao: 'ARBA Travel on KakaoTalk', greet: 'Copy greeting', greetHo: 'Copy handover greeting', copiedGreet: 'Copied — paste it in the WhatsApp group', greetHint: '① Join the group → ② Copy greeting → long-press the message box in the group, paste and send. Please send it by the day before you meet at the airport. Feel free to edit it.', greetHintHo: '① Join the group → ② Copy handover greeting → long-press the message box, paste and send. Send it the day before your first day (add the meeting time and place yourself).',
     foot: 'ARBA Travel Korea · Details can change — please reopen this page the day before the tour.' };
@@ -28,7 +28,7 @@
   function halalLink(pl) { var H = window.HALAL_LINKS || {}; if (!pl) return ''; var k = pl.replace(/\s*\(.*$/, '').replace(/\s+/g, ' ').trim().toLowerCase(); var best = ''; Object.keys(H).forEach(function (n) { var nn = n.toLowerCase(); if (nn === k || nn.indexOf(k) === 0 || k.indexOf(nn) === 0) { if (!best || n.length > best.length) best = n; } }); if (!best) Object.keys(H).forEach(function (n) { var w = n.toLowerCase().split(' ')[0]; if (w.length >= 2 && k.indexOf(w) === 0 && !best) best = n; }); return best ? H[best] : ''; }
   // 문자 버튼 기본 양식 (2026-11-09 대표 지시): 인사 + 날짜·끼니 + 인원 + 도착 시간. 식당은 항상 한국어
   function smsBody(c, d) {
-    var D = CUR || {}, g = D.guide || {}, px = D.pax || {}, nm = EN ? (g.name || '') : (g.ko || g.name || '');
+    var D = CUR || {}, g = D.guide || {}, px = mealPx(D), nm = EN ? (g.name || '') : (g.ko || g.name || '');
     var dt = d && d.d ? new Date(d.d + 'T00:00:00') : null;
     var t = String(c.text || ''), mm = t.match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)/), gim = !mm && /김밥|gimbap/i.test(t);
     if (gim) mm = [0, EN ? 'Breakfast' : '아침'];
@@ -45,7 +45,7 @@
   }
   // 할랄 리스트에 가이드·인원·호텔을 넘겨 문자하기 양식을 채움
   function halalUrl(u, D) {
-    var g = D.guide || {}, px = D.pax || {}, tl = +px.tl || 0, inf = +px.inf || 0, h = (D.hotels || [])[0] || {};
+    var g = D.guide || {}, px = mealPx(D), tl = +px.tl || 0, inf = +px.inf || 0, h = (D.hotels || [])[0] || {};
     var q = { g: EN ? (g.name || '') : (g.ko || g.name || ''), n: (+px.total || 0) - tl - inf, tl: tl, inf: inf, h: h.name || '', ha: h.address || '' };
     if (EN) q.en = 1;
     return u + (u.indexOf('?') >= 0 ? '&' : '?') + Object.keys(q).filter(function (k) { return q[k] !== '' && q[k] !== 0 || k === 'n'; }).map(function (k) { return k + '=' + encodeURIComponent(q[k]); }).join('&');
@@ -129,26 +129,34 @@
     }).catch(function () { app.innerHTML = '<p class="loading">' + (EN ? 'Could not load. Please try again.' : '불러오지 못했습니다. 다시 열어주세요.') + '</p>'; });
   }
 
+  function paxGrid(px) { return '<div class="pax"><div><small>TL</small><b>' + (px.tl || 0) + '</b></div><div><small>Adult</small><b>' + (px.adult || 0) + '</b></div><div><small>Child<br>w bed</small><b>' + (px.cwb || 0) + '</b></div><div><small>Child<br>w/o bed</small><b>' + (px.cnb || 0) + '</b></div><div><small>Infant</small><b>' + (px.inf || 0) + '</b></div><div class="tot"><small>Total</small><b>' + (px.total || 0) + '</b></div></div>'; }
+  // 식당 예약 인원 = 식사 포함 팀(합류 투어면 meals:true 팀)만
+  function mealPx(D) { var t = (D.trips || []).filter(function (x) { return x.meals; })[0]; return (t && t.pax) || D.pax || {}; }
   function draw(D) {
     CUR = D; var h = '';
+    // 합류 투어(STD+BSC, 가이드 1명): D.trips = [{tripId,short,title,pax,tlName,wa,settle,meals}] — 2026-11-09 대표
+    var TR = (D.trips && D.trips.length > 1) ? D.trips : null;
     var alt = EN ? '?lang=ko' : '?lang=en';
-    h += '<header>' + (D.draft ? '<span class="draft">' + L.draft + '</span>' : '') + '<a class="lang" href="' + alt + '">' + (EN ? '한국어' : 'English') + '</a><div class="t">ARBA TRAVEL KOREA · ' + L.voucher + '</div><h1>' + esc(D.tripId) + '</h1><div class="m">' + esc(D.title) + '</div></header>';
+    h += '<header>' + (D.draft ? '<span class="draft">' + L.draft + '</span>' : '') + '<a class="lang" href="' + alt + '">' + (EN ? '한국어' : 'English') + '</a><div class="t">ARBA TRAVEL KOREA · ' + L.voucher + '</div>' + (TR ? TR.map(function (t) { return '<h1>' + esc(t.tripId) + '</h1><div class="m">' + esc(t.title || '') + '</div>'; }).join('') : '<h1>' + esc(D.tripId) + '</h1><div class="m">' + esc(D.title) + '</div>') + '</header>';
     // 가이드 카드
     var g = D.guide || {}, px = D.pax || {};
     h += '<div class="card gd"><b class="gn">' + esc(g.name) + L.guide + (g.eng ? ' <span style="font-size:14px;color:var(--mut)">(' + esc(g.eng) + ')</span>' : '') + '</b>' +
-      '<div class="kv2"><div><small>' + L.in + '</small>' + esc(D.arrival) + '</div><div><small>' + L.out + '</small>' + esc(D.departure) + '</div><div><small>' + L.city + '</small>' + esc(D.dest) + '</div><div><small>' + L.tl + '</small><b>' + esc(D.tlName || L.none) + '</b></div></div>' +
-      '<div class="pax"><div><small>TL</small><b>' + (px.tl || 0) + '</b></div><div><small>Adult</small><b>' + (px.adult || 0) + '</b></div><div><small>Child<br>w bed</small><b>' + (px.cwb || 0) + '</b></div><div><small>Child<br>w/o bed</small><b>' + (px.cnb || 0) + '</b></div><div><small>Infant</small><b>' + (px.inf || 0) + '</b></div><div class="tot"><small>Total</small><b>' + (px.total || 0) + '</b></div></div>' +
+      '<div class="kv2"><div><small>' + L.in + '</small>' + esc(D.arrival) + '</div><div><small>' + L.out + '</small>' + esc(D.departure) + '</div><div><small>' + L.city + '</small>' + esc(D.dest) + '</div><div><small>' + L.tl + '</small><b>' + (TR ? TR.map(function (t) { return esc((t.short || t.tripId) + ': ' + (t.tlName || L.none)); }).join('<br>') : esc(D.tlName || L.none)) + '</b></div></div>' +
+      (TR ? TR.map(function (t) { return '<div class="paxl">' + esc(t.short || t.tripId) + (t.meals === false ? ' · ' + L.noMeals : t.meals ? ' · ' + L.meals : '') + '</div>' + paxGrid(t.pax || {}); }).join('') + '<div class="paxl">' + L.paxSum + '</div>' + paxGrid(px) : paxGrid(px)) +
       (D.chips && D.chips.length ? '<div style="margin-top:12px">' + D.chips.map(function (c) { return '<span class="hon' + (c.amber ? ' amber' : '') + '">' + esc(c.text || c) + '</span>'; }).join('') + '</div>' : '') + '</div>';
     // 링크: 왓츠앱(왼쪽 위) 할랄(오른쪽 위) 시즌(왼쪽 아래) 정산(오른쪽 아래)
     var K = D.links || {}; var HO = !!((D.greet || {}).handover);
+    // 왓츠앱: 팀별 단톡방이 다르면 버튼 2개, 한 방에 다 모여 있으면(같은 주소·links.wa만) 1개
+    var WAS = []; if (TR) TR.forEach(function (t) { var u = t.wa || ''; if (u && !WAS.some(function (w) { return w.u === u; })) WAS.push({ u: u, n: t.short || t.tripId }); }); if (!WAS.length && K.wa) WAS.push({ u: K.wa, n: '' });
+    var SET = TR ? TR.filter(function (t) { return t.settle; }).map(function (t) { return { u: t.settle, n: t.short || t.tripId }; }) : (K.settle ? [{ u: K.settle, n: '' }] : []);
     // 2026-11-06 대표: 버튼 5개를 한 격자(투어 전 → 투어 중 → 투어 후 순)로, 설명은 격자 아래 한 번만
     h += '<h2>' + L.links + '</h2><div class="linkgrid">' +
-      (K.wa ? '<a class="btn wa" target="_blank" rel="noopener" href="' + esc(K.wa) + '">' + WA_SVG + '① ' + L.waBtn + '</a>' : '<span class="btn wa dis">' + WA_SVG + L.waBtn + ' (' + L.tba + ')</span>') +
-      '<button type="button" class="btn wa greet cp" data-label="💬 ② ' + esc(HO ? L.greetHo : L.greet) + '" data-copy="' + esc(greet(D)) + '">💬 ② ' + (HO ? L.greetHo : L.greet) + '</button>' +
+      (WAS.length > 1 ? WAS.map(function (w) { return '<a class="btn wa" target="_blank" rel="noopener" href="' + esc(w.u) + '">' + WA_SVG + '① ' + L.waBtn + ' — ' + esc(w.n) + '</a>'; }).join('') : WAS.length ? '<a class="btn wa" target="_blank" rel="noopener" href="' + esc(WAS[0].u) + '">' + WA_SVG + '① ' + L.waBtn + '</a>' : '<span class="btn wa dis">' + WA_SVG + L.waBtn + ' (' + L.tba + ')</span>') +
+      '<button type="button" class="btn wa greet cp' + (WAS.length > 1 ? ' wide2' : '') + '" data-label="💬 ② ' + esc(HO ? L.greetHo : L.greet) + '" data-copy="' + esc(greet(D)) + '">💬 ② ' + (HO ? L.greetHo : L.greet) + '</button>' +
       (K.season ? '<a class="btn season" target="_blank" rel="noopener" href="' + esc(K.season) + '">🌸 ' + L.season + '</a>' : '') +
       (K.halal ? '<a class="btn halal' + (K.season ? '' : ' wide2') + '" target="_blank" rel="noopener" href="' + esc(halalUrl(K.halal, D)) + '">🕌 ' + L.halal + '</a>' : '') +
-      (K.settle ? '<a class="btn red wide2" target="_blank" rel="noopener" href="' + esc(K.settle) + '">🧾 ' + L.settle + '</a>' : '') + '</div>' +
-      '<p class="hint linkhint">' + (K.hint ? esc(K.hint) + '<br>' : '') + (HO ? L.greetHintHo : L.greetHint) + '</p>';
+      SET.map(function (x) { return '<a class="btn red wide2" target="_blank" rel="noopener" href="' + esc(x.u) + '">🧾 ' + L.settle + (x.n ? ' — ' + esc(x.n) : '') + '</a>'; }).join('') + '</div>' +
+      '<p class="hint linkhint">' + (K.hint ? esc(K.hint) + '<br>' : '') + (HO ? L.greetHintHo : L.greetHint) + (WAS.length > 1 ? '<br>' + L.waTwo : '') + (SET.length > 1 ? '<br>' + L.settleTwo : '') + '</p>';
     // 항공
     h += '<h2>' + L.flights + '</h2>';
     (D.flights || []).forEach(function (f) {
