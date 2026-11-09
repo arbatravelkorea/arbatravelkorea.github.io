@@ -181,11 +181,9 @@
     var P = new URLSearchParams(location.search); EN = P.get('lang') === 'en'; L = EN ? L_EN : L_KO;
     document.documentElement.lang = EN ? 'en' : 'ko';
     var app = document.getElementById('app'); app.innerHTML = '<p class="loading">' + (EN ? 'Loading…' : '지침서를 여는 중…') + '</p>';
-    var DV = LS('atk:dv'); if (!DV) { DV = (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).replace(/[^a-z0-9]/g, ''); LS('atk:dv', DV); }
-    var ST = P.get('staff'); if (ST) LS('atk:st', ST); ST = LS('atk:st') || '';
-    fetch(API + '?v=' + encodeURIComponent(slug) + (EN ? '&lang=en' : '') + '&dv=' + DV + (ST ? '&st=' + encodeURIComponent(ST) : '')).then(function (r) { return r.json(); }).then(function (j) {
+    fetch(API + '?v=' + encodeURIComponent(slug) + (EN ? '&lang=en' : '')).then(function (r) { return r.json(); }).then(function (j) {
       if (j.error === 'expired') { app.innerHTML = '<p class="loading">🔒 ' + (EN ? 'This tour voucher is closed (7 days after the tour ended). Please contact ARBA Travel Korea if you need it.' : '이 투어지침서는 열람 기간이 끝났습니다 (투어 종료 7일 뒤).<br>필요하면 회사로 연락해주세요.') + '</p>'; return; }
-      OWN = j.own !== false;
+      OWN = true; // 기기 등록·다른 기기 판별은 쓰지 않음 (11/9 대표 결정)
       if (!j.ok || !j.data) { app.innerHTML = '<p class="loading">' + (EN ? 'Voucher not found.' : '지침서를 찾을 수 없습니다. 회사로 연락해주세요.') + '</p>'; return; }
       ORIG = JSON.parse(JSON.stringify(j.data)); CHG = j.chg || null; if (CHG) applyChg(j.data, CHG); draw(j.data);
     }).catch(function () { app.innerHTML = '<p class="loading">' + (EN ? 'Could not load. Please try again.' : '불러오지 못했습니다. 다시 열어주세요.') + '</p>'; });
