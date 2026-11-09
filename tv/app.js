@@ -179,7 +179,8 @@
       var meals = d.meals || {};
       function mealSpan(i, key) { var mm = meals[key]; if (!mm) return '<span class="no">' + L.meal[i] + '</span>'; if (mm.ok === false) return '<span class="no">' + L.meal[i] + (mm.txt ? ' — ' + esc(mm.txt) : ' — ' + L.free) + '</span>'; return '<span class="' + (mm.alt ? 'alt' : '') + '">' + L.meal[i] + (mm.txt ? ' ' + esc(mm.txt) : '') + '</span>'; }
       h += '<details class="day" data-d="' + esc(d.d) + '" data-loc="' + esc(d.loc || D.loc || 'SEL') + '"><summary><span class="d" data-today="' + L.today + '">' + esc(d.label) + '</span><span class="s">' + esc(d.summary) + '</span><span class="ar">▶</span></summary><div class="body">' +
-        '<ul class="tl">' + (d.items || []).map(function (it) { return '<li><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + who(it, d) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span></li>'; }).join('') + '</ul>' +
+        '<ul class="tl" data-d="' + esc(d.d) + '">' + (d.items || []).map(function (it, ii) { return '<li data-i="' + ii + '"><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + who(it, d) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + '</span></li>'; }).join('') + '</ul>' +
+        (D.reorder ? '<div class="reo"><button type="button" class="rbtn" data-reo="' + esc(d.d) + '">✏️ ' + (EN ? 'Change order' : '순서 바꾸기') + '</button><span class="rst" data-rst="' + esc(d.d) + '"></span></div>' : '') +
         '<div class="row"><span class="i">🍽</span><div class="meal">' + mealSpan(0, 'b') + mealSpan(1, 'l') + mealSpan(2, 'd') + '</div></div>' +
         (d.move ? '<div class="row"><span class="i">🚐</span><div>' + esc(d.move) + who(d.moveWho, d) + (d.moveSub ? '<br><span class="x">' + esc(d.moveSub) + '</span>' : '') + '</div></div>' : '') +
         (d.stay ? '<div class="row"><span class="i">🏨</span><div>' + esc(d.stay) + '</div></div>' : '') +
@@ -219,6 +220,30 @@
       try { if (localStorage.getItem(key) === '1') { cb.checked = true; li.classList.add('done'); } } catch (e) { }
       cb.addEventListener('change', function () { li.classList.toggle('done', cb.checked); try { localStorage.setItem(key, cb.checked ? '1' : '0'); } catch (e) { } });
     });
+    // ✏️ 순서 바꾸기 (D.reorder) — ▲▼로 이동, 이 휴대폰에 저장, 회사에 문자로 알리기 (2026-11-09 대표 요청, 예시 지침서부터)
+    if (CUR.reorder) (function () {
+      var T = EN ? { chg: 'Changed', reset: 'Reset', done: 'Done', tell: '📨 Tell the office', mv: 'Meal moved — re-confirm the restaurant booking', msg: '[Schedule change] ' } : { chg: '변경됨', reset: '원래대로', done: '완료', tell: '📨 회사에 알리기', mv: '식사 순서가 바뀜 — 식당 예약 시간 다시 확인', msg: '[일정 변경] ' };
+      function key(dd) { return 'atk:order:' + SLUG + ':' + dd; }
+      function apply(ul, ord) { var lis = [].slice.call(ul.children); ord.forEach(function (i) { var li = lis.filter(function (l) { return +l.dataset.i === i; })[0]; if (li) ul.appendChild(li); }); }
+      function cur(ul) { return [].slice.call(ul.children).map(function (l) { return +l.dataset.i; }); }
+      function changed(ul) { return cur(ul).some(function (v, i) { return v !== i; }); }
+      function status(dd) { var ul = document.querySelector('.tl[data-d="' + dd + '"]'), st = document.querySelector('.rst[data-rst="' + dd + '"]'); if (!ul || !st) return; if (!changed(ul)) { st.innerHTML = ''; return; }
+        var mealMoved = cur(ul).some(function (v, i) { var li = ul.children[i]; return v !== i && /^(점심|저녁|아침|Lunch|Dinner|Breakfast)/.test(li.textContent.trim()); });
+        st.innerHTML = '<span class="chg">' + T.chg + '</span> <button type="button" class="rbtn" data-reset="' + dd + '">' + T.reset + '</button> <button type="button" class="rbtn tell" data-tell="' + dd + '">' + T.tell + '</button>' + (mealMoved ? '<div class="x" style="color:var(--red);font-weight:700">⚠️ ' + T.mv + '</div>' : ''); }
+      document.querySelectorAll('.tl[data-d]').forEach(function (ul) { try { var o = JSON.parse(localStorage.getItem(key(ul.dataset.d)) || 'null'); if (o) apply(ul, o); } catch (e) { } status(ul.dataset.d); });
+      document.addEventListener('click', function (ev) {
+        var b = ev.target.closest('[data-reo],[data-reset],[data-tell],[data-up],[data-dn]'); if (!b) return; ev.preventDefault();
+        var dd = b.dataset.reo || b.dataset.reset || b.dataset.tell || b.dataset.up || b.dataset.dn, ul = document.querySelector('.tl[data-d="' + dd + '"]'); if (!ul) return;
+        if (b.dataset.reo) { var on = ul.classList.toggle('edit'); b.textContent = on ? '✅ ' + T.done : '✏️ ' + (EN ? 'Change order' : '순서 바꾸기');
+          [].slice.call(ul.children).forEach(function (li) { var h = li.querySelector('.ud'); if (on && !h) { h = document.createElement('span'); h.className = 'ud'; h.innerHTML = '<button type="button" data-up="' + dd + '">▲</button><button type="button" data-dn="' + dd + '">▼</button>'; li.appendChild(h); } else if (!on && h) h.remove(); }); return; }
+        if (b.dataset.reset) { try { localStorage.removeItem(key(dd)); } catch (e) { } apply(ul, cur(ul).slice().sort(function (a, c) { return a - c; })); status(dd); return; }
+        if (b.dataset.tell) { var lines = [].slice.call(ul.children).map(function (li, i) { return (i + 1) + '. ' + (li.querySelector('.tm').textContent ? li.querySelector('.tm').textContent + ' ' : '') + li.querySelector('.tm').nextSibling.firstChild.textContent.trim(); });
+          var dl = (document.querySelector('.day[data-d="' + dd + '"] summary .d') || {}).textContent || dd;
+          location.href = 'sms:' + num((CUR.company || {}).phone || '') + '?&body=' + encodeURIComponent(T.msg + (CUR.tripId || '') + ' ' + dl + '\n' + ((CUR.guide || {}).name || '') + '\n' + lines.join('\n')); return; }
+        var li = b.closest('li'); if (b.dataset.up && li.previousElementSibling) ul.insertBefore(li, li.previousElementSibling); if (b.dataset.dn && li.nextElementSibling) ul.insertBefore(li.nextElementSibling, li);
+        try { changed(ul) ? localStorage.setItem(key(dd), JSON.stringify(cur(ul))) : localStorage.removeItem(key(dd)); } catch (e) { } status(dd);
+      });
+    })();
     // 기도 시간
     if (window.prayerTimes) document.querySelectorAll('.pray[data-pray]').forEach(function (p) {
       var loc = PRAYER_LOC[p.dataset.loc] || PRAYER_LOC.SEL, t = prayerTimes(loc[0], loc[1], p.dataset.pray);
