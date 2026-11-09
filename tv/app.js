@@ -28,6 +28,7 @@
   function halalLink(pl) { var H = window.HALAL_LINKS || {}; if (!pl) return ''; var k = pl.replace(/\s*\(.*$/, '').replace(/\s+/g, ' ').trim().toLowerCase(); var best = ''; Object.keys(H).forEach(function (n) { var nn = n.toLowerCase(); if (nn === k || nn.indexOf(k) === 0 || k.indexOf(nn) === 0) { if (!best || n.length > best.length) best = n; } }); if (!best) Object.keys(H).forEach(function (n) { var w = n.toLowerCase().split(' ')[0]; if (w.length >= 2 && k.indexOf(w) === 0 && !best) best = n; }); return best ? H[best] : ''; }
   // 문자 버튼 기본 양식 (2026-11-09 대표 지시): 인사 + 날짜·끼니 + 인원 + 도착 시간. 식당은 항상 한국어
   function smsBody(c, d) {
+    if (c.jmsg) return c.jmsg;
     var D = CUR || {}, g = D.guide || {}, px = mealPx(D), nm = EN ? (g.name || '') : (g.ko || g.name || '');
     var dt = d && d.d ? new Date(d.d + 'T00:00:00') : null;
     var t = String(c.text || ''), mm = t.match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)/), gim = !mm && /김밥|gimbap/i.test(t);
@@ -52,8 +53,35 @@
   }
   // 🤝 같은 날 같은 곳에 가는 다른 팀과 합동 (예약 한 건으로·뷔페 최소 인원·합동 발권). joint = {team, guide, phone, pax, tl, lead, items:[], meals:['l','d']}
   // 🤝 합동 — 해당 항목 바로 아래 (에버랜드·비발디 발권 / 김밥 / 신촌버거 / 캄풍쿠 15명 뷔페만). d.joint = 상대 팀 정보, item.jt = 그 항목의 합동 내용
-  function jointHtml(j, d, txt) {
-    var c = j.phone ? who({ contact: j.guide, phone: j.phone, sms: true, nomap: true }, d) : '';
+  // 🤝 합동 가이드 문자 양식 — 항목별(에버랜드·신촌버거·김밥·캄풍쿠), 주도(인원 많은 팀)/상대 구분 (대표 11/9 22:18)
+  function jointMsg(j, it, d) {
+    var D = CUR || {}, g = D.guide || {}, nm = EN ? (g.name || '') : (g.ko || g.name || ''), px = mealPx(D), tl = +px.tl || 0, inf = +px.inf || 0, my = (+px.total || 0) - tl - inf, myT = my + tl + 1;
+    var ot = +j.pax || 0, otl = +j.tl || 0, oT = ot + otl + 1, lead = myT >= oT, t = String(it.text || ''), dd = fmtD(d.d), tm = it.tm || '';
+    var myL = EN ? my + ' guests' + (tl ? ' + ' + tl + ' TL' : '') + ' + 1 guide = ' + myT : '손님 ' + my + '명' + (tl ? ' + 인솔자 ' + tl + '명' : '') + ' + 가이드 1 = ' + myT + '명';
+    var otL = EN ? ot + ' guests' + (otl ? ' + ' + otl + ' TL' : '') + ' + 1 guide = ' + oT : '손님 ' + ot + '명' + (otl ? ' + 인솔자 ' + otl + '명' : '') + ' + 가이드 1 = ' + oT + '명';
+    var hi = EN ? 'Hello ' + j.guide + ',\nThis is ' + nm + ', the guide joining you at ' : '안녕하세요 ' + j.guide + ' 가이드님\n' + dd + ' ';
+    var body;
+    if (/신촌버거|sinchon burger/i.test(t)) {
+      body = EN ? hi + 'Everland on ' + dd + '.\n\n' + (lead ? 'I will order Sinchon Burger for both teams.\n· Yours: ' + oT + ' sets (' + otL + ') — correct?\n· Delivered to our hotel by 08:00; I will hand yours over at Everland.' : 'You are ordering Sinchon Burger for both teams.\n· Ours: ' + myT + ' sets (' + myL + ')\n· I will collect them from you at Everland.') + '\nThank you!'
+        : hi + '에버랜드 같이 가는 ' + nm + ' 가이드입니다.\n\n' + (lead ? '신촌버거는 저희가 두 팀 것 함께 주문할게요.\n· ' + j.guide + ' 팀: ' + oT + '개 (' + otL + ') 맞으실까요?\n· 저희 호텔로 08:00까지 받아서 에버랜드에서 전달드릴게요.' : '신촌버거 함께 주문 부탁드려요.\n· 저희 팀: ' + myT + '개 (' + myL + ')\n· 에버랜드에서 받을게요.') + '\n감사합니다!';
+    } else if (/에버랜드|everland|비발디|vivaldi|스키|ski/i.test(t)) {
+      var pl = /비발디|vivaldi|스키|ski/i.test(t) ? (EN ? 'Vivaldi Park' : '비발디파크') : (EN ? 'Everland' : '에버랜드');
+      body = EN ? hi + pl + ' on ' + dd + '.\n\n' + (lead ? 'I will buy the group tickets for both teams, so please confirm your headcount.\n· Ours: ' + myL + '\n· Yours: ' + otL + ' — correct?\n· Our arrival: ' + (tm || '__:__') + ' — what time will you arrive?\n· Meet at the ticket office.' : 'You are buying the group tickets for both teams — please check our headcount.\n· Ours: ' + myL + '\n· Our arrival: ' + (tm || '__:__') + '\n· Where shall we meet?') + '\nThank you!'
+        : hi + pl + ' 같이 가는 ' + nm + ' 가이드입니다.\n\n' + (lead ? '저희가 두 팀 합쳐 발권하니 인원 확인 부탁드려요.\n· 저희: ' + myL + '\n· 이동금 팀: ' + otL + ' 맞으실까요?\n· 저희 도착 예정 ' + (tm || '__:__') + ' — 도착 시간 알려주세요.\n· 매표소 앞에서 만나요.' : '가이드님이 두 팀 합쳐 발권해 주시니 저희 인원 확인 부탁드려요.\n· 저희: ' + myL + '\n· 도착 예정 ' + (tm || '__:__') + '\n· 만나는 장소 알려주세요.') + '\n감사합니다!';
+      body = body.replace('이동금 팀', j.guide + ' 팀');
+    } else if (/김밥|gimbap/i.test(t)) {
+      body = EN ? hi + 'the airport on ' + dd + '.\n\n' + (lead ? 'I will order the gimbap for both teams (one airport delivery).\n· Yours: ' + oT + ' rolls (' + otL + ') — tuna without ham / spicy squid, please tell me the split by the day before.' : 'You are ordering the gimbap for both teams.\n· Ours: ' + myT + ' rolls (' + myL + ') — I will send the tuna / spicy squid split by the day before.\n· I will collect them at the airport.') + '\nThank you!'
+        : hi + '같은 편으로 출국하는 ' + nm + ' 가이드입니다.\n\n' + (lead ? '김밥은 저희가 두 팀 것 함께 주문할게요 (공항 배달 1회).\n· ' + j.guide + ' 팀: ' + oT + '줄 (' + otL + ') — 햄 뺀 참치 / 매콤오징어 몇 줄씩인지 전날까지 알려주세요.' : '김밥 함께 주문 부탁드려요.\n· 저희 팀: ' + myT + '줄 (' + myL + ') — 참치 / 매콤오징어 구분은 전날까지 보내드릴게요.\n· 공항에서 받을게요.') + '\n감사합니다!';
+    } else if (/캄풍쿠|kampungku/i.test(t)) {
+      body = EN ? hi + 'Kampungku on ' + dd + '.\n\n' + (lead ? 'I will book the buffet for both teams (15+ pax).\n· Yours: ' + oT + ' (' + otL + ') — correct?\n· Our arrival: ' + (tm || '__:__') + ' — please match the time.' : 'You are booking the Kampungku buffet for both teams.\n· Ours: ' + myT + ' (' + myL + ')\n· What time shall we arrive?') + '\nThank you!'
+        : hi + '캄풍쿠 같이 가는 ' + nm + ' 가이드입니다.\n\n' + (lead ? '뷔페는 저희가 두 팀 합쳐 예약할게요 (15명 이상).\n· ' + j.guide + ' 팀: ' + oT + '명 (' + otL + ') 맞으실까요?\n· 저희 도착 예정 ' + (tm || '__:__') + ' — 시간 맞춰 주세요.' : '캄풍쿠 뷔페 합쳐서 예약 부탁드려요.\n· 저희 팀: ' + myT + '명 (' + myL + ')\n· 몇 시 도착으로 할까요?') + '\n감사합니다!';
+    } else {
+      body = EN ? hi + mealName(t) + ' on ' + dd + '.\n· Ours: ' + myL + '\n· Our arrival: ' + (tm || '__:__') + '\nThank you!' : hi + (mealName(t) || t) + ' 같이 하는 ' + nm + ' 가이드입니다.\n· 저희: ' + myL + '\n· 도착 예정 ' + (tm || '__:__') + '\n감사합니다!';
+    }
+    return body;
+  }
+  function jointHtml(j, d, txt, it) {
+    var c = j.phone ? who({ contact: j.guide, phone: j.phone, sms: true, nomap: true, jmsg: jointMsg(j, it || {}, d) }, d) : '';
     return '<span class="joint"><b>🤝 ' + (EN ? 'Joint · ' : '합동 · ') + esc(j.team) + '</b>' + c + '<span class="jt">' + esc(txt).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' +
       '<span class="x">' + (EN ? '💳 Whoever pays with the corporate card settles the receipt' : '💳 법인카드로 결제한 가이드가 영수증 정산') + '</span></span>';
   }
@@ -196,7 +224,7 @@
       var meals = d.meals || {};
       function mealSpan(i, key) { var mm = meals[key]; if (!mm) return '<span class="no">' + L.meal[i] + '</span>'; if (mm.ok === false) return '<span class="no">' + L.meal[i] + (mm.txt ? ' — ' + esc(mm.txt) : ' — ' + L.free) + '</span>'; return '<span class="' + (mm.alt ? 'alt' : '') + '">' + L.meal[i] + (mm.txt ? ' ' + esc(mm.txt) : '') + '</span>'; }
       h += '<details class="day" data-d="' + esc(d.d) + '" data-loc="' + esc(d.loc || D.loc || 'SEL') + '"><summary><span class="d" data-today="' + L.today + '">' + esc(d.label) + '</span><span class="s">' + esc(d.summary) + '</span><span class="ar">▶</span></summary><div class="body">' +
-        '<ul class="tl" data-d="' + esc(d.d) + '">' + (d.items || []).map(function (it, ii) { return '<li data-i="' + ii + '" data-r="' + esc(it._r || (d.d + ':' + ii)) + '"' + (it.chg ? ' class="chg"' : '') + (mealKey(it.text) && it.phone ? ' data-meal="1"' : '') + '><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + (it.chg ? ' <span class="chgb">' + (EN ? 'changed' : '변경됨') + '</span>' : '') + (it.cnote ? '<span class="x cnote">📝 ' + esc(it.cnote) + '</span>' : '') + who(it, d) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + (it.jt && d.joint ? jointHtml(d.joint, d, it.jt) : '') + '</span></li>'; }).join('') + '</ul>' +
+        '<ul class="tl" data-d="' + esc(d.d) + '">' + (d.items || []).map(function (it, ii) { return '<li data-i="' + ii + '" data-r="' + esc(it._r || (d.d + ':' + ii)) + '"' + (it.chg ? ' class="chg"' : '') + (mealKey(it.text) && it.phone ? ' data-meal="1"' : '') + '><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + (it.chg ? ' <span class="chgb" title="' + (EN ? 'changed by guide' : '가이드가 변경') + '">✎</span>' : '') + (it.cnote ? '<span class="x cnote">📝 ' + esc(it.cnote) + '</span>' : '') + who(it, d) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + (it.jt && d.joint ? jointHtml(d.joint, d, it.jt, it) : '') + '</span></li>'; }).join('') + '</ul>' +
         (D.reorder ? '<div class="reo"><button type="button" class="rbtn" data-reo="' + esc(d.d) + '">✏️ ' + (EN ? 'Change order' : '순서 바꾸기') + '</button><span class="rst" data-rst="' + esc(d.d) + '"></span></div>' : '') +
         '<div class="row"><span class="i">🍽</span><div class="meal">' + mealSpan(0, 'b') + mealSpan(1, 'l') + mealSpan(2, 'd') + '</div></div>' +
         (d.move ? '<div class="row"><span class="i">🚐</span><div>' + esc(d.move) + who(d.moveWho, d) + (d.moveSub ? '<br><span class="x">' + esc(d.moveSub) + '</span>' : '') + '</div></div>' : '') +
@@ -361,7 +389,7 @@
     days_prefill: { var dk = Object.keys(st); dk.forEach(function (dd) { st[dd].forEach(function (x) { var rt = RT[x.r]; if (rt && x.tm === undefined && !(M[x.r] || {}).tm) { x.tm = rt; x.rt = true; } }); }); }
     var T = EN ? { t: '📅 Change schedule', hint: 'Drag items to reorder or move to another day. Tap an item to change time, restaurant or add a note. 🔒 = cannot change (joint tickets/orders, flights, hotel, vehicles, another guide\'s day) — call the office. ☔ = joint item unlocked by rain forecast.', pin: 'Last 4 digits of your phone', apply: 'Apply', reset: 'Back to the original schedule', close: 'Close', rest: '🍽 Change restaurant', memo: 'Note (e.g. Tom yum set 7+1)', own: 'Type a name…', done: 'Applied — the office has been notified', send: 'Please send these messages', bad: 'Wrong PIN', fail: 'Could not save. Please try again or call the office.', tm: 'Time', other: ' — guide ', otherE: '\'s day (cannot change)', ok: 'OK' }
       : { t: '📅 일정 변경', hint: '항목을 끌어서 순서·날짜를 옮기세요. 항목을 누르면 시간·식당·메모를 바꿀 수 있어요. 🔒 = 변경 불가 (합동 발권·주문, 항공, 호텔, 차량, 다른 가이드 담당일) — 회사에 전화해주세요. ☔ = 비 예보로 잠금 해제된 합동 일정.', pin: '전화번호 뒤 4자리', apply: '적용하기', reset: '원래 일정으로 되돌리기', close: '닫기', rest: '🍽 식당 바꾸기', memo: '메모 (예: 똠얌 세트 7+1)', own: '직접 입력…', done: '적용 완료 — 회사에 보고되었습니다', send: '아래 연락을 꼭 해주세요', bad: '전화번호 뒤 4자리가 맞지 않습니다', fail: '저장하지 못했습니다. 다시 시도하거나 회사로 전화해주세요.', tm: '시간', other: ' · ', otherE: ' 가이드님 담당 (변경 불가)', ok: '확인' };
-    var ov = document.createElement('div'); ov.className = 'edit'; document.body.appendChild(ov); document.body.style.overflow = 'hidden';
+    var ov = document.createElement('div'); ov.className = 'edit'; document.body.appendChild(ov); document.body.style.overflow = 'hidden'; pushOv(ov);
     var days = O.days.map(function (d) { return d.d; });
     // 다른 가이드 담당일 (day.other 또는 첫 항목 "○○ 가이드님 진행")
     var OTH = {}; O.days.forEach(function (d) { var o = d.other; if (!o) { var m = String(((d.items || [])[0] || {}).text || '').match(/^(\S+?)(\(.*?\))?\s*가이드님 진행|^Guide (.+?) runs this day/); if (m) o = m[1] || m[3]; } if (o) OTH[d.d] = o; });
@@ -426,7 +454,7 @@
       var b = ev.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT' || b.tagName === 'INPUT') return; var a = b.dataset.a;
       if (a === 'desel') { SEL = null; draw2(); return; }
       if (a === 'undo') { st = JSON.parse(SNAP); SEL = null; draw2(); var m0 = document.getElementById('emsg'); if (m0) m0.textContent = EN ? 'Restored to the schedule before this screen.' : '이 화면을 열기 전 일정으로 되돌렸습니다.'; return; }
-      if (a === 'close') { ov.remove(); document.body.style.overflow = ''; return; }
+      if (a === 'close') { backOv(ov); return; }
       if (a === 'apply' || a === 'reset') send(a === 'reset');
     });
     function diffWarn() {
@@ -482,23 +510,29 @@
       if (!reset) { var bad = []; days.forEach(function (dd) { var c = {}; st[dd].forEach(function (x) { var k = mealKey(item(x).text); if (k) c[k] = (c[k] || 0) + 1; }); Object.keys(c).forEach(function (k) { if (c[k] > 1) bad.push(dlabel(dd) + ' ' + (EN ? { b: 'breakfast', l: 'lunch', d: 'dinner' }[k] : { b: '아침', l: '점심', d: '저녁' }[k]) + ' ' + c[k] + (EN ? '' : '곳')); }); });
         if (bad.length) { msg.textContent = (EN ? '❌ Only one restaurant per meal: ' : '❌ 한 끼에 식당은 한 곳만 — ') + bad.join(', ') + (EN ? '. Move one to another day.' : '. 하나를 다른 날로 옮겨주세요.'); return; } }
       var W = reset ? { diff: [], warn: [], acts: [], imp: !!(CHG && CHG.imp) } : diffWarn();
-      if (!reset && !W.diff.length) { ov.remove(); document.body.style.overflow = ''; return; }
+      if (!reset && !W.diff.length) { backOv(ov); return; }
       var body = { act: 'chg', slug: SLUG, pin: pin, ov: reset ? null : { v: 1, days: st, imp: W.imp }, diff: W.diff, warn: W.warn, imp: W.imp };
       msg.textContent = '…';
       fetch(API, { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json(); }).then(function (j) {
         if (!j.ok) { msg.textContent = j.error === 'pin' ? T.bad : T.fail; return; }
         saveActs(reset ? [] : W.acts);
-        ov.remove(); document.body.style.overflow = '';
-        if (W.acts.length || W.warn.length) showActs(W.acts, W.warn, true); else render(SLUG);
+        closeOv(ov);
+        if (W.acts.length || W.warn.length) { try { history.replaceState({}, ''); } catch (e) { } OVS.length = 0; showActs(W.acts, W.warn, true); } else { try { history.back(); } catch (e) { } render(SLUG); }
       }).catch(function () { msg.textContent = T.fail; });
     }
   }
+  // 뒤로가기 = 화면 닫기 (지침서 밖으로 나가지 않게, 대표 11/9 22:18)
+  var OVS = [];
+  function pushOv(ov) { OVS.push(ov); try { history.pushState({ atkov: OVS.length }, ''); } catch (e) { } }
+  function closeOv(ov) { var i = OVS.indexOf(ov); if (i >= 0) OVS.splice(i, 1); ov.remove(); document.body.style.overflow = ''; }
+  window.addEventListener('popstate', function () { var ov = OVS.pop(); if (ov) { ov.remove(); document.body.style.overflow = ''; if (ov.className.indexOf('acts') >= 0) render(SLUG); } });
+  function backOv(ov) { if (OVS.indexOf(ov) >= 0) history.back(); else closeOv(ov); }
   // ───── 적용 후 연락 목록 (체크하면 취소선, 이 휴대폰에 저장) ─────
   function loadActs() { try { return JSON.parse(LS('atk:acts:' + SLUG) || '[]'); } catch (e) { return []; } }
   function saveActs(a) { LS('atk:acts:' + SLUG, a.length ? JSON.stringify(a) : null); }
   function pendingActs() { return loadActs().filter(function (a) { return !a.done; }); }
   function showActs(acts, warn, fresh) {
-    var ov = document.createElement('div'); ov.className = 'edit acts'; document.body.appendChild(ov); document.body.style.overflow = 'hidden';
+    var ov = document.createElement('div'); ov.className = 'edit acts'; document.body.appendChild(ov); document.body.style.overflow = 'hidden'; pushOv(ov);
     function draw3() {
       var h = '<div class="eh"><b>' + (fresh ? '✅ ' + (EN ? 'Applied — ' : '적용 완료 — ') : '📨 ') + (EN ? 'Contacts to make' : '연락할 곳') + '</b><button type="button" class="x2" data-a="close3">✕</button></div>';
       if (fresh && (!acts || !acts.length)) h += '<p class="hint">' + (EN ? 'Reported to the office.' : '회사에 보고되었습니다.') + '</p>';
@@ -513,7 +547,7 @@
     }
     draw3();
     ov.addEventListener('change', function (ev) { var cb = ev.target; if (cb.type !== 'checkbox') return; acts[+cb.dataset.i].done = cb.checked; saveActs(acts); draw3(); });
-    ov.addEventListener('click', function (ev) { if (ev.target.closest('[data-a="close3"]')) { ov.remove(); document.body.style.overflow = ''; render(SLUG); } });
+    ov.addEventListener('click', function (ev) { if (ev.target.closest('[data-a="close3"]')) { if (OVS.indexOf(ov) >= 0) history.back(); else { closeOv(ov); render(SLUG); } } });
   }
   document.addEventListener('click', function (ev) { if (ev.target.closest('#openEdit')) { ev.preventDefault(); openEdit(); } });
   window.ATK = { render: render };
