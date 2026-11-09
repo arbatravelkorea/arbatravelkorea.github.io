@@ -104,6 +104,15 @@
       : '안녕하세요\n아르바트래블 ' + nm + ' 가이드입니다.\n예약 시간 변경 부탁드립니다.\n\n기존: ' + dd + ' ' + mealW + ' ' + prev + '\n변경: ' + dd + ' ' + mealW + ' ' + next + '\n인원: 총 ' + tot + '명 (손님 ' + gu + '명' + (tl ? ' + 인솔자 ' + tl + '명' : '') + ' + 가이드 1명)\n\n확인 부탁드립니다. 감사합니다!';
   }
   var RT = {}; // 식당 예약 시간 (가이드가 문자 버튼 누를 때 입력, 이 휴대폰 저장)
+  // 🔒 이름 워터마크: 본인 기기 0.8% (거의 안 보임) / 다른 기기 진하게 / 인쇄·PDF 진하게 (대표 11/9 23:08)
+  function watermark(D) {
+    var g = D.guide || {}, nm = (g.ko || g.name || ''), ph = String(g.phone || '').replace(/\D/g, ''), sub = (D.tripId || '') + (ph ? ' · 010-****-' + ph.slice(-4) : '');
+    function svg(a, big) { var w = big ? 280 : 260, h = big ? 190 : 170; return 'url("data:image/svg+xml;utf8,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='" + w + "' height='" + h + "'><g transform='rotate(-24 " + w / 2 + " " + h / 2 + ")' font-family='sans-serif' font-weight='800' fill='rgba(176,38,75," + a + ")'><text x='8' y='" + (h / 2 - 4) + "' font-size='" + (big ? 20 : 17) + "'>" + nm + " 가이드님 전용</text><text x='12' y='" + (h / 2 + 18) + "' font-size='11'>" + sub + "</text></g></svg>") + '")'; }
+    var old = document.getElementById('atkwm'); if (old) old.remove();
+    var wm = document.createElement('div'); wm.id = 'atkwm'; wm.className = OWN ? 'wm own' : 'wm other'; wm.style.backgroundImage = svg(OWN ? 0.008 : 0.24, !OWN); document.body.appendChild(wm);
+    var st = document.getElementById('atkwmp'); if (!st) { st = document.createElement('style'); st.id = 'atkwmp'; document.head.appendChild(st); }
+    st.textContent = '@media print{#atkwm{background-image:' + svg(0.22, true) + ' !important;position:fixed;-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
+  }
   function smsHref(c, d) { return 'sms:' + num(c.phone) + '?&body=' + encodeURIComponent(smsBody(c, d)); }
   function who(c, d) {
     if (!c) return '';
@@ -163,14 +172,18 @@
       return out;
     }).catch(function () { return {}; });
   }
-  var L = L_KO, EN = false, SLUG = '', CUR = {}, ORIG = null, CHG = null;
+  var L = L_KO, EN = false, SLUG = '', CUR = {}, ORIG = null, CHG = null, OWN = true;
 
   function render(slug) {
     SLUG = slug;
     var P = new URLSearchParams(location.search); EN = P.get('lang') === 'en'; L = EN ? L_EN : L_KO;
     document.documentElement.lang = EN ? 'en' : 'ko';
     var app = document.getElementById('app'); app.innerHTML = '<p class="loading">' + (EN ? 'Loading…' : '지침서를 여는 중…') + '</p>';
-    fetch(API + '?v=' + encodeURIComponent(slug) + (EN ? '&lang=en' : '')).then(function (r) { return r.json(); }).then(function (j) {
+    var DV = LS('atk:dv'); if (!DV) { DV = (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).replace(/[^a-z0-9]/g, ''); LS('atk:dv', DV); }
+    var ST = P.get('staff'); if (ST) LS('atk:st', ST); ST = LS('atk:st') || '';
+    fetch(API + '?v=' + encodeURIComponent(slug) + (EN ? '&lang=en' : '') + '&dv=' + DV + (ST ? '&st=' + encodeURIComponent(ST) : '')).then(function (r) { return r.json(); }).then(function (j) {
+      if (j.error === 'expired') { app.innerHTML = '<p class="loading">🔒 ' + (EN ? 'This tour voucher is closed (7 days after the tour ended). Please contact ARBA Travel Korea if you need it.' : '이 투어지침서는 열람 기간이 끝났습니다 (투어 종료 7일 뒤).<br>필요하면 회사로 연락해주세요.') + '</p>'; return; }
+      OWN = j.own !== false;
       if (!j.ok || !j.data) { app.innerHTML = '<p class="loading">' + (EN ? 'Voucher not found.' : '지침서를 찾을 수 없습니다. 회사로 연락해주세요.') + '</p>'; return; }
       ORIG = JSON.parse(JSON.stringify(j.data)); CHG = j.chg || null; if (CHG) applyChg(j.data, CHG); draw(j.data);
     }).catch(function () { app.innerHTML = '<p class="loading">' + (EN ? 'Could not load. Please try again.' : '불러오지 못했습니다. 다시 열어주세요.') + '</p>'; });
@@ -256,7 +269,10 @@
     h += '<h2>' + L.contacts + '</h2><div class="card tel"><b>' + esc(C.name || 'ARBA Travel Korea') + '</b>' + (C.phone ? '<br>' + tel(C.phone) : '') +
       (C.kakao ? '<a class="btn kakao" target="_blank" rel="noopener" href="' + esc(C.kakao) + '">' + KA_SVG + L.kakao + '</a>' : '') + '</div>';
     h += '<p class="foot">' + L.foot + (D.issued ? ' · ' + esc(D.issued) : '') + '</p>';
+    var gw = (D.guide || {}), gnm = EN ? (gw.name || '') : (gw.ko || gw.name || '');
+    h += '<div class="secure">🔒 <b>' + (EN ? 'ARBA Travel Korea property — do not share or copy' : 'ARBA Travel Korea 자산 — 외부 공유·복제 금지') + '</b><br>' + (EN ? 'This tour voucher link was issued only to guide <b>' + esc(gnm) + '</b>. Opening it on another device is recorded. It contains guest information, restaurants and supplier contacts, so it must not be passed to anyone else or to another travel agency.' : '이 지침서는 <b>' + esc(gnm) + ' 가이드님</b>께만 발급된 링크입니다. 타인 열람시 열람 기록이 남으며 손님 정보·식당·거래처 연락처가 포함되어 있어 다른 사람이나 다른 여행사에 전달할 수 없습니다.') + '<br><span>© 2026 ARBA Travel Korea · ' + (EN ? 'Viewing closes 7 days after the tour ends.' : '투어 종료 7일 뒤 열람이 닫힙니다.') + '</span></div>';
     document.getElementById('app').innerHTML = h;
+    watermark(D);
     document.title = esc(D.tripId) + ' — ' + (EN ? 'Tour Voucher' : '투어지침서');
     afterDraw();
   }

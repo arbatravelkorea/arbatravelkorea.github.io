@@ -14,7 +14,12 @@ var FS_TERM_ = { P01: 'T1', P02: '탑승동', P03: 'T2' };
 function doGet(e) {
   var p = (e && e.parameter) || {};
   var r;
-  if (p.v) { var vj = voucherJson_(p.v, p.lang); if (vj.ok) vj.chg = chgGet_(p.v); return ContentService.createTextOutput(JSON.stringify(vj)).setMimeType(ContentService.MimeType.JSON); }
+  if (p.v) {
+    var vj = voucherJson_(p.v, p.lang), key = PropertiesService.getScriptProperties().getProperty('CHGLOG_KEY'), staff = !!(key && p.st === key);
+    if (vj.ok && !staff && vExpired_(p.v, vj.data)) vj = { ok: false, error: 'expired' };
+    if (vj.ok) { vj.chg = chgGet_(p.v); vj.own = staff ? true : devCheck_(p.v, p.dv, vj.data); }
+    return ContentService.createTextOutput(JSON.stringify(vj)).setMimeType(ContentService.MimeType.JSON);
+  }
   if (p.chglog) return ContentService.createTextOutput(JSON.stringify(chgLog_(p.since, p.k))).setMimeType(ContentService.MimeType.JSON);
   if (p.dbg) return ContentService.createTextOutput(JSON.stringify(fsDbg_(p.dbg, p.q || 'KUL', p.dir))).setMimeType(ContentService.MimeType.JSON);
   try { r = p.flights ? { ok: true, list: flightStatusMany(p.flights) } : flightStatus(p.flight, p.date, p.dir, p.t); } catch (err) { r = { ok: false, error: String(err) }; }
@@ -173,3 +178,31 @@ function chgLog_(since, k) {
   return { ok: true, list: log };
 }
 function chgInitKey() { var P = PropertiesService.getScriptProperties(); if (!P.getProperty('CHGLOG_KEY')) P.setProperty('CHGLOG_KEY', Utilities.getUuid().replace(/-/g, '').slice(0, 16)); Logger.log('CHGLOG_KEY set'); }
+
+/* ───────── 열람 기한 · 본인 기기 (2026-11-09 대표) ─────────
+   열람 기한: 마지막 날 + 7일 지나면 내용 안 줌 (속성 'ext:<슬러그>' = yyyy-MM-dd 이면 그날까지 연장). 회사(st=CHGLOG_KEY)는 항상 열람
+   본인 기기: 처음 연 기기(dv)를 본인으로 기억(속성 'dev:<슬러그>'). 다른 기기는 own:false → 진한 워터마크 + 처음 열릴 때 텔레그램 */
+function vExpired_(slug, D) {
+  var days = (D && D.days) || []; if (!days.length) return false;
+  var P = PropertiesService.getScriptProperties(), ext = P.getProperty('ext:' + String(slug).replace(/[^A-Za-z0-9_-]/g, ''));
+  var last = String(days[days.length - 1].d || ''); if (!/^\d{4}-\d{2}-\d{2}$/.test(last)) return false;
+  var lim = new Date(last + 'T00:00:00+09:00'); lim.setDate(lim.getDate() + 8); // 마지막 날 + 7일 끝까지
+  if (ext && /^\d{4}-\d{2}-\d{2}$/.test(ext)) { var e2 = new Date(ext + 'T00:00:00+09:00'); e2.setDate(e2.getDate() + 1); if (e2 > lim) lim = e2; }
+  return new Date() >= lim;
+}
+function devCheck_(slug, dv, D) {
+  slug = String(slug || '').replace(/[^A-Za-z0-9_-]/g, ''); dv = String(dv || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 24);
+  if (!dv) return true;
+  var lock = LockService.getScriptLock(); try { lock.waitLock(5000); } catch (e) { return true; }
+  try {
+    var P = PropertiesService.getScriptProperties(), list = []; try { list = JSON.parse(P.getProperty('dev:' + slug) || '[]'); } catch (x) { }
+    if (!list.length) { P.setProperty('dev:' + slug, JSON.stringify([dv])); return true; }
+    if (list[0] === dv) return true;
+    if (list.indexOf(dv) < 0) {
+      list.push(dv); if (list.length > 12) list = [list[0]].concat(list.slice(-11)); P.setProperty('dev:' + slug, JSON.stringify(list));
+      var g = ((D || {}).guide || {}), now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'MM/dd HH:mm');
+      chgTg_({ at: now, slug: slug, trip: (D || {}).tripId || '', by: (g.ko || g.name || ''), reset: false, diff: ['🔓 등록 안 된 기기에서 지침서가 열렸습니다 (' + (list.length - 1) + '번째 다른 기기) — 링크가 공유됐을 수 있어요'], warn: [] });
+    }
+    return false;
+  } finally { lock.releaseLock(); }
+}
