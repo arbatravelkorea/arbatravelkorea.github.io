@@ -55,28 +55,34 @@
   // 🤝 합동 — 해당 항목 바로 아래 (에버랜드·비발디 발권 / 김밥 / 신촌버거 / 캄풍쿠 15명 뷔페만). d.joint = 상대 팀 정보, item.jt = 그 항목의 합동 내용
   // 🤝 합동 가이드 문자 양식 — 항목별(에버랜드·신촌버거·김밥·캄풍쿠), 주도(인원 많은 팀)/상대 구분 (대표 11/9 22:18)
   function jointMsg(j, it, d) {
-    var D = CUR || {}, g = D.guide || {}, nm = EN ? (g.name || '') : (g.ko || g.name || ''), px = mealPx(D), tl = +px.tl || 0, inf = +px.inf || 0, my = (+px.total || 0) - tl - inf, myT = my + tl + 1;
-    var ot = +j.pax || 0, otl = +j.tl || 0, oT = ot + otl + 1, lead = myT >= oT, t = String(it.text || ''), dd = fmtD(d.d), tm = it.tm || '';
-    var myL = EN ? my + ' guests' + (tl ? ' + ' + tl + ' TL' : '') + ' + 1 guide = ' + myT : '손님 ' + my + '명' + (tl ? ' + 인솔자 ' + tl + '명' : '') + ' + 가이드 1 = ' + myT + '명';
-    var otL = EN ? ot + ' guests' + (otl ? ' + ' + otl + ' TL' : '') + ' + 1 guide = ' + oT : '손님 ' + ot + '명' + (otl ? ' + 인솔자 ' + otl + '명' : '') + ' + 가이드 1 = ' + oT + '명';
+    var D = CUR || {}, g = D.guide || {}, nm = EN ? (g.name || '') : (g.ko || g.name || ''), px = mealPx(D), tl = +px.tl || 0, inf = +px.inf || 0, my = (+px.total || 0) - tl - inf;
+    // 입장·식사 인원: 단체(JT)는 가이드도 입장 → 포함 / 프라이빗(PT) 드라이빙 가이드는 입장 안 함 → 제외 (대표 11/9 22:35)
+    var isJT = /\/JT\//.test(String(D.tripId || '')), oJT = /\/JT\//.test(String(j.team || '')), myG = isJT ? 1 : 0, oG = oJT ? 1 : 0;
+    var ot = +j.pax || 0, otl = +j.tl || 0, myT = my + tl + myG, oT = ot + otl + oG, lead = (my + tl + 1) >= (ot + otl + 1), t = String(it.text || ''), dd = fmtD(d.d), tm = it.tm || '';
+    function L_(gu, t2, gd, tot) { return EN ? gu + ' guests' + (t2 ? ' + ' + t2 + ' TL' : '') + (gd ? ' + 1 guide' : '') + ' = ' + tot : '손님 ' + gu + '명' + (t2 ? ' + 인솔자 ' + t2 + '명' : '') + (gd ? ' + 가이드 1' : '') + ' = ' + tot + '명'; }
+    var myL = L_(my, tl, myG, myT), otL = L_(ot, otl, oG, oT), oName = j.guide + (EN ? "'s team" : ' 팀');
+    var gNote = EN ? (isJT ? ' (group tour — guide enters too, unless a free guide ticket is issued)' : ' (private tour — driving guide does not enter)') : (isJT ? ' (단체라 가이드도 입장 — 가이드 무료 티켓 안 나오면 발권)' : ' (프라이빗 — 드라이빙 가이드는 입장 안 함)');
+    var oNote = EN ? (oJT ? ' (group — guide enters)' : ' (private — guide does not enter)') : (oJT ? ' (단체 — 가이드 입장)' : ' (프라이빗 — 가이드 입장 안 함)');
     var hi = EN ? 'Hello ' + j.guide + ',\nThis is ' + nm + ', the guide joining you at ' : '안녕하세요 ' + j.guide + ' 가이드님\n' + dd + ' ';
     var body;
     if (/신촌버거|sinchon burger/i.test(t)) {
-      body = EN ? hi + 'Everland on ' + dd + '.\n\n' + (lead ? 'I will order Sinchon Burger for both teams.\n· Yours: ' + oT + ' sets (' + otL + ') — correct?\n· Delivered to our hotel by 08:00; I will hand yours over at Everland.' : 'You are ordering Sinchon Burger for both teams.\n· Ours: ' + myT + ' sets (' + myL + ')\n· I will collect them from you at Everland.') + '\nThank you!'
-        : hi + '에버랜드 같이 가는 ' + nm + ' 가이드입니다.\n\n' + (lead ? '신촌버거는 저희가 두 팀 것 함께 주문할게요.\n· ' + j.guide + ' 팀: ' + oT + '개 (' + otL + ') 맞으실까요?\n· 저희 호텔로 08:00까지 받아서 에버랜드에서 전달드릴게요.' : '신촌버거 함께 주문 부탁드려요.\n· 저희 팀: ' + myT + '개 (' + myL + ')\n· 에버랜드에서 받을게요.') + '\n감사합니다!';
+      body = EN ? hi + 'Everland on ' + dd + '.\n\n' + (lead ? 'I will order Sinchon Burger for both teams.\n· Yours: ' + oT + ' sets (' + otL + ')' + oNote + ' — correct?\n· Delivered to our hotel by 08:00.\n· Shall I hand yours over at Everland (packed), or will your team eat separately inside? Please let me know.' : 'You are ordering Sinchon Burger for both teams.\n· Ours: ' + myT + ' sets (' + myL + ')' + gNote + '\n· Please hand ours over at Everland (packed) / we will eat separately inside — I will confirm which.') + '\nThank you!'
+        : hi + '에버랜드 같이 가는 ' + nm + ' 가이드입니다.\n\n' + (lead ? '신촌버거는 저희가 두 팀 것 함께 주문할게요.\n· ' + oName + ': ' + oT + '개 (' + otL + ')' + oNote + ' 맞으실까요?\n· 저희 호텔로 08:00까지 받아요.\n· 에버랜드에서 포장 전달드릴지, 안에서 따로 드실지 알려주세요.' : '신촌버거 함께 주문 부탁드려요.\n· 저희 팀: ' + myT + '개 (' + myL + ')' + gNote + '\n· 에버랜드에서 포장 전달 / 안에서 따로 식사 — 어느 쪽인지 확정해서 알려드릴게요.') + '\n감사합니다!';
     } else if (/에버랜드|everland|비발디|vivaldi|스키|ski/i.test(t)) {
       var pl = /비발디|vivaldi|스키|ski/i.test(t) ? (EN ? 'Vivaldi Park' : '비발디파크') : (EN ? 'Everland' : '에버랜드');
-      body = EN ? hi + pl + ' on ' + dd + '.\n\n' + (lead ? 'I will buy the group tickets for both teams, so please confirm your headcount.\n· Ours: ' + myL + '\n· Yours: ' + otL + ' — correct?\n· Our arrival: ' + (tm || '__:__') + ' — what time will you arrive?\n· Meet at the ticket office.' : 'You are buying the group tickets for both teams — please check our headcount.\n· Ours: ' + myL + '\n· Our arrival: ' + (tm || '__:__') + '\n· Where shall we meet?') + '\nThank you!'
-        : hi + pl + ' 같이 가는 ' + nm + ' 가이드입니다.\n\n' + (lead ? '저희가 두 팀 합쳐 발권하니 인원 확인 부탁드려요.\n· 저희: ' + myL + '\n· 이동금 팀: ' + otL + ' 맞으실까요?\n· 저희 도착 예정 ' + (tm || '__:__') + ' — 도착 시간 알려주세요.\n· 매표소 앞에서 만나요.' : '가이드님이 두 팀 합쳐 발권해 주시니 저희 인원 확인 부탁드려요.\n· 저희: ' + myL + '\n· 도착 예정 ' + (tm || '__:__') + '\n· 만나는 장소 알려주세요.') + '\n감사합니다!';
-      body = body.replace('이동금 팀', j.guide + ' 팀');
+      body = EN ? hi + pl + ' on ' + dd + '.\n\n' + (lead ? 'I will buy the group tickets for both teams, so please confirm your headcount.\n· Ours: ' + myL + gNote + '\n· Yours: ' + otL + oNote + ' — correct?\n· Our arrival: ' + (tm || '__:__') + ' — what time will you arrive?\n· Meet at the ticket office.' : 'You are buying the group tickets for both teams — please check our headcount.\n· Ours: ' + myL + gNote + '\n· Our arrival: ' + (tm || '__:__') + '\n· Where shall we meet?') + '\nThank you!'
+        : hi + pl + ' 같이 가는 ' + nm + ' 가이드입니다.\n\n' + (lead ? '저희가 두 팀 합쳐 발권하니 인원 확인 부탁드려요.\n· 저희: ' + myL + gNote + '\n· ' + oName + ': ' + otL + oNote + ' 맞으실까요?\n· 저희 도착 예정 ' + (tm || '__:__') + ' — 도착 시간 알려주세요.\n· 매표소 앞에서 만나요.' : '가이드님이 두 팀 합쳐 발권해 주시니 저희 인원 확인 부탁드려요.\n· 저희: ' + myL + gNote + '\n· 도착 예정 ' + (tm || '__:__') + '\n· 만나는 장소 알려주세요.') + '\n감사합니다!';
     } else if (/김밥|gimbap/i.test(t)) {
-      body = EN ? hi + 'the airport on ' + dd + '.\n\n' + (lead ? 'I will order the gimbap for both teams (one airport delivery).\n· Yours: ' + oT + ' rolls (' + otL + ') — tuna without ham / spicy squid, please tell me the split by the day before.' : 'You are ordering the gimbap for both teams.\n· Ours: ' + myT + ' rolls (' + myL + ') — I will send the tuna / spicy squid split by the day before.\n· I will collect them at the airport.') + '\nThank you!'
-        : hi + '같은 편으로 출국하는 ' + nm + ' 가이드입니다.\n\n' + (lead ? '김밥은 저희가 두 팀 것 함께 주문할게요 (공항 배달 1회).\n· ' + j.guide + ' 팀: ' + oT + '줄 (' + otL + ') — 햄 뺀 참치 / 매콤오징어 몇 줄씩인지 전날까지 알려주세요.' : '김밥 함께 주문 부탁드려요.\n· 저희 팀: ' + myT + '줄 (' + myL + ') — 참치 / 매콤오징어 구분은 전날까지 보내드릴게요.\n· 공항에서 받을게요.') + '\n감사합니다!';
+      var mK = my + tl + 1, oK = ot + otl + 1, myK = L_(my, tl, 1, mK), otK = L_(ot, otl, 1, oK);
+      body = EN ? hi + 'the airport on ' + dd + '.\n\n' + (lead ? 'I will order the gimbap for both teams (one airport delivery).\n· Yours: ' + oK + ' rolls (' + otK + ') — tuna without ham / spicy squid, please tell me the split by the day before.' : 'You are ordering the gimbap for both teams.\n· Ours: ' + mK + ' rolls (' + myK + ') — I will send the tuna / spicy squid split by the day before.\n· I will collect them at the airport.') + '\nThank you!'
+        : hi + '같은 편으로 출국하는 ' + nm + ' 가이드입니다.\n\n' + (lead ? '김밥은 저희가 두 팀 것 함께 주문할게요 (공항 배달 1회).\n· ' + oName + ': ' + oK + '줄 (' + otK + ') — 햄 뺀 참치 / 매콤오징어 몇 줄씩인지 전날까지 알려주세요.' : '김밥 함께 주문 부탁드려요.\n· 저희 팀: ' + mK + '줄 (' + myK + ') — 참치 / 매콤오징어 구분은 전날까지 보내드릴게요.\n· 공항에서 받을게요.') + '\n감사합니다!';
     } else if (/캄풍쿠|kampungku/i.test(t)) {
-      body = EN ? hi + 'Kampungku on ' + dd + '.\n\n' + (lead ? 'I will book the buffet for both teams (15+ pax).\n· Yours: ' + oT + ' (' + otL + ') — correct?\n· Our arrival: ' + (tm || '__:__') + ' — please match the time.' : 'You are booking the Kampungku buffet for both teams.\n· Ours: ' + myT + ' (' + myL + ')\n· What time shall we arrive?') + '\nThank you!'
-        : hi + '캄풍쿠 같이 가는 ' + nm + ' 가이드입니다.\n\n' + (lead ? '뷔페는 저희가 두 팀 합쳐 예약할게요 (15명 이상).\n· ' + j.guide + ' 팀: ' + oT + '명 (' + otL + ') 맞으실까요?\n· 저희 도착 예정 ' + (tm || '__:__') + ' — 시간 맞춰 주세요.' : '캄풍쿠 뷔페 합쳐서 예약 부탁드려요.\n· 저희 팀: ' + myT + '명 (' + myL + ')\n· 몇 시 도착으로 할까요?') + '\n감사합니다!';
+      var mB = my + tl + 1, oB = ot + otl + 1;
+      body = EN ? hi + 'Kampungku on ' + dd + '.\n\n' + (lead ? 'I will book the buffet for both teams (15+ pax).\n· Yours: ' + oB + ' (' + L_(ot, otl, 1, oB) + ') — correct?\n· Our arrival: ' + (tm || '__:__') + ' — please match the time.' : 'You are booking the Kampungku buffet for both teams.\n· Ours: ' + mB + ' (' + L_(my, tl, 1, mB) + ')\n· What time shall we arrive?') + '\nThank you!'
+        : hi + '캄풍쿠 같이 가는 ' + nm + ' 가이드입니다.\n\n' + (lead ? '뷔페는 저희가 두 팀 합쳐 예약할게요 (15명 이상).\n· ' + oName + ': ' + oB + '명 (' + L_(ot, otl, 1, oB) + ') 맞으실까요?\n· 저희 도착 예정 ' + (tm || '__:__') + ' — 시간 맞춰 주세요.' : '캄풍쿠 뷔페 합쳐서 예약 부탁드려요.\n· 저희 팀: ' + mB + '명 (' + L_(my, tl, 1, mB) + ')\n· 몇 시 도착으로 할까요?') + '\n감사합니다!';
     } else {
-      body = EN ? hi + mealName(t) + ' on ' + dd + '.\n· Ours: ' + myL + '\n· Our arrival: ' + (tm || '__:__') + '\nThank you!' : hi + (mealName(t) || t) + ' 같이 하는 ' + nm + ' 가이드입니다.\n· 저희: ' + myL + '\n· 도착 예정 ' + (tm || '__:__') + '\n감사합니다!';
+      var mX = my + tl + 1;
+      body = EN ? hi + mealName(t) + ' on ' + dd + '.\n· Ours: ' + L_(my, tl, 1, mX) + '\n· Our arrival: ' + (tm || '__:__') + '\nThank you!' : hi + (mealName(t) || t) + ' 같이 하는 ' + nm + ' 가이드입니다.\n· 저희: ' + L_(my, tl, 1, mX) + '\n· 도착 예정 ' + (tm || '__:__') + '\n감사합니다!';
     }
     return body;
   }
@@ -90,6 +96,13 @@
   var WK2 = ['일', '월', '화', '수', '목', '금', '토'], WE2 = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], ME2 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   function fmtD(dd) { var t = new Date(dd + 'T00:00:00'); if (isNaN(t)) return dd; return EN ? WE2[t.getDay()] + ', ' + t.getDate() + ' ' + ME2[t.getMonth()] : (t.getMonth() + 1) + '월 ' + t.getDate() + '일(' + WK2[t.getDay()] + ')'; }
   function LS(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
+  // 예약 시간 변경 문자 (이미 시간이 있는데 다른 시간을 넣으면 신규 예약이 아니라 변경, 대표 11/9 22:35)
+  function chgTimeMsg(it, d, prev, next) {
+    var D = CUR || {}, g = D.guide || {}, nm = EN ? (g.name || '') : (g.ko || g.name || ''), px = mealPx(D), tl = +px.tl || 0, inf = +px.inf || 0, gu = (+px.total || 0) - tl - inf, tot = gu + tl + 1;
+    var mk = mealKey(it.text), mealW = EN ? ({ b: 'breakfast', l: 'lunch', d: 'dinner' })[mk] || '' : ({ b: '아침', l: '점심', d: '저녁' })[mk] || '', dd = fmtD(d.d);
+    return EN ? 'Hello,\nThis is ' + nm + ', tour guide from ARBA Travel.\nPlease change our booking time.\n\nFrom: ' + dd + ' ' + mealW + ' ' + prev + '\nTo: ' + dd + ' ' + mealW + ' ' + next + '\nPax: ' + tot + ' (' + gu + ' guests' + (tl ? ' + ' + tl + ' tour leader' : '') + ' + 1 guide)\n\nPlease confirm. Thank you!'
+      : '안녕하세요\n아르바트래블 ' + nm + ' 가이드입니다.\n예약 시간 변경 부탁드립니다.\n\n기존: ' + dd + ' ' + mealW + ' ' + prev + '\n변경: ' + dd + ' ' + mealW + ' ' + next + '\n인원: 총 ' + tot + '명 (손님 ' + gu + '명' + (tl ? ' + 인솔자 ' + tl + '명' : '') + ' + 가이드 1명)\n\n확인 부탁드립니다. 감사합니다!';
+  }
   var RT = {}; // 식당 예약 시간 (가이드가 문자 버튼 누를 때 입력, 이 휴대폰 저장)
   function smsHref(c, d) { return 'sms:' + num(c.phone) + '?&body=' + encodeURIComponent(smsBody(c, d)); }
   function who(c, d) {
@@ -219,7 +232,7 @@
     }
     // 날짜 카드
     h += '<h2>' + L.days + '</h2>';
-    if (D.edit) h += '<div class="editbar">' + (CHG ? '<span class="chgnote">📅 ' + esc(CHG.at || '') + ' ' + esc(CHG.by || '') + (EN ? ' changed the schedule (reported to the office)' : ' 가이드님이 일정 변경 (회사 보고됨)') + '</span>' : '') + '<button type="button" class="btn editbtn" id="openEdit">📅 ' + (EN ? 'Change schedule' : '일정 변경하기') + '</button>' + (pendingActs().length ? '<button type="button" class="btn editbtn acts" id="openActs">📨 ' + (EN ? 'Contacts to make' : '연락할 곳') + ' ' + pendingActs().length + '</button>' : '') + '</div>';
+    if (editOn(D)) h += '<div class="editbar">' + (CHG ? '<span class="chgnote">📅 ' + esc(CHG.at || '') + ' ' + esc(CHG.by || '') + (EN ? ' changed the schedule (reported to the office)' : ' 가이드님이 일정 변경 (회사 보고됨)') + '</span>' : '') + '<button type="button" class="btn editbtn" id="openEdit">📅 ' + (EN ? 'Change schedule' : '일정 변경하기') + '</button>' + (pendingActs().length ? '<button type="button" class="btn editbtn acts" id="openActs">📨 ' + (EN ? 'Contacts to make' : '연락할 곳') + ' ' + pendingActs().length + '</button>' : '') + '</div>';
     (D.days || []).forEach(function (d, di) {
       var meals = d.meals || {};
       function mealSpan(i, key) { var mm = meals[key]; if (!mm) return '<span class="no">' + L.meal[i] + '</span>'; if (mm.ok === false) return '<span class="no">' + L.meal[i] + (mm.txt ? ' — ' + esc(mm.txt) : ' — ' + L.free) + '</span>'; return '<span class="' + (mm.alt ? 'alt' : '') + '">' + L.meal[i] + (mm.txt ? ' ' + esc(mm.txt) : '') + '</span>'; }
@@ -261,7 +274,7 @@
     // 식당 문자 버튼 → 예약 시간 입력(이 휴대폰 저장) → 문자에 도착 시간 자동, 일정 변경 화면에도 자동 반영 (대표 11/9 21:57)
     var IT = {}; (CUR.days || []).forEach(function (d) { (d.items || []).forEach(function (it, i) { IT[it._r || (d.d + ':' + i)] = { it: it, d: d }; }); });
     document.querySelectorAll('.tl li[data-meal]').forEach(function (li) {
-      var r = li.dataset.r, saved = LS('atk:rt:' + SLUG + ':' + r); if (saved) RT[r] = saved;
+      var r = li.dataset.r, saved = LS('atk:rt:' + SLUG + ':' + r), saved0 = saved; if (saved) RT[r] = saved;
       var a = li.querySelector('a[href^="sms:"]'); if (!a) return;
       function badge() { var b = li.querySelector('.rt'); if (saved) { if (!b) { b = document.createElement('span'); b.className = 'rt'; li.querySelector('span:nth-child(2)').appendChild(b); } b.textContent = (EN ? '📞 booked ' : '📞 예약 ') + saved; } else if (b) b.remove(); }
       badge();
@@ -270,7 +283,9 @@
         var v = prompt(EN ? 'Arrival time for the booking (e.g. 1100 → 11:00). Leave empty if not decided.' : '예약(도착) 시간을 넣어주세요 (예: 1100 → 11:00). 아직 모르면 비워두세요.', saved || x.it.tm || '');
         if (v === null) return; var t = normTm(v); if (v.trim() && !t) { alert(EN ? 'Time format: 1100 or 11:00' : '시간은 1100 또는 11:00 형식으로 넣어주세요'); return; }
         saved = t || ''; LS('atk:rt:' + SLUG + ':' + r, saved || null); if (saved) RT[r] = saved; else delete RT[r]; badge();
-        var c2 = JSON.parse(JSON.stringify(x.it)); if (saved) c2.tm = saved; location.href = smsHref(c2, x.d);
+        var prev = saved0 || x.it.tm || '';
+        if (prev && saved && saved !== prev) { location.href = 'sms:' + num(x.it.phone) + '?&body=' + encodeURIComponent(chgTimeMsg(x.it, x.d, prev, saved)); saved0 = saved; return; }
+        saved0 = saved; var c2 = JSON.parse(JSON.stringify(x.it)); if (saved) c2.tm = saved; location.href = smsHref(c2, x.d);
       });
     });
     document.addEventListener('click', function (ev) { if (ev.target.closest('#openActs')) { ev.preventDefault(); showActs(loadActs(), null); } });
@@ -441,7 +456,7 @@
     loadSortable(draw2); draw2();
     ov.addEventListener('change', function (ev) {
       var e = ev.target, a = e.dataset.a; if (!a || !SEL) return; var x = st[SEL.d][SEL.i];
-      if (a === 'tm') { var tv = normTm(e.value); if (e.value.trim() && !tv) { alert(EN ? 'Time format: 1100 or 11:00' : '시간은 1100 또는 11:00 형식으로 넣어주세요'); draw2(); return; } x.tm = tv; draw2(); }
+      if (a === 'tm') { var tv = normTm(e.value); if (e.value.trim() && !tv) { alert(EN ? 'Time format: 1100 or 11:00' : '시간은 1100 또는 11:00 형식으로 넣어주세요'); draw2(); return; } x.tm = tv; if (x.rt && tv !== RT[x.r]) delete x.rt; draw2(); }
       if (a === 'note') { x.note = e.value.trim(); if (!x.note) delete x.note; draw2(); }
       if (a === 'rest') { var o = M[x.r], pre = (String(o.text).match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]\s*/) || [''])[0], r;
         if (e.value === 'own') { var nm = prompt(EN ? 'Restaurant name' : '식당 이름'); if (!nm) { draw2(); return; } var ph = prompt(EN ? 'Phone (optional)' : '전화번호 (없으면 비워두기)') || ''; r = { n: nm, p: ph, s: /^01/.test(ph.replace(/\D/g, '')) }; }
@@ -463,7 +478,7 @@
       days.forEach(function (dd) {
         var origOrder = O.days.filter(function (d) { return d.d === dd; })[0].items.map(function (it, i) { return dd + ':' + i; }).join(','), now = st[dd].map(function (x) { return x.r; }).join(',');
         st[dd].forEach(function (x) {
-          var o = M[x.r] || {}, od = x.r.split(':')[0], it = item(x), ch = [], moved = od !== dd, tmCh = x.tm !== undefined && x.tm !== (o.tm || ''), mk = mealKey(o.text);
+          var o = M[x.r] || {}, od = x.r.split(':')[0], it = item(x), ch = [], moved = od !== dd, prevTm = RT[x.r] || o.tm || '', tmCh = x.tm !== undefined && x.tm !== (o.tm || ''), tmReal = x.tm !== undefined && !x.rt && x.tm !== prevTm, mk = mealKey(o.text);
           if (moved) ch.push(dlabel(od) + ' → ' + dlabel(dd));
           if (tmCh) ch.push((EN ? 'time ' : '시간 ') + (x.tm || '-') + (x.rt ? (EN ? ' (booked)' : ' (예약)') : ''));
           if (x.rest) ch.push(mealName(o.text) + ' → ' + mealName(x.rest.text));
@@ -477,14 +492,15 @@
             g.lines.push('· ' + short(o.text) + ': ' + fmtD(od) + (moved ? ' → ' + fmtD(dd) : '') + (tmCh ? ' ' + (x.tm || '') : '') + (x.rest ? ' → ' + mealName(x.rest.text) : ''));
           }
           // 식당 연락: 날짜·식당·시간이 바뀐 경우 (예약 시간 기록만 한 것은 제외)
-          if (mk && o.phone && !o.pick && (moved || x.rest || (tmCh && !x.rt))) {
+          if (mk && o.phone && !o.pick && !moved && !x.rest && tmReal && !prevTm && x.tm) { acts.push({ k: 'b:' + x.r, t: (EN ? 'Book: ' : '예약 문자: ') + mealName(o.text), sub: (o.contact || '') + ' ' + (o.phone || ''), phone: o.phone, body: window.ATK_SMS({ en: EN, name: gn, date: new Date(dd + 'T00:00:00'), meal: mk.toUpperCase(), guests: (+px.total || 0) - tl - inf, tl: tl, inf: inf, time: x.tm }) }); }
+          else if (mk && o.phone && !o.pick && (moved || x.rest || (tmReal && prevTm))) {
             var who = EN ? 'Hello,\nThis is ' + gn + ', tour guide from ARBA Travel.\n' : '안녕하세요\n아르바트래블 ' + gn + ' 가이드입니다.\n';
             var mealW = EN ? ({ b: 'breakfast', l: 'lunch', d: 'dinner' })[mk] : ({ b: '아침', l: '점심', d: '저녁' })[mk];
             var pxL = EN ? 'Pax: ' + ((+px.total || 0) - tl - inf + tl + 1) + ' (' + ((+px.total || 0) - tl - inf) + ' guests' + (tl ? ' + ' + tl + ' tour leader' : '') + ' + 1 guide)' : '인원: 총 ' + ((+px.total || 0) - tl - inf + tl + 1) + '명 (손님 ' + ((+px.total || 0) - tl - inf) + '명' + (tl ? ' + 인솔자 ' + tl + '명' : '') + ' + 가이드 1명)';
             var body = x.rest
               ? who + (EN ? 'Please cancel our booking for ' + fmtD(od) + ' ' + mealW + '. (schedule change)\nSorry for the trouble, thank you!' : fmtD(od) + ' ' + mealW + ' 예약을 취소 부탁드립니다. (일정 변경)\n죄송합니다. 감사합니다!')
-              : who + (EN ? 'Please change our booking.\n\nFrom: ' + fmtD(od) + ' ' + mealW + (o.tm ? ' ' + o.tm : '') + '\nTo: ' + fmtD(dd) + ' ' + mealW + (x.tm || it.tm ? ' ' + (x.tm || it.tm) : '') + '\n' + pxL + '\n\nPlease confirm. Thank you!'
-                : '예약 변경 부탁드립니다.\n\n기존: ' + fmtD(od) + ' ' + mealW + (o.tm ? ' ' + o.tm : '') + '\n변경: ' + fmtD(dd) + ' ' + mealW + (x.tm || it.tm ? ' ' + (x.tm || it.tm) : '') + '\n' + pxL + '\n\n확인 부탁드립니다. 감사합니다!');
+              : who + (EN ? 'Please change our booking.\n\nFrom: ' + fmtD(od) + ' ' + mealW + (prevTm ? ' ' + prevTm : '') + '\nTo: ' + fmtD(dd) + ' ' + mealW + (x.tm || it.tm ? ' ' + (x.tm || it.tm) : '') + '\n' + pxL + '\n\nPlease confirm. Thank you!'
+                : '예약 변경 부탁드립니다.\n\n기존: ' + fmtD(od) + ' ' + mealW + (prevTm ? ' ' + prevTm : '') + '\n변경: ' + fmtD(dd) + ' ' + mealW + (x.tm || it.tm ? ' ' + (x.tm || it.tm) : '') + '\n' + pxL + '\n\n확인 부탁드립니다. 감사합니다!');
             acts.push({ k: 'r:' + x.r, t: (x.rest ? (EN ? 'Cancel: ' : '예약 취소: ') : (EN ? 'Change booking: ' : '예약 변경: ')) + mealName(o.text), sub: (o.contact || '') + ' ' + (o.phone || ''), phone: o.phone, body: body });
           }
           if (x.rest && x.rest.phone) acts.push({ k: 'n:' + x.r, t: (EN ? 'New booking: ' : '새 식당 예약: ') + mealName(x.rest.text), sub: (x.rest.contact || '') + ' ' + x.rest.phone, phone: x.rest.phone, body: window.ATK_SMS({ en: EN, name: gn, date: new Date(dd + 'T00:00:00'), meal: mk.toUpperCase(), guests: (+px.total || 0) - tl - inf, tl: tl, inf: inf, time: x.tm || it.tm || '' }) });
@@ -521,6 +537,8 @@
       }).catch(function () { msg.textContent = T.fail; });
     }
   }
+  // 📅 일정 변경하기 기본 켜짐: 11/13 이후 입국 팀(A안 지침서) + 투어 안 끝남. edit:false 로 끄기, edit:true 로 강제 (대표 11/9 22:35)
+  function editOn(D) { if (D.edit === false) return false; if (D.edit === true) return true; var ds = D.days || []; if (!ds.length) return false; var tdy = new Date(); var today = tdy.getFullYear() + '-' + ('0' + (tdy.getMonth() + 1)).slice(-2) + '-' + ('0' + tdy.getDate()).slice(-2); return ds[0].d >= '2026-11-13' && ds[ds.length - 1].d >= today && !D.draft; }
   // 뒤로가기 = 화면 닫기 (지침서 밖으로 나가지 않게, 대표 11/9 22:18)
   var OVS = [];
   function pushOv(ov) { OVS.push(ov); try { history.pushState({ atkov: OVS.length }, ''); } catch (e) { } }
