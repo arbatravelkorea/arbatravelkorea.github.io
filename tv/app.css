@@ -123,3 +123,11 @@ ul.memo li::marker{color:var(--red)}
 .edit .lkr{font-size:12px;margin-top:4px}
 .edit .ef{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}.edit #epin{width:150px;font:inherit;border:1px solid var(--line);border-radius:8px;padding:8px}.edit .apply{background:var(--red);color:#fff;border:0;font-weight:800;padding:9px 18px;border-radius:10px}.edit .lnk{border:0;background:none;color:var(--mut);text-decoration:underline;font-size:13px}#emsg{flex-basis:100%;color:var(--red);font-size:13px;font-weight:700}
 .edit .ew{background:#FDECEC;color:var(--red);border-radius:10px;padding:10px 12px;margin:12px 0;font-weight:700;line-height:1.6}.edit .btn.wide{display:block;margin:8px 0;text-align:center}
+.edit .eg{margin-top:8px}.edit .erow{display:flex;gap:8px;align-items:stretch;border-bottom:1px dashed var(--line);padding:8px 0}.edit .erow.oth{opacity:.55}
+.edit .edl{flex:none;width:46px;font-weight:800;color:var(--red);font-size:13px;line-height:1.3;padding-top:6px}
+.edit .eli{flex:1;display:flex;flex-wrap:wrap;gap:6px;min-height:36px;align-content:flex-start}
+.edit .ec2{border:1px solid var(--line);background:#fff;border-radius:18px;padding:6px 10px;font-size:13px;line-height:1.2;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.edit .ec2 small{display:block;font-size:10.5px;color:var(--red);font-weight:800}
+.edit .ec2.ml{background:#EEF7F1;border-color:#BFE3CC}.edit .ec2.ch{border:2px solid var(--amber);background:#FFF6DC}.edit .ec2.lk{background:#F1F1F1;color:var(--mut);cursor:default}.edit .ec2.sel{outline:3px solid var(--blue)}.edit .ec2.ghost{opacity:.35}
+.edit .eoth{font-size:12px;color:var(--mut);margin:-4px 0 4px 54px}
+.edit .edt{margin:12px 0 90px;padding:12px;border:1px solid var(--blue);border-radius:12px;background:#F4F8FF;display:grid;gap:8px}.edit .edt label{font-size:13px}.edit .edt select{font:inherit;font-size:13px;padding:5px;border:1px solid var(--line);border-radius:8px}.edit .btn.ok{justify-self:start;padding:6px 16px}

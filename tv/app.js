@@ -331,44 +331,66 @@
     var O = ORIG, st = {}; // st[day] = [{r, tm, note, rest}]
     var M = {}; O.days.forEach(function (d) { d.items.forEach(function (it, i) { M[d.d + ':' + i] = it; }); });
     O.days.forEach(function (d) { st[d.d] = (CHG && CHG.days && CHG.days[d.d]) ? JSON.parse(JSON.stringify(CHG.days[d.d])) : d.items.map(function (it, i) { return { r: d.d + ':' + i }; }); });
-    var T = EN ? { t: '📅 Change schedule', hint: 'Reorder with ▲▼, move to another day with the date menu, change restaurants with "Restaurant". 🔒 items (joint tickets/orders, flights, hotel, vehicles) cannot be changed here — call the office.', pin: 'Last 4 digits of your phone', apply: 'Apply', reset: 'Back to the original schedule', close: 'Close', rest: '🍽 Restaurant', memo: 'Note (e.g. Tom yum set 7+1)', own: 'Type a name…', done: 'Applied — the office has been notified', send: 'Please send these messages', bad: 'Wrong PIN', fail: 'Could not save. Please try again or call the office.', locked: '🔒 ', call: '📞 Office' }
-      : { t: '📅 일정 변경', hint: '순서는 ▲▼, 다른 날로는 날짜 선택, 식당은 "식당 바꾸기". 🔒 항목(합동 발권·주문, 항공, 호텔, 차량)은 여기서 바꿀 수 없어요 — 회사에 전화해주세요.', pin: '전화번호 뒤 4자리', apply: '적용하기', reset: '원래 일정으로 되돌리기', close: '닫기', rest: '🍽 식당 바꾸기', memo: '메모 (예: 똠얌 세트 7+1)', own: '직접 입력…', done: '적용 완료 — 회사에 보고되었습니다', send: '아래 연락을 꼭 해주세요', bad: '전화번호 뒤 4자리가 맞지 않습니다', fail: '저장하지 못했습니다. 다시 시도하거나 회사로 전화해주세요.', locked: '🔒 ', call: '📞 회사' };
+    var T = EN ? { t: '📅 Change schedule', hint: 'Drag items to reorder or move to another day. Tap an item to change time, restaurant or add a note. 🔒 = cannot change (joint tickets/orders, flights, hotel, vehicles, another guide\'s day) — call the office.', pin: 'Last 4 digits of your phone', apply: 'Apply', reset: 'Back to the original schedule', close: 'Close', rest: '🍽 Change restaurant', memo: 'Note (e.g. Tom yum set 7+1)', own: 'Type a name…', done: 'Applied — the office has been notified', send: 'Please send these messages', bad: 'Wrong PIN', fail: 'Could not save. Please try again or call the office.', tm: 'Time', other: ' — guide ', otherE: '\'s day (cannot change)', ok: 'OK' }
+      : { t: '📅 일정 변경', hint: '항목을 끌어서 순서·날짜를 옮기세요. 항목을 누르면 시간·식당·메모를 바꿀 수 있어요. 🔒 = 변경 불가 (합동 발권·주문, 항공, 호텔, 차량, 다른 가이드 담당일) — 회사에 전화해주세요.', pin: '전화번호 뒤 4자리', apply: '적용하기', reset: '원래 일정으로 되돌리기', close: '닫기', rest: '🍽 식당 바꾸기', memo: '메모 (예: 똠얌 세트 7+1)', own: '직접 입력…', done: '적용 완료 — 회사에 보고되었습니다', send: '아래 연락을 꼭 해주세요', bad: '전화번호 뒤 4자리가 맞지 않습니다', fail: '저장하지 못했습니다. 다시 시도하거나 회사로 전화해주세요.', tm: '시간', other: ' · ', otherE: ' 가이드님 담당 (변경 불가)', ok: '확인' };
     var ov = document.createElement('div'); ov.className = 'edit'; document.body.appendChild(ov); document.body.style.overflow = 'hidden';
     var days = O.days.map(function (d) { return d.d; });
+    // 다른 가이드 담당일 (day.other 또는 첫 항목 "○○ 가이드님 진행")
+    var OTH = {}; O.days.forEach(function (d) { var o = d.other; if (!o) { var m = String(((d.items || [])[0] || {}).text || '').match(/^(\S+?)(\(.*?\))?\s*가이드님 진행|^Guide (.+?) runs this day/); if (m) o = m[1] || m[3]; } if (o) OTH[d.d] = o; });
     function item(x) { var o = M[x.r] || {}, it = JSON.parse(JSON.stringify(o)); if (x.tm !== undefined) it.tm = x.tm; if (x.rest) { it.text = x.rest.text; it.phone = x.rest.phone; } return it; }
+    function short(t) { var s = mealName(t) || String(t || ''); s = s.replace(/\s*[—–(].*$/, '').trim() || s; return s.length > 14 ? s.slice(0, 13) + '…' : s; }
+    var SEL = null; // {d, i}
     function draw2() {
-      var h = '<div class="eh"><b>' + T.t + '</b><button type="button" class="x2" data-a="close">✕</button></div><p class="hint">' + esc(T.hint) + '</p>';
+      var h = '<div class="eh"><b>' + T.t + '</b><button type="button" class="x2" data-a="close">✕</button></div><p class="hint">' + esc(T.hint) + '</p><div class="eg">';
       days.forEach(function (dd) {
-        h += '<div class="ed"><div class="edd">' + esc(dlabel(dd)) + '</div>';
+        var oth = OTH[dd];
+        h += '<div class="erow' + (oth ? ' oth' : '') + '"><div class="edl">' + esc(dlabel(dd)).replace(' ', '<br>') + '</div><div class="eli" data-d="' + dd + '">';
         st[dd].forEach(function (x, i) {
-          var it = item(x), lk = lockOf(M[x.r] || {}), moved = x.r.split(':')[0] !== dd, mk = mealKey(it.text);
-          h += '<div class="er' + (lk ? ' lk' : '') + (moved || x.tm !== undefined || x.rest || x.note ? ' ch' : '') + '"><div class="et">' + (lk ? '' : '<input class="tmi" data-a="tm" data-d="' + dd + '" data-i="' + i + '" value="' + esc(it.tm || '') + '" placeholder="--:--">') + '<span>' + (lk ? T.locked : '') + esc(it.text) + (moved ? ' <small>(' + esc(dlabel(x.r.split(':')[0])) + ' →)</small>' : '') + '</span></div>';
-          if (lk) h += '<div class="lkr">' + esc(lk) + '</div>';
-          else h += '<div class="ec"><button type="button" data-a="up" data-d="' + dd + '" data-i="' + i + '">▲</button><button type="button" data-a="dn" data-d="' + dd + '" data-i="' + i + '">▼</button><select data-a="mv" data-d="' + dd + '" data-i="' + i + '">' + days.map(function (o) { return '<option value="' + o + '"' + (o === dd ? ' selected' : '') + '>' + esc(dlabel(o)) + '</option>'; }).join('') + '</select>' +
-            (mk ? '<select data-a="rest" data-d="' + dd + '" data-i="' + i + '"><option value="">' + T.rest + '</option>' + (window.HALAL_CONTACTS || []).map(function (r, ri) { return '<option value="' + ri + '">' + esc(r.n) + '</option>'; }).join('') + '<option value="own">' + T.own + '</option></select>' : '') +
-            '<input class="memo" data-a="note" data-d="' + dd + '" data-i="' + i + '" value="' + esc(x.note || '') + '" placeholder="' + esc(T.memo) + '"></div>';
-          h += '</div>';
+          var it = item(x), lk = oth ? 'oth' : lockOf(M[x.r] || {}), moved = x.r.split(':')[0] !== dd, mk = mealKey(it.text), ch = moved || x.tm !== undefined || x.rest || x.note;
+          h += '<div class="ec2' + (lk ? ' lk' : '') + (mk ? ' ml' : '') + (ch ? ' ch' : '') + (SEL && SEL.d === dd && SEL.i === i ? ' sel' : '') + '" data-r="' + esc(x.r) + '" data-d="' + dd + '" data-i="' + i + '">' + (it.tm ? '<small>' + esc(it.tm) + '</small>' : '') + (lk && !oth ? '🔒' : '') + esc(short(it.text)) + (x.note ? ' 📝' : '') + '</div>';
         });
-        h += '</div>';
+        h += '</div></div>';
+        if (oth) h += '<div class="eoth">' + esc(dlabel(dd)) + T.other + esc(oth) + T.otherE + '</div>';
       });
+      h += '</div><div id="edet"></div>';
       h += '<div class="ef"><input id="epin" inputmode="numeric" maxlength="4" placeholder="' + esc(T.pin) + '"><button type="button" class="btn apply" data-a="apply">' + T.apply + '</button><button type="button" class="lnk" data-a="reset">' + T.reset + '</button><div id="emsg"></div></div>';
-      ov.innerHTML = h;
+      var pin = (document.getElementById('epin') || {}).value || '';
+      ov.innerHTML = h; document.getElementById('epin').value = pin;
+      if (window.Sortable) [].slice.call(ov.querySelectorAll('.eli')).forEach(function (el) {
+        var oth = !!OTH[el.dataset.d];
+        Sortable.create(el, { group: { name: 'days', pull: !oth, put: !oth }, disabled: oth, animation: 150, delay: 120, delayOnTouchOnly: true, filter: '.lk', preventOnFilter: false, ghostClass: 'ghost', onMove: function (ev) { return !ev.related.classList.contains('lk'); },
+          onEnd: function () { var old = {}; days.forEach(function (d) { st[d].forEach(function (x) { old[x.r] = x; }); }); days.forEach(function (d) { var e = ov.querySelector('.eli[data-d="' + d + '"]'); st[d] = [].slice.call(e.children).map(function (c) { return old[c.dataset.r]; }); }); SEL = null; draw2(); } });
+      });
+      if (SEL) det();
     }
-    draw2();
+    function det() {
+      var x = st[SEL.d][SEL.i], it = item(x), o = M[x.r] || {}, lk = OTH[SEL.d] ? T.other + OTH[SEL.d] + T.otherE : lockOf(o), mk = mealKey(it.text), box = document.getElementById('edet');
+      var h = '<div class="edt"><b>' + esc(dlabel(SEL.d)) + ' · ' + esc(it.text) + '</b>';
+      if (lk) h += '<div class="lkr">🔒 ' + esc(lk) + '</div>';
+      else {
+        h += '<label>' + T.tm + ' <input class="tmi" data-a="tm" value="' + esc(it.tm || '') + '" placeholder="--:--"></label>';
+        if (mk) h += '<select data-a="rest"><option value="">' + T.rest + '</option>' + (window.HALAL_CONTACTS || []).map(function (r, ri) { return '<option value="' + ri + '">' + esc(r.n) + '</option>'; }).join('') + '<option value="own">' + T.own + '</option></select>';
+        h += '<input class="memo" data-a="note" value="' + esc(x.note || '') + '" placeholder="' + esc(T.memo) + '">';
+      }
+      h += '<button type="button" class="btn ok" data-a="desel">' + T.ok + '</button></div>';
+      box.innerHTML = h; box.scrollIntoView({ block: 'nearest' });
+    }
+    function loadSortable(cb) { if (window.Sortable) return cb(); var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js'; s.onload = cb; s.onerror = cb; document.head.appendChild(s); }
+    loadSortable(draw2); draw2();
     ov.addEventListener('change', function (ev) {
-      var e = ev.target, a = e.dataset.a, dd = e.dataset.d, i = +e.dataset.i; if (!a) return;
-      if (a === 'tm') st[dd][i].tm = e.value.trim();
-      if (a === 'note') { st[dd][i].note = e.value.trim(); if (!st[dd][i].note) delete st[dd][i].note; }
-      if (a === 'mv' && e.value !== dd) { var x = st[dd].splice(i, 1)[0]; st[e.value].push(x); draw2(); }
-      if (a === 'rest') { var x2 = st[dd][i], o = M[x2.r], pre = (String(o.text).match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]\s*/) || [''])[0], r;
+      var e = ev.target, a = e.dataset.a; if (!a || !SEL) return; var x = st[SEL.d][SEL.i];
+      if (a === 'tm') { x.tm = e.value.trim(); draw2(); }
+      if (a === 'note') { x.note = e.value.trim(); if (!x.note) delete x.note; draw2(); }
+      if (a === 'rest') { var o = M[x.r], pre = (String(o.text).match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]\s*/) || [''])[0], r;
         if (e.value === 'own') { var nm = prompt(EN ? 'Restaurant name' : '식당 이름'); if (!nm) { draw2(); return; } var ph = prompt(EN ? 'Phone (optional)' : '전화번호 (없으면 비워두기)') || ''; r = { n: nm, p: ph, s: /^01/.test(ph.replace(/\D/g, '')) }; }
         else if (e.value !== '') r = window.HALAL_CONTACTS[+e.value];
-        if (r) x2.rest = { text: pre + r.n, contact: r.c || '', phone: r.p || '', sms: !!r.s, place: r.n }; draw2(); }
+        if (r) x.rest = { text: pre + r.n, contact: r.c || '', phone: r.p || '', sms: !!r.s, place: r.n }; draw2(); }
     });
     ov.addEventListener('click', function (ev) {
-      var b = ev.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT' || b.tagName === 'INPUT') return; var a = b.dataset.a, dd = b.dataset.d, i = +b.dataset.i;
+      var c = ev.target.closest('.ec2'); if (c) { SEL = { d: c.dataset.d, i: +c.dataset.i }; draw2(); return; }
+      var b = ev.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT' || b.tagName === 'INPUT') return; var a = b.dataset.a;
+      if (a === 'desel') { SEL = null; draw2(); return; }
       if (a === 'close') { ov.remove(); document.body.style.overflow = ''; return; }
-      if (a === 'up' || a === 'dn') { var L2 = st[dd], j = a === 'up' ? i - 1 : i + 1; if (j < 0 || j >= L2.length) return; var t = L2[i]; L2[i] = L2[j]; L2[j] = t; draw2(); return; }
       if (a === 'apply' || a === 'reset') send(a === 'reset');
     });
     function diffWarn() {
