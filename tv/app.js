@@ -318,7 +318,12 @@
       }
     });
   }
-  function lockOf(it) {
+  // ☔ 비 예보면 합동 야외 일정(에버랜드·비발디)과 그날 합동 배달(신촌버거) 잠금 해제 (대표 11/9 21:38)
+  var RAINY = {};
+  function rainy(w) { if (!w) return false; var c = +w.c; return (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95 || w.mm >= 5 || w.pp >= 70; }
+  function rainOpen(it, dd) { return !!(dd && RAINY[dd] && it.jt && /에버랜드|everland|비발디|vivaldi|스키|ski|신촌버거|sinchon burger/i.test(String(it.text || ''))); }
+  function lockOf(it, dd) {
+    if (rainOpen(it, dd)) return '';
     var t = String(it.text || '');
     if (it.lock) return EN ? 'Fixed by the office' : '회사 고정 일정';
     if (it.jt && !/^(점심|저녁|Lunch|Dinner)/.test(t)) return EN ? 'Joint with another team (tickets/order)' : '다른 팀과 합동 (발권·주문)';
@@ -331,8 +336,8 @@
     var O = ORIG, st = {}; // st[day] = [{r, tm, note, rest}]
     var M = {}; O.days.forEach(function (d) { d.items.forEach(function (it, i) { M[d.d + ':' + i] = it; }); });
     O.days.forEach(function (d) { st[d.d] = (CHG && CHG.days && CHG.days[d.d]) ? JSON.parse(JSON.stringify(CHG.days[d.d])) : d.items.map(function (it, i) { return { r: d.d + ':' + i }; }); });
-    var T = EN ? { t: '📅 Change schedule', hint: 'Drag items to reorder or move to another day. Tap an item to change time, restaurant or add a note. 🔒 = cannot change (joint tickets/orders, flights, hotel, vehicles, another guide\'s day) — call the office.', pin: 'Last 4 digits of your phone', apply: 'Apply', reset: 'Back to the original schedule', close: 'Close', rest: '🍽 Change restaurant', memo: 'Note (e.g. Tom yum set 7+1)', own: 'Type a name…', done: 'Applied — the office has been notified', send: 'Please send these messages', bad: 'Wrong PIN', fail: 'Could not save. Please try again or call the office.', tm: 'Time', other: ' — guide ', otherE: '\'s day (cannot change)', ok: 'OK' }
-      : { t: '📅 일정 변경', hint: '항목을 끌어서 순서·날짜를 옮기세요. 항목을 누르면 시간·식당·메모를 바꿀 수 있어요. 🔒 = 변경 불가 (합동 발권·주문, 항공, 호텔, 차량, 다른 가이드 담당일) — 회사에 전화해주세요.', pin: '전화번호 뒤 4자리', apply: '적용하기', reset: '원래 일정으로 되돌리기', close: '닫기', rest: '🍽 식당 바꾸기', memo: '메모 (예: 똠얌 세트 7+1)', own: '직접 입력…', done: '적용 완료 — 회사에 보고되었습니다', send: '아래 연락을 꼭 해주세요', bad: '전화번호 뒤 4자리가 맞지 않습니다', fail: '저장하지 못했습니다. 다시 시도하거나 회사로 전화해주세요.', tm: '시간', other: ' · ', otherE: ' 가이드님 담당 (변경 불가)', ok: '확인' };
+    var T = EN ? { t: '📅 Change schedule', hint: 'Drag items to reorder or move to another day. Tap an item to change time, restaurant or add a note. 🔒 = cannot change (joint tickets/orders, flights, hotel, vehicles, another guide\'s day) — call the office. ☔ = joint item unlocked by rain forecast.', pin: 'Last 4 digits of your phone', apply: 'Apply', reset: 'Back to the original schedule', close: 'Close', rest: '🍽 Change restaurant', memo: 'Note (e.g. Tom yum set 7+1)', own: 'Type a name…', done: 'Applied — the office has been notified', send: 'Please send these messages', bad: 'Wrong PIN', fail: 'Could not save. Please try again or call the office.', tm: 'Time', other: ' — guide ', otherE: '\'s day (cannot change)', ok: 'OK' }
+      : { t: '📅 일정 변경', hint: '항목을 끌어서 순서·날짜를 옮기세요. 항목을 누르면 시간·식당·메모를 바꿀 수 있어요. 🔒 = 변경 불가 (합동 발권·주문, 항공, 호텔, 차량, 다른 가이드 담당일) — 회사에 전화해주세요. ☔ = 비 예보로 잠금 해제된 합동 일정.', pin: '전화번호 뒤 4자리', apply: '적용하기', reset: '원래 일정으로 되돌리기', close: '닫기', rest: '🍽 식당 바꾸기', memo: '메모 (예: 똠얌 세트 7+1)', own: '직접 입력…', done: '적용 완료 — 회사에 보고되었습니다', send: '아래 연락을 꼭 해주세요', bad: '전화번호 뒤 4자리가 맞지 않습니다', fail: '저장하지 못했습니다. 다시 시도하거나 회사로 전화해주세요.', tm: '시간', other: ' · ', otherE: ' 가이드님 담당 (변경 불가)', ok: '확인' };
     var ov = document.createElement('div'); ov.className = 'edit'; document.body.appendChild(ov); document.body.style.overflow = 'hidden';
     var days = O.days.map(function (d) { return d.d; });
     // 다른 가이드 담당일 (day.other 또는 첫 항목 "○○ 가이드님 진행")
@@ -344,16 +349,17 @@
       var h = '<div class="eh"><b>' + T.t + '</b><button type="button" class="x2" data-a="close">✕</button></div><p class="hint">' + esc(T.hint) + '</p><div class="eg">';
       days.forEach(function (dd) {
         var oth = OTH[dd];
-        h += '<div class="erow' + (oth ? ' oth' : '') + '"><div class="edl">' + esc(dlabel(dd)).replace(' ', '<br>') + '</div><div class="eli" data-d="' + dd + '">';
+        h += '<div class="erow' + (oth ? ' oth' : '') + '"><div class="edl">' + esc(dlabel(dd)).replace(' ', '<br>') + (WX[dd] ? '<span class="ewx">' + wxIcon(WX[dd].c) + '</span>' : '') + '</div><div class="eli" data-d="' + dd + '">';
         st[dd].forEach(function (x, i) {
-          var it = item(x), lk = oth ? 'oth' : lockOf(M[x.r] || {}), moved = x.r.split(':')[0] !== dd, mk = mealKey(it.text), ch = moved || x.tm !== undefined || x.rest || x.note;
-          h += '<div class="ec2' + (lk ? ' lk' : '') + (mk ? ' ml' : '') + (it.pick ? ' pk' : '') + (ch ? ' ch' : '') + (SEL && SEL.d === dd && SEL.i === i ? ' sel' : '') + '" data-r="' + esc(x.r) + '" data-d="' + dd + '" data-i="' + i + '">' + (it.tm ? '<small>' + esc(it.tm) + '</small>' : '') + (lk && !oth ? '🔒' : '') + esc(short(it.text)) + (x.note ? ' 📝' : '') + '</div>';
+          var it = item(x), lk = oth ? 'oth' : lockOf(M[x.r] || {}, x.r.split(':')[0]), rn = !lk && rainOpen(M[x.r] || {}, x.r.split(':')[0]), moved = x.r.split(':')[0] !== dd, mk = mealKey(it.text), ch = moved || x.tm !== undefined || x.rest || x.note;
+          h += '<div class="ec2' + (lk ? ' lk' : '') + (mk ? ' ml' : '') + (it.pick ? ' pk' : '') + (ch ? ' ch' : '') + (SEL && SEL.d === dd && SEL.i === i ? ' sel' : '') + '" data-r="' + esc(x.r) + '" data-d="' + dd + '" data-i="' + i + '">' + (it.tm ? '<small>' + esc(it.tm) + '</small>' : '') + (lk && !oth ? '🔒' : rn ? '☔' : '') + esc(short(it.text)) + (x.note ? ' 📝' : '') + '</div>';
         });
         h += '</div></div>';
         if (oth) h += '<div class="eoth">' + esc(dlabel(dd)) + T.other + esc(oth) + T.otherE + '</div>';
       });
       h += '</div><div id="edet"></div>';
-      h += '<div class="ef"><input id="epin" inputmode="numeric" maxlength="4" placeholder="' + esc(T.pin) + '"><button type="button" class="btn apply" data-a="apply">' + T.apply + '</button><button type="button" class="lnk" data-a="reset">' + T.reset + '</button><div id="emsg"></div></div>';
+      h += '<div class="ef"><input id="epin" inputmode="numeric" maxlength="4" placeholder="' + esc(T.pin) + '"><div id="emsg"></div><button type="button" class="btn apply" data-a="apply">' + T.apply + '</button>' +
+        '<div class="erst"><button type="button" class="lnk" data-a="undo">' + (EN ? '↩ Undo changes on this screen' : '↩ 이 화면에서 바꾼 것 되돌리기') + '</button>' + (CHG ? '<button type="button" class="lnk" data-a="reset">' + (EN ? '🏢 Back to the office schedule (cancel saved changes)' : '🏢 회사 원래 일정으로 (저장된 변경 모두 취소)') + '</button>' : '') + '</div></div>';
       var pin = (document.getElementById('epin') || {}).value || '';
       ov.innerHTML = h; document.getElementById('epin').value = pin;
       if (window.Sortable) [].slice.call(ov.querySelectorAll('.eli')).forEach(function (el) {
@@ -364,9 +370,10 @@
       if (SEL) det();
     }
     function det() {
-      var x = st[SEL.d][SEL.i], it = item(x), o = M[x.r] || {}, lk = OTH[SEL.d] ? T.other + OTH[SEL.d] + T.otherE : lockOf(o), mk = mealKey(it.text), box = document.getElementById('edet');
+      var x = st[SEL.d][SEL.i], it = item(x), o = M[x.r] || {}, lk = OTH[SEL.d] ? T.other + OTH[SEL.d] + T.otherE : lockOf(o, x.r.split(':')[0]), mk = mealKey(it.text), box = document.getElementById('edet');
       var h = '<div class="edt"><b>' + esc(dlabel(SEL.d)) + ' · ' + esc(it.text) + '</b>';
       if (lk) h += '<div class="lkr">🔒 ' + esc(lk) + '</div>';
+      else if (rainOpen(o, x.r.split(':')[0])) h += '<div class="pkh">☔ ' + (EN ? 'Rain forecast — unlocked. If you move it, you must tell the joint guide (button after applying).' : '비 예보로 잠금 해제 — 옮기면 합동 가이드님께 꼭 알려 일정을 같이 조율해주세요 (적용 후 문자 버튼).') + '</div>';
       else {
         h += '<label>' + T.tm + ' <input class="tmi" data-a="tm" value="' + esc(it.tm || '') + '" placeholder="--:--"></label>';
         if (mk) { var dl0 = (O.days.filter(function (d) { return d.d === SEL.d; })[0] || {}).loc || O.loc || 'SEL', RG = { SEL: ['seoul', 'outer'], JJU: ['jeju'], BUS: ['busan'] }[dl0] || ['seoul', 'outer'];
@@ -377,6 +384,8 @@
       h += '<button type="button" class="btn ok" data-a="desel">' + T.ok + '</button></div>';
       box.innerHTML = h; box.scrollIntoView({ block: 'nearest' });
     }
+    var SNAP = JSON.stringify(st), WX = {};
+    weather(O.loc || 'SEL').then(function (W) { days.forEach(function (dd) { if (W[dd]) { WX[dd] = W[dd]; if (rainy(W[dd])) RAINY[dd] = 1; } }); draw2(); });
     function loadSortable(cb) { if (window.Sortable) return cb(); var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js'; s.onload = cb; s.onerror = cb; document.head.appendChild(s); }
     loadSortable(draw2); draw2();
     ov.addEventListener('change', function (ev) {
@@ -393,6 +402,7 @@
       var c = ev.target.closest('.ec2'); if (c) { SEL = { d: c.dataset.d, i: +c.dataset.i }; draw2(); return; }
       var b = ev.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT' || b.tagName === 'INPUT') return; var a = b.dataset.a;
       if (a === 'desel') { SEL = null; draw2(); return; }
+      if (a === 'undo') { st = JSON.parse(SNAP); SEL = null; draw2(); var m0 = document.getElementById('emsg'); if (m0) m0.textContent = EN ? 'Restored to the schedule before this screen.' : '이 화면을 열기 전 일정으로 되돌렸습니다.'; return; }
       if (a === 'close') { ov.remove(); document.body.style.overflow = ''; return; }
       if (a === 'apply' || a === 'reset') send(a === 'reset');
     });
@@ -410,7 +420,7 @@
           diff.push(dlabel(od) + ' ' + o.text + ' — ' + ch.join(' · '));
           var J = (O.days.filter(function (d) { return d.d === od; })[0] || {}).joint;
           if (o.jt && J && J.phone) { warn.push((EN ? 'Joint item changed — tell ' : '합동 일정 변경 — ') + J.guide + (EN ? '' : ' 가이드님께도 알려주세요'));
-            acts.push({ t: (EN ? 'Tell ' : '') + J.guide + (EN ? '' : ' 가이드님께 알리기'), href: 'sms:' + num(J.phone) + '?&body=' + encodeURIComponent((EN ? '[Schedule change] ' : '[일정 변경] ') + (CUR.tripId || '') + '\n' + o.text + ' — ' + ch.join(' · ') + '\n' + (EN ? 'Our joint booking may need to change. Please check.' : '합동으로 정했던 예약이 바뀌어야 할 수 있어요. 확인 부탁드립니다.')) }); }
+            acts.push({ t: (EN ? 'Tell ' : '') + J.guide + (EN ? '' : ' 가이드님께 알리기'), href: 'sms:' + num(J.phone) + '?&body=' + encodeURIComponent((EN ? '[Schedule change] ' : '[일정 변경] ') + (CUR.tripId || '') + '\n' + (RAINY[od] ? (EN ? '☔ Rain forecast — ' : '☔ 비 예보로 ') : '') + o.text + ' — ' + ch.join(' · ') + '\n' + (EN ? 'Our joint booking (tickets / order) needs to move too. Shall we arrange it together?' : '합동으로 정했던 발권·주문도 같이 옮겨야 해요. 일정 함께 조율 부탁드립니다.')) }); }
           var mk = mealKey(o.text);
           if (mk && o.phone && (od !== dd || x.rest || (x.tm !== undefined && x.tm !== (o.tm || '')))) {
             acts.push({ t: (EN ? 'Tell the restaurant: ' : '식당에 변경 연락: ') + mealName(o.text), href: 'sms:' + num(o.phone) + '?&body=' + encodeURIComponent((EN ? 'Hello, this is ' : '안녕하세요\n아르바트래블 ') + ((CUR.guide || {}).name || '') + (EN ? ' from ARBA Travel.\nPlease change our booking: ' : ' 가이드입니다.\n예약 변경 부탁드립니다: ') + dlabel(od) + ' → ' + dlabel(dd) + (x.tm ? ' ' + x.tm : '') + (x.rest ? (EN ? ' (cancel — new restaurant)' : ' (취소 — 다른 식당으로 변경)') : '')) });
@@ -426,7 +436,8 @@
     }
     function send(reset) {
       var pin = (document.getElementById('epin').value || '').replace(/\D/g, ''), msg = document.getElementById('emsg');
-      if (pin.length !== 4) { msg.textContent = T.pin; return; }
+      if (pin.length !== 4) { msg.textContent = (EN ? '⬆ Enter the last 4 digits of your phone first' : '⬆ 먼저 전화번호 뒤 4자리를 넣어주세요'); var pe = document.getElementById('epin'); if (pe) pe.focus(); return; }
+      if (reset && !confirm(EN ? 'Cancel all saved changes and go back to the office schedule?' : '저장된 변경을 모두 취소하고 회사가 정한 원래 일정으로 되돌릴까요?')) return;
       if (!reset) { var bad = []; days.forEach(function (dd) { var c = {}; st[dd].forEach(function (x) { var k = mealKey(item(x).text); if (k) c[k] = (c[k] || 0) + 1; }); Object.keys(c).forEach(function (k) { if (c[k] > 1) bad.push(dlabel(dd) + ' ' + (EN ? { b: 'breakfast', l: 'lunch', d: 'dinner' }[k] : { b: '아침', l: '점심', d: '저녁' }[k]) + ' ' + c[k] + (EN ? '' : '곳')); }); });
         if (bad.length) { msg.textContent = (EN ? '❌ Only one restaurant per meal: ' : '❌ 한 끼에 식당은 한 곳만 — ') + bad.join(', ') + (EN ? '. Move one to another day.' : '. 하나를 다른 날로 옮겨주세요.'); return; } }
       var W = reset ? { diff: [], warn: [], acts: [] } : diffWarn();
