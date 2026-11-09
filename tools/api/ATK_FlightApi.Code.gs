@@ -16,8 +16,9 @@ function doGet(e) {
   var r;
   if (p.v) {
     var vj = voucherJson_(p.v, p.lang), key = PropertiesService.getScriptProperties().getProperty('CHGLOG_KEY'), staff = !!(key && p.st === key);
-    if (vj.ok && !staff && vExpired_(p.v, vj.data)) vj = { ok: false, error: 'expired' };
-    if (vj.ok) { vj.chg = chgGet_(p.v); vj.own = staff ? true : devCheck_(p.v, p.dv, vj.data); }
+    var sec = vj.ok && (vj.data.secure === true || p.v === 'demo-k7p2qx' || PropertiesService.getScriptProperties().getProperty('SECURE_ALL') === '1'); // 대표 확정 전엔 예시만 → 확정 후 속성 SECURE_ALL=1
+    if (sec && !staff && vExpired_(p.v, vj.data)) vj = { ok: false, error: 'expired' };
+    if (vj.ok) { vj.chg = chgGet_(p.v); vj.own = (staff || !sec) ? true : devCheck_(p.v, p.dv, vj.data); }
     return ContentService.createTextOutput(JSON.stringify(vj)).setMimeType(ContentService.MimeType.JSON);
   }
   if (p.chglog) return ContentService.createTextOutput(JSON.stringify(chgLog_(p.since, p.k))).setMimeType(ContentService.MimeType.JSON);
