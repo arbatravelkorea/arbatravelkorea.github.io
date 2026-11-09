@@ -105,6 +105,8 @@
   }
   var RT = {}; // 식당 예약 시간 (가이드가 문자 버튼 누를 때 입력, 이 휴대폰 저장)
   // 🔒 이름 워터마크: 본인 기기 0.8% (거의 안 보임) / 다른 기기 진하게 / 인쇄·PDF 진하게 (대표 11/9 23:08)
+  // 대표 확인 전: 예시 지침서(demo)와 secure:true 인 지침서만. 확정되면 기본 켜기로 바꿈
+  function SECURE(D) { return D.secure === true || SLUG === 'demo-k7p2qx'; }
   function watermark(D) {
     var g = D.guide || {}, nm = (g.ko || g.name || ''), ph = String(g.phone || '').replace(/\D/g, ''), sub = (D.tripId || '') + (ph ? ' · 010-****-' + ph.slice(-4) : '');
     function svg(a, big) { var w = big ? 280 : 260, h = big ? 190 : 170; return 'url("data:image/svg+xml;utf8,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='" + w + "' height='" + h + "'><g transform='rotate(-24 " + w / 2 + " " + h / 2 + ")' font-family='sans-serif' font-weight='800' fill='rgba(176,38,75," + a + ")'><text x='8' y='" + (h / 2 - 4) + "' font-size='" + (big ? 20 : 17) + "'>" + nm + " 가이드님 전용</text><text x='12' y='" + (h / 2 + 18) + "' font-size='11'>" + sub + "</text></g></svg>") + '")'; }
@@ -270,9 +272,9 @@
       (C.kakao ? '<a class="btn kakao" target="_blank" rel="noopener" href="' + esc(C.kakao) + '">' + KA_SVG + L.kakao + '</a>' : '') + '</div>';
     h += '<p class="foot">' + L.foot + (D.issued ? ' · ' + esc(D.issued) : '') + '</p>';
     var gw = (D.guide || {}), gnm = EN ? (gw.name || '') : (gw.ko || gw.name || '');
-    h += '<div class="secure">🔒 <b>' + (EN ? 'ARBA Travel Korea property — do not share or copy' : 'ARBA Travel Korea 자산 — 외부 공유·복제 금지') + '</b><br>' + (EN ? 'This tour voucher link was issued only to guide <b>' + esc(gnm) + '</b>. Opening it on another device is recorded. It contains guest information, restaurants and supplier contacts, so it must not be passed to anyone else or to another travel agency.' : '이 지침서는 <b>' + esc(gnm) + ' 가이드님</b>께만 발급된 링크입니다. 타인 열람시 열람 기록이 남으며 손님 정보·식당·거래처 연락처가 포함되어 있어 다른 사람이나 다른 여행사에 전달할 수 없습니다.') + '<br><span>© 2026 ARBA Travel Korea · ' + (EN ? 'Viewing closes 7 days after the tour ends.' : '투어 종료 7일 뒤 열람이 닫힙니다.') + '</span></div>';
+    if (SECURE(D)) h += '<div class="secure">🔒 <b>' + (EN ? 'ARBA Travel Korea property — do not share or copy' : 'ARBA Travel Korea 자산 — 외부 공유·복제 금지') + '</b><br>' + (EN ? 'This tour voucher link was issued only to guide <b>' + esc(gnm) + '</b>. Opening it on another device is recorded. It contains guest information, restaurants and supplier contacts, so it must not be passed to anyone else or to another travel agency.' : '이 지침서는 <b>' + esc(gnm) + ' 가이드님</b>께만 발급된 링크입니다. 타인 열람시 열람 기록이 남으며 손님 정보·식당·거래처 연락처가 포함되어 있어 다른 사람이나 다른 여행사에 전달할 수 없습니다.') + '<br><span>© 2026 ARBA Travel Korea · ' + (EN ? 'Viewing closes 7 days after the tour ends.' : '투어 종료 7일 뒤 열람이 닫힙니다.') + '</span></div>';
     document.getElementById('app').innerHTML = h;
-    watermark(D);
+    if (SECURE(D)) watermark(D);
     document.title = esc(D.tripId) + ' — ' + (EN ? 'Tour Voucher' : '투어지침서');
     afterDraw();
   }
