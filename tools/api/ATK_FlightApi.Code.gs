@@ -15,7 +15,7 @@ function doGet(e) {
   var p = (e && e.parameter) || {};
   var r;
   if (p.v) { var vj = voucherJson_(p.v, p.lang); if (vj.ok) vj.chg = chgGet_(p.v); return ContentService.createTextOutput(JSON.stringify(vj)).setMimeType(ContentService.MimeType.JSON); }
-  if (p.chglog) return ContentService.createTextOutput(JSON.stringify(chgLog_(p.since))).setMimeType(ContentService.MimeType.JSON);
+  if (p.chglog) return ContentService.createTextOutput(JSON.stringify(chgLog_(p.since, p.k))).setMimeType(ContentService.MimeType.JSON);
   if (p.dbg) return ContentService.createTextOutput(JSON.stringify(fsDbg_(p.dbg, p.q || 'KUL', p.dir))).setMimeType(ContentService.MimeType.JSON);
   try { r = p.flights ? { ok: true, list: flightStatusMany(p.flights) } : flightStatus(p.flight, p.date, p.dir, p.t); } catch (err) { r = { ok: false, error: String(err) }; }
   return ContentService.createTextOutput(JSON.stringify(r)).setMimeType(ContentService.MimeType.JSON);
@@ -164,11 +164,12 @@ function chgTg_(x) {
   var txt = '📅 지침서 일정 변경 ' + x.trip + ' — ' + x.by + ' (' + x.at + ')\n' + (x.reset ? '원래 일정으로 되돌림' : x.diff.join('\n')) + (x.warn.length ? '\n⚠️ ' + x.warn.join('\n⚠️ ') : '') + '\nhttps://arbatravelkorea.github.io/v/' + x.slug + '/';
   try { UrlFetchApp.fetch('https://api.telegram.org/bot' + tok + '/sendMessage', { method: 'post', payload: { chat_id: chat, text: txt.slice(0, 3900), disable_web_page_preview: 'true' }, muteHttpExceptions: true }); } catch (e) { }
 }
-/** 회사 계정(로그인)만: ?chglog=1&since=yyyy-MM-dd HH:mm */
-function chgLog_(since) {
-  var me = ''; try { me = Session.getActiveUser().getEmail(); } catch (e) { }
-  if (!/@arbatravel\.com$/.test(me)) return { ok: false, error: 'auth' };
+/** 회사만: ?chglog=1&k=<스크립트 속성 CHGLOG_KEY>&since=yyyy-MM-dd HH:mm  (키는 chgInitKey 한 번 실행으로 만듦) */
+function chgLog_(since, k) {
+  var key = PropertiesService.getScriptProperties().getProperty('CHGLOG_KEY');
+  if (!key || String(k || '') !== key) return { ok: false, error: 'auth' };
   var log = []; try { log = JSON.parse(PropertiesService.getScriptProperties().getProperty('chglog') || '[]'); } catch (x) { }
   if (since) log = log.filter(function (x) { return x.at > since; });
   return { ok: true, list: log };
 }
+function chgInitKey() { var P = PropertiesService.getScriptProperties(); if (!P.getProperty('CHGLOG_KEY')) P.setProperty('CHGLOG_KEY', Utilities.getUuid().replace(/-/g, '').slice(0, 16)); Logger.log('CHGLOG_KEY set'); }
