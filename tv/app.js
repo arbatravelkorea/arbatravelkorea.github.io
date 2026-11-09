@@ -116,7 +116,7 @@
       return out;
     }).catch(function () { return {}; });
   }
-  var L = L_KO, EN = false, SLUG = '', CUR = {};
+  var L = L_KO, EN = false, SLUG = '', CUR = {}, ORIG = null, CHG = null;
 
   function render(slug) {
     SLUG = slug;
@@ -125,7 +125,7 @@
     var app = document.getElementById('app'); app.innerHTML = '<p class="loading">' + (EN ? 'Loading…' : '지침서를 여는 중…') + '</p>';
     fetch(API + '?v=' + encodeURIComponent(slug) + (EN ? '&lang=en' : '')).then(function (r) { return r.json(); }).then(function (j) {
       if (!j.ok || !j.data) { app.innerHTML = '<p class="loading">' + (EN ? 'Voucher not found.' : '지침서를 찾을 수 없습니다. 회사로 연락해주세요.') + '</p>'; return; }
-      draw(j.data);
+      ORIG = JSON.parse(JSON.stringify(j.data)); CHG = j.chg || null; if (CHG) applyChg(j.data, CHG); draw(j.data);
     }).catch(function () { app.innerHTML = '<p class="loading">' + (EN ? 'Could not load. Please try again.' : '불러오지 못했습니다. 다시 열어주세요.') + '</p>'; });
   }
 
@@ -185,11 +185,12 @@
     }
     // 날짜 카드
     h += '<h2>' + L.days + '</h2>';
+    if (D.edit) h += '<div class="editbar">' + (CHG ? '<span class="chgnote">📅 ' + esc(CHG.at || '') + ' ' + esc(CHG.by || '') + (EN ? ' changed the schedule (reported to the office)' : ' 가이드님이 일정 변경 (회사 보고됨)') + '</span>' : '') + '<button type="button" class="btn editbtn" id="openEdit">📅 ' + (EN ? 'Change schedule' : '일정 변경하기') + '</button></div>';
     (D.days || []).forEach(function (d, di) {
       var meals = d.meals || {};
       function mealSpan(i, key) { var mm = meals[key]; if (!mm) return '<span class="no">' + L.meal[i] + '</span>'; if (mm.ok === false) return '<span class="no">' + L.meal[i] + (mm.txt ? ' — ' + esc(mm.txt) : ' — ' + L.free) + '</span>'; return '<span class="' + (mm.alt ? 'alt' : '') + '">' + L.meal[i] + (mm.txt ? ' ' + esc(mm.txt) : '') + '</span>'; }
       h += '<details class="day" data-d="' + esc(d.d) + '" data-loc="' + esc(d.loc || D.loc || 'SEL') + '"><summary><span class="d" data-today="' + L.today + '">' + esc(d.label) + '</span><span class="s">' + esc(d.summary) + '</span><span class="ar">▶</span></summary><div class="body">' +
-        '<ul class="tl" data-d="' + esc(d.d) + '">' + (d.items || []).map(function (it, ii) { return '<li data-i="' + ii + '"><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + who(it, d) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + (it.jt && d.joint ? jointHtml(d.joint, d, it.jt) : '') + '</span></li>'; }).join('') + '</ul>' +
+        '<ul class="tl" data-d="' + esc(d.d) + '">' + (d.items || []).map(function (it, ii) { return '<li data-i="' + ii + '"' + (it.chg ? ' class="chg"' : '') + '><span class="tm">' + esc(it.tm || '') + '</span><span>' + esc(it.text) + (it.chg ? ' <span class="chgb">' + (EN ? 'changed' : '변경됨') + '</span>' : '') + (it.cnote ? '<span class="x cnote">📝 ' + esc(it.cnote) + '</span>' : '') + who(it, d) + (it.x ? '<span class="x">' + nl(it.x).replace(/\*\*(.+?)\*\*/g, '<b class="imp">$1</b>') + '</span>' : '') + (it.jt && d.joint ? jointHtml(d.joint, d, it.jt) : '') + '</span></li>'; }).join('') + '</ul>' +
         (D.reorder ? '<div class="reo"><button type="button" class="rbtn" data-reo="' + esc(d.d) + '">✏️ ' + (EN ? 'Change order' : '순서 바꾸기') + '</button><span class="rst" data-rst="' + esc(d.d) + '"></span></div>' : '') +
         '<div class="row"><span class="i">🍽</span><div class="meal">' + mealSpan(0, 'b') + mealSpan(1, 'l') + mealSpan(2, 'd') + '</div></div>' +
         (d.move ? '<div class="row"><span class="i">🚐</span><div>' + esc(d.move) + who(d.moveWho, d) + (d.moveSub ? '<br><span class="x">' + esc(d.moveSub) + '</span>' : '') + '</div></div>' : '') +
@@ -290,5 +291,130 @@
     }
     go(); setInterval(go, 60000);
   }
+  /* ───────── 📅 일정 변경 (2026-11-09 대표 지시) ─────────
+     원본 JSON은 그대로, 변경분(ov)만 Apps Script 스크립트 속성에 저장 → 열 때 applyChg로 덮어씀.
+     ov = {days: {'2026-11-16': [{r:'2026-11-16:0', tm:'18:00', note:'…', rest:{text,contact,phone,sms,place}}, …]}} (r = 원래 날짜:순번) */
+  function mealKey(t) { var m = String(t || '').match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)/); return m ? ({ 점심: 'l', Lunch: 'l', 저녁: 'd', Dinner: 'd', 아침: 'b', Breakfast: 'b' })[m[1]] : ''; }
+  function mealName(t) { return String(t || '').replace(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]\s*/, '').replace(/\s*\(.*$/, '').trim(); }
+  function applyChg(D, ov) {
+    if (!ov || !ov.days) return;
+    var M = {}; (D.days || []).forEach(function (d) { (d.items || []).forEach(function (it, i) { M[d.d + ':' + i] = it; }); });
+    (D.days || []).forEach(function (d) {
+      var list = ov.days[d.d]; if (!list) return;
+      var before = (d.items || []).map(function (it) { return mealKey(it.text); }).join(','), items = [];
+      list.forEach(function (x, i) {
+        var o = M[x.r]; if (!o) return; var it = JSON.parse(JSON.stringify(o)), ch = false;
+        if (x.r.split(':')[0] !== d.d || +x.r.split(':')[1] !== i) ch = true;
+        if (x.tm !== undefined && x.tm !== (o.tm || '')) { it.tm = x.tm; ch = true; }
+        if (x.rest) { ['text', 'contact', 'phone', 'sms', 'place', 'map'].forEach(function (k) { if (x.rest[k] !== undefined) it[k] = x.rest[k]; else if (k !== 'text') delete it[k]; }); delete it.note; delete it.jt; ch = true; }
+        if (x.note) { it.cnote = x.note; ch = true; }
+        if (ch) it.chg = true; it._r = x.r; items.push(it);
+      });
+      d.items = items;
+      // 식사 칸: 그날 점심·저녁 항목에서 다시
+      if (items.map(function (it) { return mealKey(it.text); }).join(',') !== before || items.some(function (it) { return it.chg && mealKey(it.text); })) {
+        d.meals = d.meals || {};
+        ['l', 'd'].forEach(function (k) { var f = items.filter(function (it) { return mealKey(it.text) === k; })[0]; if (f) d.meals[k] = { txt: mealName(f.text) }; else if (d.meals[k] && d.meals[k].ok !== false) d.meals[k] = { txt: EN ? 'see schedule' : '일정 확인', alt: true }; });
+      }
+    });
+  }
+  function lockOf(it) {
+    var t = String(it.text || '');
+    if (it.lock) return EN ? 'Fixed by the office' : '회사 고정 일정';
+    if (it.jt && !/^(점심|저녁|Lunch|Dinner)/.test(t)) return EN ? 'Joint with another team (tickets/order)' : '다른 팀과 합동 (발권·주문)';
+    if (it.jt && /배달|delivery|김밥|gimbap/i.test(t)) return EN ? 'Joint delivery with another team' : '다른 팀과 합동 배달';
+    if (/공항|airport|인천|incheon|T1 |T2 |미팅|meeting|체크인|check-in|체크아웃|check-out|콜밴|call-van|호텔 출발|hotel departure|OD\d|MH\d|AK\d|D7\d|TR\d|7C\d/i.test(t)) return EN ? 'Flight / hotel / vehicle' : '항공·호텔·차량 일정';
+    return '';
+  }
+  function dlabel(dd) { var d = (ORIG.days || []).filter(function (x) { return x.d === dd; })[0]; return d ? d.label : dd; }
+  function openEdit() {
+    var O = ORIG, st = {}; // st[day] = [{r, tm, note, rest}]
+    var M = {}; O.days.forEach(function (d) { d.items.forEach(function (it, i) { M[d.d + ':' + i] = it; }); });
+    O.days.forEach(function (d) { st[d.d] = (CHG && CHG.days && CHG.days[d.d]) ? JSON.parse(JSON.stringify(CHG.days[d.d])) : d.items.map(function (it, i) { return { r: d.d + ':' + i }; }); });
+    var T = EN ? { t: '📅 Change schedule', hint: 'Reorder with ▲▼, move to another day with the date menu, change restaurants with "Restaurant". 🔒 items (joint tickets/orders, flights, hotel, vehicles) cannot be changed here — call the office.', pin: 'Last 4 digits of your phone', apply: 'Apply', reset: 'Back to the original schedule', close: 'Close', rest: '🍽 Restaurant', memo: 'Note (e.g. Tom yum set 7+1)', own: 'Type a name…', done: 'Applied — the office has been notified', send: 'Please send these messages', bad: 'Wrong PIN', fail: 'Could not save. Please try again or call the office.', locked: '🔒 ', call: '📞 Office' }
+      : { t: '📅 일정 변경', hint: '순서는 ▲▼, 다른 날로는 날짜 선택, 식당은 "식당 바꾸기". 🔒 항목(합동 발권·주문, 항공, 호텔, 차량)은 여기서 바꿀 수 없어요 — 회사에 전화해주세요.', pin: '전화번호 뒤 4자리', apply: '적용하기', reset: '원래 일정으로 되돌리기', close: '닫기', rest: '🍽 식당 바꾸기', memo: '메모 (예: 똠얌 세트 7+1)', own: '직접 입력…', done: '적용 완료 — 회사에 보고되었습니다', send: '아래 연락을 꼭 해주세요', bad: '전화번호 뒤 4자리가 맞지 않습니다', fail: '저장하지 못했습니다. 다시 시도하거나 회사로 전화해주세요.', locked: '🔒 ', call: '📞 회사' };
+    var ov = document.createElement('div'); ov.className = 'edit'; document.body.appendChild(ov); document.body.style.overflow = 'hidden';
+    var days = O.days.map(function (d) { return d.d; });
+    function item(x) { var o = M[x.r] || {}, it = JSON.parse(JSON.stringify(o)); if (x.tm !== undefined) it.tm = x.tm; if (x.rest) { it.text = x.rest.text; it.phone = x.rest.phone; } return it; }
+    function draw2() {
+      var h = '<div class="eh"><b>' + T.t + '</b><button type="button" class="x2" data-a="close">✕</button></div><p class="hint">' + esc(T.hint) + '</p>';
+      days.forEach(function (dd) {
+        h += '<div class="ed"><div class="edd">' + esc(dlabel(dd)) + '</div>';
+        st[dd].forEach(function (x, i) {
+          var it = item(x), lk = lockOf(M[x.r] || {}), moved = x.r.split(':')[0] !== dd, mk = mealKey(it.text);
+          h += '<div class="er' + (lk ? ' lk' : '') + (moved || x.tm !== undefined || x.rest || x.note ? ' ch' : '') + '"><div class="et">' + (lk ? '' : '<input class="tmi" data-a="tm" data-d="' + dd + '" data-i="' + i + '" value="' + esc(it.tm || '') + '" placeholder="--:--">') + '<span>' + (lk ? T.locked : '') + esc(it.text) + (moved ? ' <small>(' + esc(dlabel(x.r.split(':')[0])) + ' →)</small>' : '') + '</span></div>';
+          if (lk) h += '<div class="lkr">' + esc(lk) + '</div>';
+          else h += '<div class="ec"><button type="button" data-a="up" data-d="' + dd + '" data-i="' + i + '">▲</button><button type="button" data-a="dn" data-d="' + dd + '" data-i="' + i + '">▼</button><select data-a="mv" data-d="' + dd + '" data-i="' + i + '">' + days.map(function (o) { return '<option value="' + o + '"' + (o === dd ? ' selected' : '') + '>' + esc(dlabel(o)) + '</option>'; }).join('') + '</select>' +
+            (mk ? '<select data-a="rest" data-d="' + dd + '" data-i="' + i + '"><option value="">' + T.rest + '</option>' + (window.HALAL_CONTACTS || []).map(function (r, ri) { return '<option value="' + ri + '">' + esc(r.n) + '</option>'; }).join('') + '<option value="own">' + T.own + '</option></select>' : '') +
+            '<input class="memo" data-a="note" data-d="' + dd + '" data-i="' + i + '" value="' + esc(x.note || '') + '" placeholder="' + esc(T.memo) + '"></div>';
+          h += '</div>';
+        });
+        h += '</div>';
+      });
+      h += '<div class="ef"><input id="epin" inputmode="numeric" maxlength="4" placeholder="' + esc(T.pin) + '"><button type="button" class="btn apply" data-a="apply">' + T.apply + '</button><button type="button" class="lnk" data-a="reset">' + T.reset + '</button><div id="emsg"></div></div>';
+      ov.innerHTML = h;
+    }
+    draw2();
+    ov.addEventListener('change', function (ev) {
+      var e = ev.target, a = e.dataset.a, dd = e.dataset.d, i = +e.dataset.i; if (!a) return;
+      if (a === 'tm') st[dd][i].tm = e.value.trim();
+      if (a === 'note') { st[dd][i].note = e.value.trim(); if (!st[dd][i].note) delete st[dd][i].note; }
+      if (a === 'mv' && e.value !== dd) { var x = st[dd].splice(i, 1)[0]; st[e.value].push(x); draw2(); }
+      if (a === 'rest') { var x2 = st[dd][i], o = M[x2.r], pre = (String(o.text).match(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]\s*/) || [''])[0], r;
+        if (e.value === 'own') { var nm = prompt(EN ? 'Restaurant name' : '식당 이름'); if (!nm) { draw2(); return; } var ph = prompt(EN ? 'Phone (optional)' : '전화번호 (없으면 비워두기)') || ''; r = { n: nm, p: ph, s: /^01/.test(ph.replace(/\D/g, '')) }; }
+        else if (e.value !== '') r = window.HALAL_CONTACTS[+e.value];
+        if (r) x2.rest = { text: pre + r.n, contact: r.c || '', phone: r.p || '', sms: !!r.s, place: r.n }; draw2(); }
+    });
+    ov.addEventListener('click', function (ev) {
+      var b = ev.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT' || b.tagName === 'INPUT') return; var a = b.dataset.a, dd = b.dataset.d, i = +b.dataset.i;
+      if (a === 'close') { ov.remove(); document.body.style.overflow = ''; return; }
+      if (a === 'up' || a === 'dn') { var L2 = st[dd], j = a === 'up' ? i - 1 : i + 1; if (j < 0 || j >= L2.length) return; var t = L2[i]; L2[i] = L2[j]; L2[j] = t; draw2(); return; }
+      if (a === 'apply' || a === 'reset') send(a === 'reset');
+    });
+    function diffWarn() {
+      var diff = [], warn = [], acts = [], px = mealPx(CUR), tl = +px.tl || 0, inf = +px.inf || 0;
+      days.forEach(function (dd) {
+        var origOrder = O.days.filter(function (d) { return d.d === dd; })[0].items.map(function (it, i) { return dd + ':' + i; }).join(','), now = st[dd].map(function (x) { return x.r; }).join(',');
+        st[dd].forEach(function (x) {
+          var o = M[x.r] || {}, od = x.r.split(':')[0], it = item(x), ch = [];
+          if (od !== dd) ch.push(dlabel(od) + ' → ' + dlabel(dd));
+          if (x.tm !== undefined && x.tm !== (o.tm || '')) ch.push((EN ? 'time ' : '시간 ') + (x.tm || '-'));
+          if (x.rest) ch.push(mealName(o.text) + ' → ' + mealName(x.rest.text));
+          if (x.note) ch.push((EN ? 'note: ' : '메모: ') + x.note);
+          if (!ch.length) return;
+          diff.push(dlabel(od) + ' ' + o.text + ' — ' + ch.join(' · '));
+          var J = (O.days.filter(function (d) { return d.d === od; })[0] || {}).joint;
+          if (o.jt && J && J.phone) { warn.push((EN ? 'Joint item changed — tell ' : '합동 일정 변경 — ') + J.guide + (EN ? '' : ' 가이드님께도 알려주세요'));
+            acts.push({ t: (EN ? 'Tell ' : '') + J.guide + (EN ? '' : ' 가이드님께 알리기'), href: 'sms:' + num(J.phone) + '?&body=' + encodeURIComponent((EN ? '[Schedule change] ' : '[일정 변경] ') + (CUR.tripId || '') + '\n' + o.text + ' — ' + ch.join(' · ') + '\n' + (EN ? 'Our joint booking may need to change. Please check.' : '합동으로 정했던 예약이 바뀌어야 할 수 있어요. 확인 부탁드립니다.')) }); }
+          var mk = mealKey(o.text);
+          if (mk && o.phone && (od !== dd || x.rest || (x.tm !== undefined && x.tm !== (o.tm || '')))) {
+            acts.push({ t: (EN ? 'Tell the restaurant: ' : '식당에 변경 연락: ') + mealName(o.text), href: 'sms:' + num(o.phone) + '?&body=' + encodeURIComponent((EN ? 'Hello, this is ' : '안녕하세요\n아르바트래블 ') + ((CUR.guide || {}).name || '') + (EN ? ' from ARBA Travel.\nPlease change our booking: ' : ' 가이드입니다.\n예약 변경 부탁드립니다: ') + dlabel(od) + ' → ' + dlabel(dd) + (x.tm ? ' ' + x.tm : '') + (x.rest ? (EN ? ' (cancel — new restaurant)' : ' (취소 — 다른 식당으로 변경)') : '')) });
+          }
+          if (x.rest && x.rest.phone) acts.push({ t: (EN ? 'Book: ' : '새 식당 예약: ') + mealName(x.rest.text), href: 'sms:' + num(x.rest.phone) + '?&body=' + encodeURIComponent(window.ATK_SMS({ en: EN, name: (CUR.guide || {}).name || '', date: new Date(dd + 'T00:00:00'), meal: mk.toUpperCase(), guests: (+px.total || 0) - tl - inf, tl: tl, inf: inf, time: x.tm || it.tm || '' })) });
+          if (/하루 전|1 day ahead|halal preparation/i.test((o.note || '') + (o.jt || '')) && (od !== dd || x.rest)) { var days2 = (new Date(dd + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5; if (days2 < 2) warn.push((EN ? 'Halal needs a booking 1 day ahead — ' : '할랄은 하루 전 예약 필수 — ') + mealName(o.text) + (EN ? ': too late?' : ': 시간이 부족할 수 있어요')); }
+        });
+        var cnt = {}; st[dd].forEach(function (x) { var k = mealKey(item(x).text); if (k === 'l' || k === 'd') cnt[k] = (cnt[k] || 0) + 1; });
+        Object.keys(cnt).forEach(function (k) { if (cnt[k] > 1) warn.push(dlabel(dd) + (EN ? (k === 'l' ? ' has 2 lunches' : ' has 2 dinners') + ' — check' : (k === 'l' ? ' 점심이 2곳' : ' 저녁이 2곳') + ' — 하나는 다른 날로 옮기거나 확인')); });
+        var movedIO = st[dd].some(function (x) { return x.r.split(':')[0] !== dd; }) || O.days.filter(function (d) { return d.d === dd; })[0].items.some(function (it, i) { return !st[dd].some(function (x) { return x.r === dd + ':' + i; }); });
+        if (origOrder !== now && !movedIO) diff.push(dlabel(dd) + (EN ? ' order: ' : ' 순서: ') + st[dd].map(function (x) { return mealName(item(x).text) || item(x).text; }).join(' → '));
+      });
+      return { diff: diff, warn: warn, acts: acts };
+    }
+    function send(reset) {
+      var pin = (document.getElementById('epin').value || '').replace(/\D/g, ''), msg = document.getElementById('emsg');
+      if (pin.length !== 4) { msg.textContent = T.pin; return; }
+      var W = reset ? { diff: [], warn: [], acts: [] } : diffWarn();
+      if (!reset && !W.diff.length) { ov.remove(); document.body.style.overflow = ''; return; }
+      var body = { act: 'chg', slug: SLUG, pin: pin, ov: reset ? null : { v: 1, days: st }, diff: W.diff, warn: W.warn };
+      msg.textContent = '…';
+      fetch(API, { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json(); }).then(function (j) {
+        if (!j.ok) { msg.textContent = j.error === 'pin' ? T.bad : T.fail; return; }
+        ov.innerHTML = '<div class="eh"><b>✅ ' + T.done + '</b><button type="button" class="x2" data-a="close2">✕</button></div>' + (W.warn.length ? '<div class="ew">' + W.warn.map(function (w) { return '⚠️ ' + esc(w); }).join('<br>') + '</div>' : '') +
+          (W.acts.length ? '<p class="hint"><b>' + T.send + '</b></p>' + W.acts.map(function (a) { return '<a class="btn wide" href="' + esc(a.href) + '">💬 ' + esc(a.t) + '</a>'; }).join('') : '') + '<button type="button" class="btn wide" data-a="close2">' + T.close + '</button>';
+        ov.onclick = function (ev) { if (ev.target.closest('[data-a="close2"]')) { ov.remove(); document.body.style.overflow = ''; render(SLUG); } };
+      }).catch(function () { msg.textContent = T.fail; });
+    }
+  }
+  document.addEventListener('click', function (ev) { if (ev.target.closest('#openEdit')) { ev.preventDefault(); openEdit(); } });
   window.ATK = { render: render };
 })();

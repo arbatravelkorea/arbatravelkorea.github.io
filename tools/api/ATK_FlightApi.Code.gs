@@ -1,6 +1,8 @@
 /**
  * ATK_FlightApi — 인천공항공사 여객기 운항 현황(StatusOfPassengerFlightsDeOdp) 조회 전용 (2026-11-05)
- * 이 프로젝트는 읽기 전용 조회만 함 (시트·텔레그램 없음) → 웹앱을 '모든 사용자'로 배포해 지침서 항공 칸이 호출
+ * 이 프로젝트는 조회 위주 (시트 없음) → 웹앱을 '모든 사용자'로 배포해 지침서 항공 칸이 호출
+ * 2026-11-09: 가이드 일정 변경(doPost act=chg) — 스크립트 속성 'chg:<슬러그>'에 변경분 저장(원본 JSON은 그대로), PIN = 지침서 가이드 전화 뒤 4자리.
+ *   텔레그램 알림은 스크립트 속성 TG_TOKEN·TG_CHAT이 있을 때만 (대표가 직접 넣음 — 코드·대화에 쓰지 않음). 기록 'chglog'(최근 200건)
  * 인증키: 스크립트 속성 DATA_GO_KR_KEY (공공데이터포털 일반 인증키 Decoding 값). 코드·대화·문서에 쓰지 않음.
  * 사용: ?flight=MH38&date=20261104&dir=A&t=2055   /   ?flights=편명|YYYYMMDD|A|HHMM~편명|YYYYMMDD|D|HHMM
  * dir: A=도착(입국) D=출발(출국). date=YYYYMMDD (인천 기준 예정일, D-3~D+6만 조회됨). t=예정 HHMM(선택, 도착편 조회 범위 ±3시간). 결과 5분 캐시
@@ -12,7 +14,8 @@ var FS_TERM_ = { P01: 'T1', P02: '탑승동', P03: 'T2' };
 function doGet(e) {
   var p = (e && e.parameter) || {};
   var r;
-  if (p.v) return ContentService.createTextOutput(JSON.stringify(voucherJson_(p.v, p.lang))).setMimeType(ContentService.MimeType.JSON);
+  if (p.v) { var vj = voucherJson_(p.v, p.lang); if (vj.ok) vj.chg = chgGet_(p.v); return ContentService.createTextOutput(JSON.stringify(vj)).setMimeType(ContentService.MimeType.JSON); }
+  if (p.chglog) return ContentService.createTextOutput(JSON.stringify(chgLog_(p.since))).setMimeType(ContentService.MimeType.JSON);
   if (p.dbg) return ContentService.createTextOutput(JSON.stringify(fsDbg_(p.dbg, p.q || 'KUL', p.dir))).setMimeType(ContentService.MimeType.JSON);
   try { r = p.flights ? { ok: true, list: flightStatusMany(p.flights) } : flightStatus(p.flight, p.date, p.dir, p.t); } catch (err) { r = { ok: false, error: String(err) }; }
   return ContentService.createTextOutput(JSON.stringify(r)).setMimeType(ContentService.MimeType.JSON);
@@ -119,4 +122,53 @@ function fsDbg_(date, q, dir) {
   var j = JSON.parse(body); var items = (j.response && j.response.body && j.response.body.items) || [];
   var out = []; for (var i = 0; i < items.length; i++) { var it = items[i]; var s = (it.flightId || '') + ' ' + (it.airportCode || '') + ' ' + (it.airport || ''); if (s.indexOf(q) >= 0) out.push([it.flightId, it.airportCode, it.scheduleDateTime, it.estimatedDateTime, it.terminalid || it.terminalId, it.exitnumber || it.chkinrange, it.carousel || it.gatenumber, it.remark, it.codeshare].join('|')); }
   return { total: items.length, hits: out.slice(0, 40) };
+}
+
+/* ───────── 가이드 일정 변경 (2026-11-09) ───────── */
+function chgGet_(slug) {
+  slug = String(slug || '').replace(/[^A-Za-z0-9_-]/g, '');
+  var t = PropertiesService.getScriptProperties().getProperty('chg:' + slug);
+  if (!t) return null; try { return JSON.parse(t); } catch (e) { return null; }
+}
+function doPost(e) {
+  var r;
+  try {
+    var b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    if (b.act === 'chg') r = chgSave_(b); else r = { ok: false, error: 'act' };
+  } catch (err) { r = { ok: false, error: String(err) }; }
+  return ContentService.createTextOutput(JSON.stringify(r)).setMimeType(ContentService.MimeType.JSON);
+}
+function chgSave_(b) {
+  var slug = String(b.slug || '').replace(/[^A-Za-z0-9_-]/g, '');
+  var vj = voucherJson_(slug, 'ko'); if (!vj.ok) return { ok: false, error: 'voucher' };
+  var ph = String(((vj.data || {}).guide || {}).phone || '').replace(/\D/g, '');
+  if (!ph || String(b.pin || '').replace(/\D/g, '') !== ph.slice(-4)) return { ok: false, error: 'pin' };
+  var lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    var P = PropertiesService.getScriptProperties(), now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
+    var ov = b.ov || null;
+    if (ov) { ov.at = now; ov.by = String(((vj.data || {}).guide || {}).name || ''); var t = JSON.stringify(ov); if (t.length > 8500) return { ok: false, error: 'too big' }; P.setProperty('chg:' + slug, t); }
+    else P.deleteProperty('chg:' + slug);
+    var lines = (b.diff || []).map(String).slice(0, 30);
+    var log = []; try { log = JSON.parse(P.getProperty('chglog') || '[]'); } catch (x) { }
+    log.push({ at: now, slug: slug, trip: (vj.data || {}).tripId || '', by: ov ? ov.by : String(((vj.data || {}).guide || {}).name || ''), reset: !ov, diff: lines, warn: (b.warn || []).map(String).slice(0, 10) });
+    while (JSON.stringify(log).length > 8500 && log.length > 1) log.shift();
+    P.setProperty('chglog', JSON.stringify(log));
+    chgTg_(log[log.length - 1]);
+    return { ok: true, at: now };
+  } finally { lock.releaseLock(); }
+}
+function chgTg_(x) {
+  var P = PropertiesService.getScriptProperties(), tok = P.getProperty('TG_TOKEN'), chat = P.getProperty('TG_CHAT');
+  if (!tok || !chat) return;
+  var txt = '📅 지침서 일정 변경 ' + x.trip + ' — ' + x.by + ' (' + x.at + ')\n' + (x.reset ? '원래 일정으로 되돌림' : x.diff.join('\n')) + (x.warn.length ? '\n⚠️ ' + x.warn.join('\n⚠️ ') : '') + '\nhttps://arbatravelkorea.github.io/v/' + x.slug + '/';
+  try { UrlFetchApp.fetch('https://api.telegram.org/bot' + tok + '/sendMessage', { method: 'post', payload: { chat_id: chat, text: txt.slice(0, 3900), disable_web_page_preview: 'true' }, muteHttpExceptions: true }); } catch (e) { }
+}
+/** 회사 계정(로그인)만: ?chglog=1&since=yyyy-MM-dd HH:mm */
+function chgLog_(since) {
+  var me = ''; try { me = Session.getActiveUser().getEmail(); } catch (e) { }
+  if (!/@arbatravel\.com$/.test(me)) return { ok: false, error: 'auth' };
+  var log = []; try { log = JSON.parse(PropertiesService.getScriptProperties().getProperty('chglog') || '[]'); } catch (x) { }
+  if (since) log = log.filter(function (x) { return x.at > since; });
+  return { ok: true, list: log };
 }
