@@ -38,7 +38,7 @@
       var hs = D.hotels || [], st = String((d && d.stay) || ''); hs.forEach(function (h) { if (!H && h.name && st.indexOf(h.name) >= 0) H = h; }); H = H || hs[0] || {};
       var xm = String(c.x || '').match(/(\d{1,2}:\d{2})\s*까지|until\s*(\d{1,2}:\d{2})/i); if (!tm && xm) tm = xm[1] || xm[2];
     }
-    var J = d && d.joint, ex = null; if (J && J.meals && J.meals.indexOf(meal.toLowerCase()) >= 0 && J.pax) ex = { label: J.label || J.team, guests: +J.pax, tl: +J.tl || 0 };
+    var J = d && d.joint, ex = null; if (dl && J && J.hotel && J.meals && J.meals.indexOf(meal.toLowerCase()) >= 0) H = { name: J.hotel, address: J.addr || '' }; if (J && J.meals && J.meals.indexOf(meal.toLowerCase()) >= 0 && J.pax) ex = { label: J.label || J.team, guests: +J.pax, tl: +J.tl || 0 };
     return window.ATK_SMS({ en: EN, name: nm, date: dt, meal: meal, guests: (+px.total || 0) - tl - inf, tl: tl, inf: inf, dl: dl, hotel: H ? H.name : '', addr: H ? H.address : '', time: tm, extra: ex });
   }
   // 할랄 리스트에 가이드·인원·호텔을 넘겨 문자하기 양식을 채움
