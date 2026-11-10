@@ -423,7 +423,7 @@
     var ov = document.createElement('div'); ov.className = 'edit'; document.body.appendChild(ov); document.body.style.overflow = 'hidden'; pushOv(ov);
     var days = O.days.map(function (d) { return d.d; });
     // 다른 가이드 담당일 (day.other 또는 첫 항목 "○○ 가이드님 진행")
-    var OTH = {}; O.days.forEach(function (d) { var o = d.other; if (!o) { var m = String(((d.items || [])[0] || {}).text || '').match(/^(\S+?)(\(.*?\))?\s*가이드님 진행|^Guide (.+?) runs this day/); if (m) o = m[1] || m[3]; } if (o) OTH[d.d] = o; });
+    var OTH = {}; O.days.forEach(function (d) { var o = d.other; if (!o) { var m = String(((d.items || [])[0] || {}).text || '').match(/^(\S+?)(\(.*?\))?\s*가이드님 진행|^Guide (.+?) runs this day/); if (m) o = m[1] || m[3]; } if (o && !d.unlock) OTH[d.d] = o; }) // day.unlock:true → 다른 가이드 날도 수정 가능 (대표 지시);
     function item(x) { var o = M[x.r] || {}, it = JSON.parse(JSON.stringify(o)); if (x.tm !== undefined) it.tm = x.tm; if (x.rest) { it.text = x.rest.text; it.phone = x.rest.phone; it.pick = !!x.rest.pick; } return it; }
     function short(t) { var s = mealName(t) || String(t || ''); s = s.replace(/\s*[—–(].*$/, '').trim() || s; return s.length > 14 ? s.slice(0, 13) + '…' : s; }
     var SEL = null; // {d, i}
