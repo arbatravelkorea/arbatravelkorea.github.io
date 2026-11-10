@@ -18,7 +18,7 @@ function doGet(e) {
     var vj = voucherJson_(p.v, p.lang), key = PropertiesService.getScriptProperties().getProperty('CHGLOG_KEY'), staff = !!(key && p.st === key);
     var sec = vj.ok && (vj.data.secure === true || p.v === 'demo-k7p2qx' || PropertiesService.getScriptProperties().getProperty('SECURE_ALL') === '1'); // 대표 확정 전엔 예시만 → 확정 후 속성 SECURE_ALL=1
     if (sec && !staff && vExpired_(p.v, vj.data)) vj = { ok: false, error: 'expired' };
-    if (vj.ok) { vj.chg = chgGet_(p.v); vj.own = (staff || !sec) ? true : devCheck_(p.v, p.dv, vj.data); }
+    if (vj.ok) { vj.chg = chgGet_(p.v); vj.rt = rtGet_(p.v); vj.own = (staff || !sec) ? true : devCheck_(p.v, p.dv, vj.data); }
     return ContentService.createTextOutput(JSON.stringify(vj)).setMimeType(ContentService.MimeType.JSON);
   }
   if (p.chglog) return ContentService.createTextOutput(JSON.stringify(chgLog_(p.since, p.k))).setMimeType(ContentService.MimeType.JSON);
@@ -140,7 +140,7 @@ function doPost(e) {
   var r;
   try {
     var b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    if (b.act === 'chg') r = chgSave_(b); else r = { ok: false, error: 'act' };
+    if (b.act === 'chg') r = chgSave_(b); else if (b.act === 'rt') r = rtSave_(b); else r = { ok: false, error: 'act' };
   } catch (err) { r = { ok: false, error: String(err) }; }
   return ContentService.createTextOutput(JSON.stringify(r)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -160,8 +160,10 @@ function chgSave_(b) {
     log.push({ at: now, slug: slug, trip: (vj.data || {}).tripId || '', by: ov ? ov.by : String(((vj.data || {}).guide || {}).name || ''), reset: !ov, diff: lines, warn: (b.warn || []).map(String).slice(0, 10), imp: !!b.imp });
     while (JSON.stringify(log).length > 8500 && log.length > 1) log.shift();
     P.setProperty('chglog', JSON.stringify(log));
-    if (b.imp) chgTg_(log[log.length - 1]); // 텔레그램은 중요 변경(합동·비 예보 이동)만 — 대표 11/9 21:57
-    return { ok: true, at: now };
+    // 텔레그램 일정 변경 알림 끔 (대표 11/10 18:56 "수정하면 텔레그램 알림은 보낼 필요 없음") — chgTg_는 남겨둠
+    var sync = null; try { sync = shSync_(slug, vj.data); } catch (err) { sync = { ok: false, error: String(err) }; }
+    log[log.length - 1].sheet = sync && sync.ok ? (sync.cells || 0) : ('ERR ' + (sync && sync.error)); P.setProperty('chglog', JSON.stringify(log));
+    return { ok: true, at: now, sheet: sync };
   } finally { lock.releaseLock(); }
 }
 function chgTg_(x) {
@@ -207,3 +209,96 @@ function devCheck_(slug, dv, D) {
     return false;
   } finally { lock.releaseLock(); }
 }
+
+/* ── 예약 시간(식당 💬 문자 버튼) 서버 저장 + Schedule-Tour 시트 자동 반영 (대표 11/10 19:00 "A로 진행") ──
+   rt:<슬러그> = {"2026-11-15:3":"11:30", …}  (원래 항목 번호 r 기준). 회사·누가 열어도 "📞 예약 11:30" 보임
+   시트: 지침서 JSON 항목의 sh(시트 표기, 예 ["SeoulTower","ByEV Bus"])가 있고 최상위 "sheet":true 인 지침서만.
+   블록 원래 값은 처음 반영할 때 shorig:<TripID> 에 보관 → 매번 원래 값 + 변경으로 다시 계산 (되돌리면 원래대로)
+   다른 가이드 담당일(other, unlock 아님)은 그 가이드 지침서가 반영 */
+var OPS_SS_ = '1_b0DjqbMWdZtw7zRaGLPOgB9K5K5-8tdg_2hFr7GVM0', OPS_GID_ = 1089706084;
+function rtGet_(slug) {
+  slug = String(slug || '').replace(/[^A-Za-z0-9_-]/g, '');
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('rt:' + slug) || 'null'); } catch (e) { return null; }
+}
+function normTm_(v) { var m = String(v || '').trim().match(/^(\d{1,2})[:.]?(\d{2})$/); if (!m) return ''; var h = +m[1], mi = +m[2]; if (h > 23 || mi > 59) return ''; return (h < 10 ? '0' : '') + h + ':' + (mi < 10 ? '0' : '') + mi; }
+function mealKey_(t) { var m = String(t || '').match(/^(점심|저녁|Lunch|Dinner)/); return m ? ({ 점심: 'l', Lunch: 'l', 저녁: 'd', Dinner: 'd' })[m[1]] : ''; }
+function mealName_(t) { return String(t || '').replace(/^(점심|저녁|아침|Lunch|Dinner|Breakfast)\s*[—–-]\s*/, '').replace(/\s*\(.*$/, '').trim(); }
+function rtSave_(b) {
+  var slug = String(b.slug || '').replace(/[^A-Za-z0-9_-]/g, ''), r = String(b.r || '');
+  if (!/^\d{4}-\d\d-\d\d:\d{1,2}$/.test(r)) return { ok: false, error: 'r' };
+  var vj = voucherJson_(slug, 'ko'); if (!vj.ok) return { ok: false, error: 'voucher' };
+  var dd = r.split(':')[0], ii = +r.split(':')[1], day = (vj.data.days || []).filter(function (d) { return d.d === dd; })[0], it = day && (day.items || [])[ii];
+  if (!it || !mealKey_(it.text)) return { ok: false, error: 'item' };
+  var tm = b.tm ? normTm_(b.tm) : ''; if (b.tm && !tm) return { ok: false, error: 'tm' };
+  var lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    var P = PropertiesService.getScriptProperties(), o = rtGet_(slug) || {};
+    if (tm) o[r] = tm; else delete o[r];
+    if (Object.keys(o).length) P.setProperty('rt:' + slug, JSON.stringify(o)); else P.deleteProperty('rt:' + slug);
+    var now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm'), log = []; try { log = JSON.parse(P.getProperty('chglog') || '[]'); } catch (x) { }
+    var sync = null; try { sync = shSync_(slug, vj.data); } catch (err) { sync = { ok: false, error: String(err) }; }
+    log.push({ at: now, slug: slug, trip: vj.data.tripId || '', by: String((vj.data.guide || {}).name || ''), reset: false, diff: ['📞 예약 시간 ' + dd.slice(5).replace('-', '/') + ' ' + mealName_(it.text) + ' ' + (tm || '삭제')], warn: [], imp: false, sheet: sync && sync.ok ? (sync.cells || 0) : ('ERR ' + (sync && sync.error)) });
+    while (JSON.stringify(log).length > 8500 && log.length > 1) log.shift();
+    P.setProperty('chglog', JSON.stringify(log));
+    return { ok: true, rt: o, sheet: sync };
+  } finally { lock.releaseLock(); }
+}
+function shSync_(slug, D) {
+  if (!D || D.sheet !== true || !D.tripId) return { ok: true, skip: 'no sheet tags' };
+  var P = PropertiesService.getScriptProperties(), trip = String(D.tripId);
+  var sh = SpreadsheetApp.openById(OPS_SS_).getSheets().filter(function (x) { return x.getSheetId() === OPS_GID_; })[0];
+  if (!sh) return { ok: false, error: 'sheet' };
+  // 블록 제목 칸 찾기 ("<TripID> · 18Pax+1TL", /CX 같은 다른 레인 제외)
+  var cell = null, hits = sh.createTextFinder(trip).matchCase(true).findAll();
+  hits.forEach(function (c) { var v = String(c.getValue()); if (!cell && (v === trip || v.indexOf(trip + ' ·') === 0)) cell = c; });
+  if (!cell) return { ok: false, error: 'block not found' };
+  var r0 = cell.getRow(), c0 = cell.getColumn(), days = D.days || [], n = days.length;
+  var mr = cell.getMergedRanges(); if (mr.length && mr[0].getNumColumns() !== n) return { ok: false, error: 'block width ' + mr[0].getNumColumns() + ' ≠ days ' + n };
+  // 원래 값 보관 (TripID 기준 — 같은 블록을 쓰는 교대 가이드 지침서와 공유)
+  var RW = [2, 3, 4, 5, 6, 7, 8, 16, 17, 18, 19], key = 'shorig:' + trip.replace(/[^A-Za-z0-9]/g, '');
+  var rng = sh.getRange(r0 + 2, c0, 18, n), dv = rng.getDisplayValues(), nt = rng.getNotes();
+  var orig = null; try { orig = JSON.parse(P.getProperty(key) || 'null'); } catch (x) { }
+  if (!orig || orig.n !== n || orig.r0 !== r0 || orig.c0 !== c0) {
+    orig = { n: n, r0: r0, c0: c0, v: RW.map(function (k) { return dv[k - 2].slice(); }), t: RW.map(function (k) { return nt[k - 2].map(function (x) { return String(x || '').slice(0, 300); }); }) };
+    P.setProperty(key, JSON.stringify(orig));
+  }
+  var ov = chgGet_(slug), rt = rtGet_(slug) || {}, M = {}, ALL = {};
+  days.forEach(function (d) { (d.items || []).forEach(function (it, i) { M[d.d + ':' + i] = it; (it.sh || []).forEach(function (s) { ALL[s] = 1; }); }); });
+  var who = String((D.guide || {}).name || '가이드'), stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'MM/dd HH:mm'), cells = 0, out = [];
+  days.forEach(function (d, ci) {
+    if (d.other && !d.unlock) return; // 다른 가이드 날은 그 가이드 지침서가
+    var list = (ov && ov.days && ov.days[d.d]) || (d.items || []).map(function (it, i) { return { r: d.d + ':' + i }; });
+    var ov0 = orig.v.map(function (row) { return row[ci]; }), want = ov0.slice();
+    var changed = !(ov && ov.days && ov.days[d.d]) ? false : list.some(function (x, i) { return x.r !== d.d + ':' + i || x.tm !== undefined || x.rest || x.note; }) || list.length !== (d.items || []).length;
+    var hasRt = list.some(function (x) { return rt[x.r]; });
+    if (changed) {
+      var s = ov0.slice(0, 7), idx = []; s.forEach(function (v, k) { if (ALL[v]) idx.push(k); });
+      var first = idx.length ? idx[0] : s.filter(function (v) { return v !== ''; }).length, last = idx.length ? idx[idx.length - 1] : first - 1;
+      var pre = s.slice(0, first), suf = s.slice(last + 1).filter(function (v) { return v !== '' && !ALL[v]; }), mov = [];
+      list.forEach(function (x) { var it = M[x.r]; if (!it || mealKey_(it.text) || x.rest) return; (it.sh || []).forEach(function (v) { mov.push(v); }); });
+      var ns = pre.concat(mov, suf); while (ns.length > 7) { var z = ns.pop(); ns[6] = ns[6] + ' / ' + z; } while (ns.length < 7) ns.push('');
+      for (var k = 0; k < 7; k++) want[k] = ns[k];
+    }
+    if (changed || hasRt) {
+      [['l', 7, 8], ['d', 9, 10]].forEach(function (q) {
+        var its = list.filter(function (x) { var it = M[x.r]; return it && mealKey_((x.rest && x.rest.text) || it.text) === q[0]; });
+        if (changed) { if (its.length) want[q[1]] = its.map(function (x) { var it = M[x.r]; return x.rest ? mealName_(x.rest.text) : ((it.sh || [])[0] || mealName_(it.text)); }).join(' / '); else if (ALL[ov0[q[1]]]) want[q[1]] = ''; }
+        var tms = its.map(function (x) { return x.tm || rt[x.r] || ''; }).filter(String); if (tms.length) want[q[2]] = tms[0];
+        else if (changed && !its.length && ALL[ov0[q[1]]]) want[q[2]] = '';
+      });
+    }
+    RW.forEach(function (row, k) {
+      var cur = dv[row - 2][ci], w = want[k], c = sh.getRange(r0 + row, c0 + ci);
+      var note0 = orig.t[k][ci], wantNote = w === ov0[k] ? note0 : ('[' + stamp + ' ' + who + ' 가이드 지침서 변경] 원래: ' + (ov0[k] || '(빈칸)') + (note0 ? '\n' + note0 : ''));
+      if (cur === w && (w === ov0[k] ? String(nt[row - 2][ci] || '') === String(note0 || '') : String(nt[row - 2][ci] || '').indexOf('원래: ' + (ov0[k] || '(빈칸)')) >= 0)) return;
+      if (cur !== w) {
+        if (row === 17 || row === 19) { c.setNumberFormat('h:mm'); }
+        c.setValue(w); c.setFontFamily('Arial').setFontSize(6).setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(true);
+      }
+      c.setNote(wantNote); cells++; out.push(c.getA1Notation() + ' ' + (cur || '∅') + '→' + (w || '∅'));
+    });
+  });
+  return { ok: true, cells: cells, changes: out.slice(0, 40) };
+}
+/** 편집기에서 한 번 실행 → 시트 접근 권한 허용 (11/10) */
+function shAuth() { Logger.log(SpreadsheetApp.openById(OPS_SS_).getName()); }

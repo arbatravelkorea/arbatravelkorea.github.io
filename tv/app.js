@@ -103,7 +103,9 @@
     return EN ? 'Hello,\nThis is ' + nm + ', tour guide from ARBA Travel.\nPlease change our booking time.\n\nFrom: ' + dd + ' ' + mealW + ' ' + prev + '\nTo: ' + dd + ' ' + mealW + ' ' + next + '\nPax: ' + tot + ' (' + gu + ' guests' + (tl ? ' + ' + tl + ' tour leader' : '') + ' + 1 guide)\n\nPlease confirm. Thank you!'
       : '안녕하세요\n아르바트래블 ' + nm + ' 가이드입니다.\n예약 시간 변경 부탁드립니다.\n\n기존: ' + dd + ' ' + mealW + ' ' + prev + '\n변경: ' + dd + ' ' + mealW + ' ' + next + '\n인원: 총 ' + tot + '명 (손님 ' + gu + '명' + (tl ? ' + 인솔자 ' + tl + '명' : '') + ' + 가이드 1명)\n\n확인 부탁드립니다. 감사합니다!';
   }
-  var RT = {}; // 식당 예약 시간 (가이드가 문자 버튼 누를 때 입력, 이 휴대폰 저장)
+  var RT = {}; // 식당 예약 시간 (가이드가 문자 버튼 누를 때 입력, 이 휴대폰 + 서버 rt:<슬러그>)
+  var SRT = {}; // 서버에 저장된 예약 시간 (회사·누가 열어도 보임, 11/10)
+  function rtPost(r, t) { try { fetch(API, { method: 'POST', body: JSON.stringify({ act: 'rt', slug: SLUG, r: r, tm: t || '' }) }).then(function (x) { return x.json(); }).then(function (j) { if (j && j.ok) { if (t) SRT[r] = t; else delete SRT[r]; } }).catch(function () { }); } catch (e) { } }
   // 🔒 이름 워터마크: 본인 기기 0.8% (거의 안 보임) / 다른 기기 진하게 / 인쇄·PDF 진하게 (대표 11/9 23:08)
   // 대표 확인 전: 예시 지침서(demo)와 secure:true 인 지침서만. 확정되면 기본 켜기로 바꿈
   function SECURE(D) { return D.secure !== false; } // 11/9 대표 확정: 모든 지침서 (끄려면 "secure":false)
@@ -185,7 +187,7 @@
       if (j.error === 'expired') { app.innerHTML = '<p class="loading">🔒 ' + (EN ? 'This tour voucher is closed (7 days after the tour ended). Please contact ARBA Travel Korea if you need it.' : '이 투어지침서는 열람 기간이 끝났습니다 (투어 종료 7일 뒤).<br>필요하면 회사로 연락해주세요.') + '</p>'; return; }
       OWN = true; // 기기 등록·다른 기기 판별은 쓰지 않음 (11/9 대표 결정)
       if (!j.ok || !j.data) { app.innerHTML = '<p class="loading">' + (EN ? 'Voucher not found.' : '지침서를 찾을 수 없습니다. 회사로 연락해주세요.') + '</p>'; return; }
-      ORIG = JSON.parse(JSON.stringify(j.data)); CHG = j.chg || null; if (CHG) applyChg(j.data, CHG); draw(j.data);
+      ORIG = JSON.parse(JSON.stringify(j.data)); CHG = j.chg || null; SRT = j.rt || {}; if (CHG) applyChg(j.data, CHG); draw(j.data);
     }).catch(function () { app.innerHTML = '<p class="loading">' + (EN ? 'Could not load. Please try again.' : '불러오지 못했습니다. 다시 열어주세요.') + '</p>'; });
   }
 
@@ -290,7 +292,7 @@
     // 식당 문자 버튼 → 예약 시간 입력(이 휴대폰 저장) → 문자에 도착 시간 자동, 일정 변경 화면에도 자동 반영 (대표 11/9 21:57)
     var IT = {}; (CUR.days || []).forEach(function (d) { (d.items || []).forEach(function (it, i) { IT[it._r || (d.d + ':' + i)] = { it: it, d: d }; }); });
     document.querySelectorAll('.tl li[data-meal]').forEach(function (li) {
-      var r = li.dataset.r, saved = LS('atk:rt:' + SLUG + ':' + r), saved0 = saved; if (saved) RT[r] = saved;
+      var r = li.dataset.r, loc = LS('atk:rt:' + SLUG + ':' + r), saved = loc || SRT[r] || '', saved0 = saved; if (saved) RT[r] = saved; if (loc && loc !== SRT[r]) rtPost(r, loc); // 예전에 이 휴대폰에만 저장된 시간 → 서버로
       var a = li.querySelector('a[href^="sms:"]'); if (!a) return;
       function badge() { var b = li.querySelector('.rt'); if (saved) { if (!b) { b = document.createElement('span'); b.className = 'rt'; li.querySelector('span:nth-child(2)').appendChild(b); } b.textContent = (EN ? '📞 booked ' : '📞 예약 ') + saved; } else if (b) b.remove(); }
       badge();
@@ -298,7 +300,7 @@
         ev.preventDefault(); var x = IT[r]; if (!x) { location.href = a.getAttribute('href'); return; }
         var v = prompt(EN ? 'Arrival time for the booking (e.g. 1100 → 11:00). Leave empty if not decided.' : '예약(도착) 시간을 넣어주세요 (예: 1100 → 11:00). 아직 모르면 비워두세요.', saved || x.it.tm || '');
         if (v === null) return; var t = normTm(v); if (v.trim() && !t) { alert(EN ? 'Time format: 1100 or 11:00' : '시간은 1100 또는 11:00 형식으로 넣어주세요'); return; }
-        saved = t || ''; LS('atk:rt:' + SLUG + ':' + r, saved || null); if (saved) RT[r] = saved; else delete RT[r]; badge();
+        saved = t || ''; LS('atk:rt:' + SLUG + ':' + r, saved || null); if (saved) RT[r] = saved; else delete RT[r]; badge(); if (saved !== (SRT[r] || '')) rtPost(r, saved);
         var prev = saved0 || x.it.tm || '';
         if (prev && saved && saved !== prev) { location.href = 'sms:' + num(x.it.phone) + '?&body=' + encodeURIComponent(chgTimeMsg(x.it, x.d, prev, saved)); saved0 = saved; return; }
         saved0 = saved; var c2 = JSON.parse(JSON.stringify(x.it)); if (saved) c2.tm = saved; location.href = smsHref(c2, x.d);
@@ -392,6 +394,11 @@
         if (ch) it.chg = true; it._r = x.r; items.push(it);
       });
       d.items = items;
+      // 한 줄 요약도 바뀐 일정으로 (대표 11/10: 회사가 열면 안 바뀐 것처럼 보였음)
+      if (items.some(function (it) { return it.chg; })) {
+        var suf = String(d.summary || '').match(/\s[—–-]\s([^—–-]*(가이드|guide|Guide)[^—–-]*)$/), nm = items.filter(function (it) { return !mealKey(it.text) && !/가이드님 진행|runs (this|to)day/.test(it.text) && !/체크인|check-in|호텔 출발|hotel departure/i.test(it.text); }).map(function (it) { return String(it.text).replace(/\s[—–-]\s.*$/, '').replace(/\s*\(.*?\)/g, '').trim(); });
+        d.summary = '✎ ' + nm.join(' · ') + (suf ? ' — ' + suf[1].trim() : '');
+      }
       // 식사 칸: 그날 점심·저녁 항목에서 다시
       if (items.map(function (it) { return mealKey(it.text); }).join(',') !== before || items.some(function (it) { return it.chg && mealKey(it.text); })) {
         d.meals = d.meals || {};
