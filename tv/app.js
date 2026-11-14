@@ -104,6 +104,7 @@
       : '안녕하세요\n아르바트래블 ' + nm + ' 가이드입니다.\n예약 시간 변경 부탁드립니다.\n\n기존: ' + dd + ' ' + mealW + ' ' + prev + '\n변경: ' + dd + ' ' + mealW + ' ' + next + '\n인원: 총 ' + tot + '명 (손님 ' + gu + '명' + (tl ? ' + 인솔자 ' + tl + '명' : '') + ' + 가이드 1명)\n\n확인 부탁드립니다. 감사합니다!';
   }
   var RT = {}; // 식당 예약 시간 (가이드가 문자 버튼 누를 때 입력, 이 휴대폰 + 서버 rt:<슬러그>)
+  var GEXP = null; // 서버가 센 가이드 경력 {n, exp}
   var SRT = {}; // 서버에 저장된 예약 시간 (회사·누가 열어도 보임, 11/10)
   function rtPost(r, t) { try { fetch(API, { method: 'POST', body: JSON.stringify({ act: 'rt', slug: SLUG, r: r, tm: t || '' }) }).then(function (x) { return x.json(); }).then(function (j) { if (j && j.ok) { if (t) SRT[r] = t; else delete SRT[r]; } }).catch(function () { }); } catch (e) { } }
   // 🔒 이름 워터마크: 본인 기기 0.8% (거의 안 보임) / 다른 기기 진하게 / 인쇄·PDF 진하게 (대표 11/9 23:08)
@@ -152,7 +153,9 @@
     var lo = WXR ? WXR.lo : (WX_LO[loc] || WX_LO.SEL)[m0 - 1], hi = WXR ? WXR.hi : (WX_HI[loc] || WX_HI.SEL)[m0 - 1];
     var wl = lo < 0 ? 'very cold, below 0°C at night. Please bring a thick winter coat, gloves and a scarf.' : lo <= 5 ? 'cold in the morning and evening. A warm jacket and layers are recommended.' : hi >= 28 ? 'hot and humid. Light clothes, a hat and sunscreen are recommended.' : lo >= 15 ? 'pleasant but cooler at night. A light jacket is enough.' : 'cool, especially in the morning and evening. A jacket and layers are recommended.';
     if (m0 >= 7 && m0 <= 9) wl += ' Rain is likely — please bring a small umbrella.';
-    var exp = G.exp === 'new' ? "I'm really looking forward to meeting you all and making this a comfortable, memorable trip." : G.exp === 'before' ? "I've guided Muslim groups with ARBA before, so you're in good hands." : "I've guided many Muslim groups with ARBA, so you're in good hands.";
+    // 경력 = 서버 자동(GEXP: 지난 ARBA 투어 수) 우선, 없으면 JSON greet.exp (11/14 대표) · "looking forward" 줄은 모두에게
+    var ex = (GEXP && GEXP.exp) || G.exp || 'new', fwd = "I'm really looking forward to meeting you all and making this a comfortable, memorable trip.";
+    var exp = ex === 'new' ? fwd : (ex === 'before' ? "I've guided Muslim groups with ARBA before, so you're in good hands. " : "I've guided many Muslim groups with ARBA, so you're in good hands. ") + fwd;
     var taxi = G.taxi != null ? G.taxi : /\/JT\//.test(D.tripId || '');
     var ap = loc === 'JJU' ? 'Jeju Airport' : loc === 'BUS' ? 'Gimhae Airport' : 'Incheon Airport';
     var tips = ["🗺️ Use Naver Map instead of Google Maps — it's much more accurate in Korea."];
@@ -187,7 +190,7 @@
       if (j.error === 'expired') { app.innerHTML = '<p class="loading">🔒 ' + (EN ? 'This tour voucher is closed (7 days after the tour ended). Please contact ARBA Travel Korea if you need it.' : '이 투어지침서는 열람 기간이 끝났습니다 (투어 종료 7일 뒤).<br>필요하면 회사로 연락해주세요.') + '</p>'; return; }
       OWN = true; // 기기 등록·다른 기기 판별은 쓰지 않음 (11/9 대표 결정)
       if (!j.ok || !j.data) { app.innerHTML = '<p class="loading">' + (EN ? 'Voucher not found.' : '지침서를 찾을 수 없습니다. 회사로 연락해주세요.') + '</p>'; return; }
-      ORIG = JSON.parse(JSON.stringify(j.data)); CHG = j.chg || null; SRT = j.rt || {}; if (CHG) applyChg(j.data, CHG); draw(j.data);
+      ORIG = JSON.parse(JSON.stringify(j.data)); CHG = j.chg || null; SRT = j.rt || {}; GEXP = j.gexp || null; if (CHG) applyChg(j.data, CHG); draw(j.data);
     }).catch(function () { app.innerHTML = '<p class="loading">' + (EN ? 'Could not load. Please try again.' : '불러오지 못했습니다. 다시 열어주세요.') + '</p>'; });
   }
 

@@ -18,7 +18,7 @@ function doGet(e) {
     var vj = voucherJson_(p.v, p.lang), key = PropertiesService.getScriptProperties().getProperty('CHGLOG_KEY'), staff = !!(key && p.st === key);
     var sec = vj.ok && (vj.data.secure === true || p.v === 'demo-k7p2qx' || PropertiesService.getScriptProperties().getProperty('SECURE_ALL') === '1'); // 대표 확정 전엔 예시만 → 확정 후 속성 SECURE_ALL=1
     if (sec && !staff && vExpired_(p.v, vj.data)) vj = { ok: false, error: 'expired' };
-    if (vj.ok) { vj.chg = chgGet_(p.v); vj.rt = rtGet_(p.v); vj.own = (staff || !sec) ? true : devCheck_(p.v, p.dv, vj.data); }
+    if (vj.ok) { vj.chg = chgGet_(p.v); vj.rt = rtGet_(p.v); try { vj.gexp = gexp_(p.v, vj.data); } catch (ge) { vj.gexp = null; } vj.own = (staff || !sec) ? true : devCheck_(p.v, p.dv, vj.data); }
     return ContentService.createTextOutput(JSON.stringify(vj)).setMimeType(ContentService.MimeType.JSON);
   }
   if (p.chglog) return ContentService.createTextOutput(JSON.stringify(chgLog_(p.since, p.k))).setMimeType(ContentService.MimeType.JSON);
@@ -302,3 +302,39 @@ function shSync_(slug, D) {
 }
 /** 편집기에서 한 번 실행 → 시트 접근 권한 허용 (11/10) */
 function shAuth() { Logger.log(SpreadsheetApp.openById(OPS_SS_).getName()); }
+
+/* ── 첫 인사 경력 문구 자동 (대표 11/14: 변영미는 첫 투어인데 "before"로 나감 → 자동으로) ──
+   지난 ARBA 투어 수 = max( Payment Tracking WHT 탭에서 가이드 이름이 있는 줄 수(이 Trip 제외),
+                           Schedule-Tour에서 이 블록보다 왼쪽(앞 날짜) 블록 중 TG 칸에 이름이 있는 Trip 수 )
+   0 → new · 1~4 → before · 5+ → many. 6시간 캐시. 실패하면 null → 렌더러는 JSON greet.exp 사용 */
+var PAY_SS_ = '1U1EwIKML2u1nsmCHCKhs08ONSErgbWCBVLZ4gVEH_-M';
+function gexp_(slug, D) {
+  var g = (D && D.guide) || {}, name = String(g.name || '').trim(), trip = String((D && D.tripId) || '').trim();
+  if (!/[가-힣]/.test(name)) { var k = voucherJson_(slug, 'ko'); if (k.ok) name = String(((k.data || {}).guide || {}).name || '').trim(); }
+  if (!name || !trip) return null;
+  var cache = CacheService.getScriptCache(), ck = 'gx:' + Utilities.base64EncodeWebSafe(name + '|' + trip).slice(0, 200), hit = cache.get(ck);
+  if (hit) return JSON.parse(hit);
+  var nW = 0, nS = 0;
+  try {
+    var w = SpreadsheetApp.openById(PAY_SS_).getSheetByName('WHT');
+    if (w) { var wv = w.getDataRange().getDisplayValues(), trips = {};
+      wv.forEach(function (row) { if (row.some(function (x) { return String(x).trim() === name; }) && !row.some(function (x) { return String(x).indexOf(trip) >= 0; })) { var key = row.filter(function (x) { return /\d{6}|\/JT\/|_/.test(String(x)); })[0] || row.join('|'); trips[key] = 1; } });
+      nW = Object.keys(trips).length; }
+  } catch (e1) { }
+  try {
+    var sh = SpreadsheetApp.openById(OPS_SS_).getSheets().filter(function (x) { return x.getSheetId() === OPS_GID_; })[0];
+    var v = sh.getDataRange().getDisplayValues(), cur = -1, seen = {};
+    for (var r0 = 3; r0 < v.length && cur < 0; r0 += 20) for (var c = 0; c < v[r0].length; c++) { var t0 = String(v[r0][c]); if (t0 === trip || t0.indexOf(trip + ' ·') === 0) { cur = c; break; } }
+    for (var r = 3; r + 11 < v.length; r += 20) {
+      var tg = v[r + 11], tt = v[r];
+      for (var cc = 0; cc < tg.length && (cur < 0 || cc < cur); cc++) {
+        if (String(tg[cc]).trim() !== name) continue;
+        for (var k2 = cc; k2 >= 0; k2--) { var t = String(tt[k2]).trim(); if (t) { t = t.split(' · ')[0]; if (t !== trip) seen[t] = 1; break; } }
+      }
+    }
+    nS = Object.keys(seen).length;
+  } catch (e2) { }
+  var n = Math.max(nW, nS), r2 = { n: n, w: nW, s: nS, exp: n === 0 ? 'new' : n < 5 ? 'before' : 'many' };
+  cache.put(ck, JSON.stringify(r2), 21600);
+  return r2;
+}
